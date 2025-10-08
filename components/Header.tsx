@@ -33,21 +33,23 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLog
           </div>
         </div>
 
-        {user && onLogout ? (
+        {user ? (
           <div className="w-48 flex-shrink-0 flex items-center justify-end gap-3 text-brand-light">
             <UserCircleIcon className="w-8 h-8"/>
             <div className="text-left hidden md:block">
               <p className="font-bold whitespace-nowrap">{user.username}</p>
-              <p className="text-xs text-brand-muted capitalize">{user.role}</p>
+              {user.role && <p className="text-xs text-brand-muted capitalize">{user.role}</p>}
             </div>
-            <button
-              onClick={onLogout}
-              className="p-2 rounded-full hover:bg-brand-secondary/80 transition-colors"
-              aria-label="Logout"
-              title="Logout"
-            >
-              <LogoutIcon className="w-6 h-6 text-red-400"/>
-            </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-full hover:bg-brand-secondary/80 transition-colors"
+                aria-label="Logout"
+                title="Logout"
+              >
+                <LogoutIcon className="w-6 h-6 text-red-400"/>
+              </button>
+            )}
           </div>
         ) : (
            <div className="w-48 hidden sm:block flex-shrink-0"></div>

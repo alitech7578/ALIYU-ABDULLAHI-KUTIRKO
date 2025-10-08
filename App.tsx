@@ -10,20 +10,22 @@ const App: React.FC = () => {
       setRoute(window.location.hash);
     };
 
-    window.addEventListener('hashchange', handleHashChange, false);
-
+    window.addEventListener('hashchange', handleHashChange);
     return () => {
-      window.removeEventListener('hashchange', handleHashChange, false);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 
-  // Simple hash-based routing to show the public verification page
-  if (route.startsWith('#/id/')) {
-    return <ClientPage />;
-  }
-  
-  // Default view is the Admin Dashboard as per the original App.tsx
-  return <AdminDashboard />;
+  const renderContent = () => {
+    if (route.startsWith('#/id/')) {
+      return <ClientPage />;
+    }
+    
+    // Default to Admin Dashboard, bypassing any login
+    return <AdminDashboard />;
+  };
+
+  return <>{renderContent()}</>;
 };
 
 export default App;

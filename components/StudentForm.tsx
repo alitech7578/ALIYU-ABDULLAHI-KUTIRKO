@@ -1,12 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
-import { PlusIcon, UploadIcon } from './IconComponents';
+import { PlusIcon, UploadIcon, SpinnerIcon, CheckCircleIcon } from './IconComponents';
 
 interface StudentFormProps {
-  onAddStudent: (student: Student) => void;
+  onSubmitStudent: (student: Student) => void;
+  studentToEdit: Student | null;
+  saveStatus: 'idle' | 'saving' | 'saved';
 }
 
-const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
+const InputField = ({ id, label, type, value, onChange, placeholder, isRequired = true }: { id: string, label: string, type: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, isRequired?: boolean }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-brand-muted mb-2">
+      {label}
+    </label>
+    <input
+      type={type}
+      id={id}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={isRequired}
+      className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors"
+    />
+  </div>
+);
+
+const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdit, saveStatus }) => {
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [surname, setSurname] = useState('');
@@ -16,14 +35,48 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
   const [photoBase64, setPhotoBase64] = useState<string>('');
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
+  
+  useEffect(() => {
+    if (studentToEdit) {
+      setFirstName(studentToEdit.firstName);
+      setMiddleName(studentToEdit.middleName);
+      setSurname(studentToEdit.surname);
+      setEmail(studentToEdit.email);
+      setDepartment(studentToEdit.department);
+      setRegistrationNumber(studentToEdit.registrationNumber);
+      setPhotoBase64(studentToEdit.photo);
+      setPhotoPreview(studentToEdit.photo);
+    } else {
+      setFirstName('');
+      setMiddleName('');
+      setSurname('');
+      setEmail('');
+      setDepartment('');
+      setRegistrationNumber('');
+      setPhotoBase64('');
+      setPhotoPreview('');
+      setError('');
+    }
+  }, [studentToEdit]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-          setError('Image size should not exceed 2MB.');
-          return;
+      setError(''); // Clear previous error
+
+      // Validate file type
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Invalid file format. Please upload a PNG, JPG, or WEBP image.');
+        return;
       }
+
+      // Validate file size
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        setError('Image size should not exceed 2MB.');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
           const base64String = reader.result as string;
@@ -31,7 +84,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
           setPhotoPreview(base64String);
       };
       reader.readAsDataURL(file);
-      setError('');
     }
   };
 
@@ -43,43 +95,24 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
     }
     setError('');
     
-    const newStudent: Student = {
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      createdBy: 'admin', // Hardcoded as there are no users
-      firstName, middleName, surname, email, department, registrationNumber,
-      photo: photoBase64,
-    };
-
-    onAddStudent(newStudent);
-
-    // Reset form
-    setFirstName('');
-    setMiddleName('');
-    setSurname('');
-    setEmail('');
-    setDepartment('');
-    setRegistrationNumber('');
-    setPhotoBase64('');
-    setPhotoPreview('');
+    if (studentToEdit) {
+      const updatedStudent: Student = {
+        ...studentToEdit,
+        firstName, middleName, surname, email, department, registrationNumber,
+        photo: photoBase64,
+      };
+      onSubmitStudent(updatedStudent);
+    } else {
+      const newStudent: Student = {
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        createdBy: 'admin', // Hardcoded as there are no users
+        firstName, middleName, surname, email, department, registrationNumber,
+        photo: photoBase64,
+      };
+      onSubmitStudent(newStudent);
+    }
   };
-
-  const InputField = ({ id, label, type, value, onChange, placeholder, isRequired = true }: { id: string, label: string, type: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, isRequired?: boolean }) => (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-brand-muted mb-2">
-        {label}
-      </label>
-      <input
-        type={type}
-        id={id}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={isRequired}
-        className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors"
-      />
-    </div>
-  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 mt-4 border-t border-brand-secondary/50 pt-6">
@@ -132,10 +165,25 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="flex items-center justify-center space-x-2 w-full md:w-auto px-6 py-3 bg-brand-accent hover:bg-opacity-80 transition-all duration-300 rounded-lg text-white font-bold text-lg"
+          disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+          className="flex items-center justify-center space-x-2 w-full md:w-auto min-w-[260px] px-6 py-3 bg-brand-accent hover:bg-opacity-80 transition-all duration-300 rounded-lg text-white font-bold text-lg disabled:bg-brand-accent/70 disabled:cursor-not-allowed"
         >
-          <PlusIcon className="w-6 h-6" />
-          <span>Add Student Record</span>
+          {saveStatus === 'saving' ? (
+            <>
+              <SpinnerIcon className="w-6 h-6 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : saveStatus === 'saved' ? (
+            <>
+              <CheckCircleIcon className="w-6 h-6" />
+              <span>Record Saved!</span>
+            </>
+          ) : (
+            <>
+              <PlusIcon className="w-6 h-6" />
+              <span>{studentToEdit ? 'Update Student Record' : 'Add Student Record'}</span>
+            </>
+          )}
         </button>
       </div>
     </form>

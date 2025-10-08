@@ -1,32 +1,27 @@
 import React, { useState } from 'react';
-import { UserCircleIcon, EyeIcon, EyeSlashIcon, DatabaseIcon } from './IconComponents';
+import { DatabaseIcon, EyeIcon, EyeSlashIcon, SpinnerIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-
 
 const API_URL = 'http://localhost:3001/api';
 
-interface User {
+interface AppUser {
   username: string;
   role: 'admin' | 'user';
 }
 
 interface LoginPageProps {
-    onLogin: (token: string, user: User) => void;
+  onLoginSuccess: (user: AppUser, token: string) => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     
-    // Fetch branding from local storage
     const [companyName] = useLocalStorage('company-name', 'Data Collector Pro');
     const [companyLogo] = useLocalStorage<string | null>('company-logo', null);
-    const [companyEmail] = useLocalStorage('company-email', 'contact@example.com');
-    const [companyAddress] = useLocalStorage('company-address', '123 Innovation Drive, Tech City');
-    const [companyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,19 +29,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         setError('');
 
         try {
-            const response = await fetch(`${API_URL}/login`, {
+            const response = await fetch(`${API_URL}/users/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
             });
+            
+            const data = await response.json();
 
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.message || 'Login failed');
+                throw new Error(data.error || 'Login failed. Please check your credentials.');
             }
 
-            const { token, user } = await response.json();
-            onLogin(token, user);
+            onLoginSuccess({ username: data.username, role: data.role }, data.token);
 
         } catch (err: any) {
             setError(err.message);
@@ -54,18 +49,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             setLoading(false);
         }
     };
-    
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-brand-primary to-brand-secondary p-4">
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-brand-primary to-brand-secondary p-4">
             <div className="w-full max-w-md">
-                <div className="text-center mb-8 flex flex-col items-center gap-4">
+                <div className="text-center mb-8">
                      {companyLogo ? (
-                        <img src={companyLogo} alt={`${companyName} Logo`} className="h-16 object-contain"/>
+                        <img src={companyLogo} alt={`${companyName} Logo`} className="w-24 h-24 mx-auto object-contain"/>
                      ) : (
-                        <UserCircleIcon className="w-24 h-24 mx-auto text-brand-accent"/>
+                        <DatabaseIcon className="w-24 h-24 mx-auto text-brand-accent"/>
                      )}
-                     <h1 className="text-3xl font-extrabold text-brand-light">{companyName}</h1>
-                     <p className="text-brand-muted">Please sign in to continue.</p>
+                     <h1 className="mt-4 text-3xl font-extrabold text-brand-light">{companyName}</h1>
+                     <p className="text-brand-muted">Please log in to access the dashboard.</p>
                 </div>
                 <div className="bg-brand-secondary/50 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -78,54 +73,58 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                 id="username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                placeholder="e.g., admin"
                                 required
                                 className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors text-brand-light"
+                                placeholder="Enter your username"
                             />
                         </div>
-                        <div className="relative">
+
+                        <div>
                             <label htmlFor="password" className="block text-sm font-medium text-brand-muted mb-2">
                                 Password
                             </label>
-                            <input
-                                type={showPassword ? 'text' : 'password'}
-                                id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="e.g., password123"
-                                required
-                                className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors text-brand-light"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 top-7 flex items-center px-3 text-brand-muted hover:text-brand-light"
-                                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                            >
-                                {showPassword ? <EyeSlashIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
-                            </button>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="block w-full px-4 py-3 pr-12 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors text-brand-light"
+                                    placeholder="Enter your password"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 flex items-center px-4 text-brand-muted hover:text-brand-light"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
+
                         {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                        
                         <div>
-                             <button
+                            <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-accent hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent transition-all duration-300 disabled:bg-brand-accent/50 disabled:cursor-not-allowed"
-                                >
-                                {loading ? 'Signing In...' : 'Sign In'}
+                                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-accent hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent transition-all duration-300 disabled:bg-brand-accent/50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
+                                    <><SpinnerIcon className="w-5 h-5 mr-2 animate-spin" /> Logging In...</>
+                                ) : (
+                                    'Log In'
+                                )}
                             </button>
                         </div>
                     </form>
                 </div>
+                 <p className="mt-6 text-center text-xs text-brand-muted">
+                    This is a secure system. All activities are logged.
+                </p>
             </div>
-            <footer className="absolute bottom-0 w-full p-6 text-center text-brand-muted text-sm">
-                <p className="max-w-2xl mx-auto">{companyContent}</p>
-                <div className="mt-2 flex justify-center items-center gap-x-4 gap-y-1 flex-wrap">
-                    <span>{companyAddress}</span>
-                    <span className="hidden sm:inline">|</span>
-                    <a href={`mailto:${companyEmail}`} className="text-brand-accent hover:underline">{companyEmail}</a>
-                </div>
-            </footer>
         </div>
     );
 };

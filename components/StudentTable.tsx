@@ -1,35 +1,77 @@
 import React, { useMemo } from 'react';
 import { Student } from '../types';
-import { TrashIcon, TableIcon, IdCardIcon } from './IconComponents';
+import { TrashIcon, TableIcon, IdCardIcon, PencilIcon, ChevronUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './IconComponents';
+import PaginationControls from './PaginationControls';
+
+type SortDirection = 'ascending' | 'descending';
+interface SortConfig<T> {
+  key: keyof T;
+  direction: SortDirection;
+}
 
 interface StudentTableProps {
   records: Student[];
   onDeleteRecord: (id: string) => void;
   onShowIdCard: (student: Student) => void;
+  onEditRecord: (student: Student) => void;
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
+  onSort: (key: keyof Student) => void;
+  sortConfig: SortConfig<Student> | null;
+  // Pagination props
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalRecords: number;
+  recordsPerPage: number;
 }
 
-const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, onShowIdCard, selectedIds, onSelectionChange }) => {
+const SortableHeader = ({ label, columnKey, sortConfig, onSort }: { label: string; columnKey: keyof Student; sortConfig: SortConfig<Student> | null; onSort: (key: keyof Student) => void; }) => {
+    const getSortIcon = () => {
+        const iconClass = "w-4 h-4 ml-1 transition-opacity";
+        if (sortConfig?.key !== columnKey) {
+            return <ChevronUpDownIcon className={`${iconClass} opacity-25 group-hover:opacity-75`} />;
+        }
+        if (sortConfig.direction === 'ascending') {
+            return <ChevronUpIcon className={iconClass} />;
+        }
+        return <ChevronDownIcon className={iconClass} />;
+    };
+    return (
+        <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">
+            <button onClick={() => onSort(columnKey)} className="flex items-center group hover:text-brand-light transition-colors">
+                <span>{label}</span>
+                {getSortIcon()}
+            </button>
+        </th>
+    );
+};
+
+const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, onShowIdCard, onEditRecord, selectedIds, onSelectionChange, currentPage, totalPages, onPageChange, totalRecords, recordsPerPage, onSort, sortConfig }) => {
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const currentPageIds = records.map(r => r.id);
+    const selectionSet = new Set(selectedIds);
     if (e.target.checked) {
-      onSelectionChange(records.map(r => r.id));
+      currentPageIds.forEach(id => selectionSet.add(id));
     } else {
-      onSelectionChange([]);
+      currentPageIds.forEach(id => selectionSet.delete(id));
     }
+    onSelectionChange(Array.from(selectionSet));
   };
 
   const handleSelectRow = (id: string) => {
-    const newSelection = selectedIds.includes(id)
-      ? selectedIds.filter(selectedId => selectedId !== id)
-      : [...selectedIds, id];
-    onSelectionChange(newSelection);
+    const selectionSet = new Set(selectedIds);
+    if (selectionSet.has(id)) {
+      selectionSet.delete(id);
+    } else {
+      selectionSet.add(id);
+    }
+    onSelectionChange(Array.from(selectionSet));
   };
   
-  const isAllSelected = useMemo(() => records.length > 0 && selectedIds.length === records.length, [records, selectedIds]);
-
-
-  if (records.length === 0) {
+  const isAllSelected = useMemo(() => records.length > 0 && records.every(r => selectedIds.includes(r.id)), [records, selectedIds]);
+  
+  if (totalRecords === 0) {
     return (
       <div className="text-center py-16 px-6 bg-brand-secondary/30 rounded-2xl">
         <TableIcon className="w-16 h-16 mx-auto text-brand-muted/50" />
@@ -51,16 +93,16 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
                       className="h-4 w-4 rounded border-brand-secondary text-brand-accent focus:ring-brand-accent bg-brand-primary"
                       checked={isAllSelected}
                       onChange={handleSelectAll}
-                      aria-label="Select all student records"
+                      aria-label="Select all student records on this page"
                   />
               </th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Photo</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">First Name</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Middle Name</th>
-              <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Surname</th>
+              <SortableHeader label="Surname" columnKey="surname" sortConfig={sortConfig} onSort={onSort} />
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Email</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Department</th>
-              <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Registration No.</th>
+              <SortableHeader label="Registration No." columnKey="registrationNumber" sortConfig={sortConfig} onSort={onSort} />
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Created At</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Actions</th>
             </tr>
@@ -88,8 +130,9 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
                 <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.registrationNumber}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-muted whitespace-nowrap">{new Date(record.createdAt).toLocaleDateString()}</td>
                 <td className="p-4 sm:p-5 text-sm">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <button onClick={() => onShowIdCard(record)} className="text-blue-400 hover:text-blue-300 transition-colors" title="View ID Card"><IdCardIcon className="w-5 h-5"/></button>
+                    <button onClick={() => onEditRecord(record)} className="text-yellow-400 hover:text-yellow-300 transition-colors" title="Edit Record"><PencilIcon className="w-5 h-5"/></button>
                     <button onClick={() => onDeleteRecord(record.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Delete Record"><TrashIcon className="w-5 h-5"/></button>
                   </div>
                 </td>
@@ -98,6 +141,13 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
           </tbody>
         </table>
       </div>
+       <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          totalRecords={totalRecords}
+          recordsPerPage={recordsPerPage}
+        />
     </div>
   );
 };

@@ -11,6 +11,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ token }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [role, setRole] = useState<'admin' | 'user'>('user');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ token }) => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, password, role }),
             });
 
             const data = await response.json();
@@ -40,10 +41,11 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ token }) => {
                 throw new Error(data.error || 'Registration failed');
             }
 
-            setSuccess(`User "${username}" created successfully!`);
+            setSuccess(`User "${username}" created successfully with role "${role}"!`);
             setUsername('');
             setPassword('');
             setConfirmPassword('');
+            setRole('user');
 
         } catch (err: any) {
             setError(err.message);
@@ -58,7 +60,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ token }) => {
                 <div className="text-center mb-8">
                      <UserPlusIcon className="w-24 h-24 mx-auto text-brand-accent"/>
                      <h1 className="mt-4 text-3xl font-extrabold text-brand-light">Register New User</h1>
-                     <p className="text-brand-muted">Create a new account with the 'user' role.</p>
+                     <p className="text-brand-muted">Create a new account with the 'user' or 'admin' role.</p>
                 </div>
                 <div className="bg-brand-secondary/50 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -102,11 +104,27 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ token }) => {
                             />
                         </div>
 
+                        <div>
+                            <label htmlFor="role" className="block text-sm font-medium text-brand-muted mb-2">
+                                Role
+                            </label>
+                            <select
+                                id="role"
+                                value={role}
+                                onChange={(e) => setRole(e.target.value as 'admin' | 'user')}
+                                required
+                                className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors text-brand-light"
+                            >
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+
                         {error && <p className="text-red-400 text-sm text-center">{error}</p>}
                         {success && <p className="text-green-400 text-sm text-center">{success}</p>}
                         
                         <div className="flex items-center gap-4 pt-2">
-                             <a href="#" className="w-full flex justify-center py-3 px-4 border border-brand-muted/50 rounded-lg text-sm font-medium text-brand-muted hover:bg-brand-muted/10 transition-colors">
+                             <a href="#/" className="w-full flex justify-center py-3 px-4 border border-brand-muted/50 rounded-lg text-sm font-medium text-brand-muted hover:bg-brand-muted/10 transition-colors">
                                 Back to Dashboard
                              </a>
                              <button

@@ -2,7 +2,8 @@ import React, { useRef } from 'react';
 import { toPng } from 'html-to-image';
 import { Student } from '../types';
 import StudentIDCard from './StudentIDCard';
-import { XMarkIcon, DownloadIcon } from './IconComponents';
+import StudentIDCardBack from './StudentIDCardBack';
+import { XMarkIcon, DownloadIcon, PrinterIcon } from './IconComponents';
 
 interface StudentIDCardModalProps {
   student: Student | null;
@@ -12,9 +13,10 @@ interface StudentIDCardModalProps {
   companyEmail: string;
   companyAddress: string;
   companyWebsite: string;
+  provostSignature: string | null;
 }
 
-const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite }) => {
+const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature }) => {
   const idCardRef = useRef<HTMLDivElement>(null);
 
   if (!student) return null;
@@ -37,6 +39,10 @@ const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClos
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div 
         className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4" 
@@ -54,10 +60,13 @@ const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClos
             >
                 <XMarkIcon className="w-6 h-6" />
             </button>
-            <div ref={idCardRef}>
-                <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} />
+            <div ref={idCardRef} className="printable-id-card">
+              <div className="flex flex-row gap-4 items-start">
+                <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />
+              </div>
             </div>
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4 flex justify-center gap-4">
                 <button
                     onClick={handleDownload}
                     className="flex items-center gap-2 px-6 py-3 bg-brand-accent hover:bg-opacity-80 transition-all duration-300 rounded-lg text-white font-bold"
@@ -65,8 +74,38 @@ const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClos
                     <DownloadIcon className="w-5 h-5" />
                     <span>Download PNG</span>
                 </button>
+                <button
+                    onClick={handlePrint}
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 transition-all duration-300 rounded-lg text-white font-bold"
+                >
+                    <PrinterIcon className="w-5 h-5" />
+                    <span>Print</span>
+                </button>
             </div>
         </div>
+         <style>
+        {`
+          @media print {
+            @page {
+              size: landscape;
+            }
+            body * {
+              visibility: hidden;
+            }
+            .printable-id-card, .printable-id-card * {
+              visibility: visible;
+            }
+            .printable-id-card {
+              position: absolute;
+              left: 0;
+              top: 0;
+              transform: scale(1);
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+          }
+        `}
+        </style>
     </div>
   );
 };

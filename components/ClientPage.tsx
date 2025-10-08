@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { DataRecord } from '../types';
+import { DataRecord, Student } from '../types';
 import IDCard from './IDCard';
+import StudentIDCard from './StudentIDCard';
 import { DatabaseIcon, UserCircleIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-const API_URL = 'http://localhost:3001/api/public';
+// Type guard to check if the record is a staff member (DataRecord)
+const isDataRecord = (person: DataRecord | Student): person is DataRecord => {
+  return (person as DataRecord).spNumber !== undefined;
+};
 
 const ClientPage: React.FC = () => {
-    const [record, setRecord] = useState<DataRecord | null>(null);
+    const [person, setPerson] = useState<DataRecord | Student | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
@@ -20,8 +24,6 @@ const ClientPage: React.FC = () => {
     const [companyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
 
     useEffect(() => {
-        // This component is currently set up for a backend, but the app is running locally.
-        // We will adapt it to use localStorage to match the active AdminDashboard.
         const fetchRecordFromLocalStorage = () => {
              try {
                 const hash = window.location.hash;
@@ -33,11 +35,18 @@ const ClientPage: React.FC = () => {
                     return;
                 }
 
-                const allRecords: DataRecord[] = JSON.parse(window.localStorage.getItem('data-records') || '[]');
-                const foundRecord = allRecords.find(r => r.id === recordId);
+                // Search for staff records first
+                const allStaffRecords: DataRecord[] = JSON.parse(window.localStorage.getItem('data-records') || '[]');
+                let foundPerson: DataRecord | Student | undefined = allStaffRecords.find(r => r.id === recordId);
 
-                if (foundRecord) {
-                    setRecord(foundRecord);
+                // If not found in staff, search in students
+                if (!foundPerson) {
+                    const allStudentRecords: Student[] = JSON.parse(window.localStorage.getItem('student-records') || '[]');
+                    foundPerson = allStudentRecords.find(s => s.id === recordId);
+                }
+
+                if (foundPerson) {
+                    setPerson(foundPerson);
                 } else {
                     throw new Error('Record not found. The link may be invalid or the record has been deleted.');
                 }
@@ -75,7 +84,11 @@ const ClientPage: React.FC = () => {
                     </div>
                 )}
                 
-                {record && <IDCard record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} />}
+                {person && (
+                    isDataRecord(person)
+                        ? <IDCard record={person} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                        : <StudentIDCard student={person as Student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                )}
             </main>
 
             <footer className="absolute bottom-0 w-full p-6 text-center text-brand-muted text-sm">

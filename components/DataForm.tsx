@@ -1,16 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { DataRecord, MarriedStatus } from '../types';
-import { PlusIcon, UploadIcon } from './IconComponents';
+import { PlusIcon, UploadIcon, SpinnerIcon, CheckCircleIcon } from './IconComponents';
 import { nigeriaStates } from '../data/nigeria-data';
 
 interface DataFormProps {
-  onAddRecord: (record: DataRecord) => void;
+  onSubmitRecord: (record: DataRecord) => void;
+  recordToEdit: DataRecord | null;
+  saveStatus: 'idle' | 'saving' | 'saved';
 }
 
 const marriedStatuses: MarriedStatus[] = ['Single', 'Married', 'Divorced', 'Widowed'];
 const bloodGroups: string[] = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
-const DataForm: React.FC<DataFormProps> = ({ onAddRecord }) => {
+const InputField = ({ id, label, type, value, onChange, placeholder, isRequired = true }: { id: string, label: string, type: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, isRequired?: boolean }) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-brand-muted mb-2">
+      {label}
+    </label>
+    <input
+      type={type}
+      id={id}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={isRequired}
+      className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors"
+    />
+  </div>
+);
+
+const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveStatus }) => {
   const [name, setName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [surname, setSurname] = useState('');
@@ -29,14 +48,54 @@ const DataForm: React.FC<DataFormProps> = ({ onAddRecord }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (recordToEdit) {
+      setName(recordToEdit.name);
+      setMiddleName(recordToEdit.middleName);
+      setSurname(recordToEdit.surname);
+      setEmail(recordToEdit.email);
+      setDepartment(recordToEdit.department);
+      setSpNumber(recordToEdit.spNumber);
+      setRank(recordToEdit.rank);
+      setState(recordToEdit.state);
+      setLg(recordToEdit.lg);
+      setPhoneNumber(recordToEdit.phoneNumber);
+      setMarriedStatus(recordToEdit.marriedStatus);
+      setBloodGroup(recordToEdit.bloodGroup);
+      setPhotoBase64(recordToEdit.photo);
+      setPhotoPreview(recordToEdit.photo);
+    } else {
+      setName('');
+      setMiddleName('');
+      setSurname('');
+      setEmail('');
+      setDepartment('');
+      setSpNumber('');
+      setRank('');
+      setState('');
+      setLg('');
+      setPhoneNumber('');
+      setMarriedStatus('Single');
+      setBloodGroup('');
+      setPhotoBase64('');
+      setPhotoPreview('');
+      setError('');
+    }
+  }, [recordToEdit]);
+
+  useEffect(() => {
     if (state) {
       setLgaOptions(nigeriaStates[state] || []);
-      setLg(''); // Reset LG when state changes
+      // Do not reset lg if we are editing and state is the same
+      if (recordToEdit && recordToEdit.state !== state) {
+        setLg('');
+      } else if (!recordToEdit) {
+        setLg('');
+      }
     } else {
       setLgaOptions([]);
       setLg('');
     }
-  }, [state]);
+  }, [state, recordToEdit]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,49 +123,24 @@ const DataForm: React.FC<DataFormProps> = ({ onAddRecord }) => {
     }
     setError('');
     
-    const newRecord: DataRecord = {
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      createdBy: 'admin', // Hardcoded as there are no users
-      name, middleName, surname, email, department, spNumber, rank, state, lg, phoneNumber, marriedStatus, bloodGroup,
-      photo: photoBase64
-    };
-
-    onAddRecord(newRecord);
-
-    // Reset form
-    setName('');
-    setMiddleName('');
-    setSurname('');
-    setEmail('');
-    setDepartment('');
-    setSpNumber('');
-    setRank('');
-    setState('');
-    setLg('');
-    setPhoneNumber('');
-    setMarriedStatus('Single');
-    setBloodGroup('');
-    setPhotoBase64('');
-    setPhotoPreview('');
+    if (recordToEdit) {
+       const updatedRecord: DataRecord = {
+        ...recordToEdit,
+        name, middleName, surname, email, department, spNumber, rank, state, lg, phoneNumber, marriedStatus, bloodGroup,
+        photo: photoBase64
+      };
+      onSubmitRecord(updatedRecord);
+    } else {
+      const newRecord: DataRecord = {
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        createdBy: 'admin', // Hardcoded as there are no users
+        name, middleName, surname, email, department, spNumber, rank, state, lg, phoneNumber, marriedStatus, bloodGroup,
+        photo: photoBase64
+      };
+      onSubmitRecord(newRecord);
+    }
   };
-
-  const InputField = ({ id, label, type, value, onChange, placeholder, isRequired = true }: { id: string, label: string, type: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, isRequired?: boolean }) => (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-brand-muted mb-2">
-        {label}
-      </label>
-      <input
-        type={type}
-        id={id}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={isRequired}
-        className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors"
-      />
-    </div>
-  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 mt-4 border-t border-brand-secondary/50 pt-6">
@@ -234,10 +268,25 @@ const DataForm: React.FC<DataFormProps> = ({ onAddRecord }) => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="flex items-center justify-center space-x-2 w-full md:w-auto px-6 py-3 bg-brand-accent hover:bg-opacity-80 transition-all duration-300 rounded-lg text-white font-bold text-lg"
+          disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+          className="flex items-center justify-center space-x-2 w-full md:w-auto min-w-[200px] px-6 py-3 bg-brand-accent hover:bg-opacity-80 transition-all duration-300 rounded-lg text-white font-bold text-lg disabled:bg-brand-accent/70 disabled:cursor-not-allowed"
         >
-          <PlusIcon className="w-6 h-6" />
-          <span>Add Record</span>
+          {saveStatus === 'saving' ? (
+            <>
+              <SpinnerIcon className="w-6 h-6 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : saveStatus === 'saved' ? (
+            <>
+              <CheckCircleIcon className="w-6 h-6" />
+              <span>Record Saved!</span>
+            </>
+          ) : (
+            <>
+              <PlusIcon className="w-6 h-6" />
+              <span>{recordToEdit ? 'Update Record' : 'Add Record'}</span>
+            </>
+          )}
         </button>
       </div>
     </form>

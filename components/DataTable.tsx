@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { DataRecord } from '../types';
-import { TrashIcon, TableIcon, IdCardIcon } from './IconComponents';
+import { TrashIcon, TableIcon, IdCardIcon, PencilIcon } from './IconComponents';
 import IDCardModal from './IDCardModal';
+import PaginationControls from './PaginationControls';
 
 interface DataTableProps {
   records: DataRecord[];
   onDeleteRecord: (id: string) => void;
+  onEditRecord?: (record: DataRecord) => void;
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   showAdminActions?: boolean;
@@ -14,29 +16,43 @@ interface DataTableProps {
   companyEmail: string;
   companyAddress: string;
   companyWebsite: string;
+  provostSignature: string | null;
+  // Pagination props
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalRecords: number;
+  recordsPerPage: number;
 }
 
-const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, selectedIds, onSelectionChange, showAdminActions = true, companyName, companyLogo, companyEmail, companyAddress, companyWebsite }) => {
+const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, onEditRecord, selectedIds, onSelectionChange, showAdminActions = true, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature, currentPage, totalPages, onPageChange, totalRecords, recordsPerPage }) => {
   const [selectedRecord, setSelectedRecord] = useState<DataRecord | null>(null);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const currentPageIds = records.map(r => r.id);
+    const selectionSet = new Set(selectedIds);
+
     if (e.target.checked) {
-      onSelectionChange(records.map(r => r.id));
+      currentPageIds.forEach(id => selectionSet.add(id));
     } else {
-      onSelectionChange([]);
+      currentPageIds.forEach(id => selectionSet.delete(id));
     }
+    onSelectionChange(Array.from(selectionSet));
   };
 
   const handleSelectRow = (id: string) => {
-    const newSelection = selectedIds.includes(id)
-      ? selectedIds.filter(selectedId => selectedId !== id)
-      : [...selectedIds, id];
-    onSelectionChange(newSelection);
+    const selectionSet = new Set(selectedIds);
+    if (selectionSet.has(id)) {
+      selectionSet.delete(id);
+    } else {
+      selectionSet.add(id);
+    }
+    onSelectionChange(Array.from(selectionSet));
   };
   
-  const isAllSelected = useMemo(() => records.length > 0 && selectedIds.length === records.length, [records, selectedIds]);
+  const isAllSelected = useMemo(() => records.length > 0 && records.every(r => selectedIds.includes(r.id)), [records, selectedIds]);
 
-  if (records.length === 0) {
+  if (totalRecords === 0) {
     return (
       <div className="text-center py-16 px-6 bg-brand-secondary/30 rounded-2xl">
         <TableIcon className="w-16 h-16 mx-auto text-brand-muted/50" />
@@ -60,7 +76,7 @@ const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, selected
                           className="h-4 w-4 rounded border-brand-secondary text-brand-accent focus:ring-brand-accent bg-brand-primary"
                           checked={isAllSelected}
                           onChange={handleSelectAll}
-                          aria-label="Select all records"
+                          aria-label="Select all records on this page"
                       />
                   </th>
                 )}
@@ -78,7 +94,7 @@ const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, selected
                 <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Blood Group</th>
                 <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Created By</th>
                 <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Created At</th>
-                <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Actions</th>
+                {showAdminActions && <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-secondary">
@@ -111,17 +127,27 @@ const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, selected
                   <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.bloodGroup}</td>
                   <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.createdBy}</td>
                   <td className="p-4 sm:p-5 text-sm text-brand-muted whitespace-nowrap">{new Date(record.createdAt).toLocaleDateString()}</td>
-                  <td className="p-4 sm:p-5 text-sm">
-                    <div className="flex items-center gap-2">
-                        <button onClick={() => setSelectedRecord(record)} className="text-blue-400 hover:text-blue-300 transition-colors" title="View ID Card"><IdCardIcon className="w-5 h-5"/></button>
-                        <button onClick={() => onDeleteRecord(record.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Delete Record"><TrashIcon className="w-5 h-5"/></button>
-                    </div>
-                  </td>
+                  {showAdminActions && (
+                    <td className="p-4 sm:p-5 text-sm">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setSelectedRecord(record)} className="text-blue-400 hover:text-blue-300 transition-colors" title="View ID Card"><IdCardIcon className="w-5 h-5"/></button>
+                            <button onClick={() => onEditRecord?.(record)} className="text-yellow-400 hover:text-yellow-300 transition-colors" title="Edit Record"><PencilIcon className="w-5 h-5"/></button>
+                            <button onClick={() => onDeleteRecord(record.id)} className="text-red-400 hover:text-red-300 transition-colors" title="Delete Record"><TrashIcon className="w-5 h-5"/></button>
+                        </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          totalRecords={totalRecords}
+          recordsPerPage={recordsPerPage}
+        />
       </div>
       {selectedRecord && (
         <IDCardModal 
@@ -132,6 +158,7 @@ const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, selected
             companyEmail={companyEmail}
             companyAddress={companyAddress}
             companyWebsite={companyWebsite}
+            provostSignature={provostSignature}
         />
       )}
     </>

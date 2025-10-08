@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DataRecord } from '../types';
 import Header from './Header';
 import DataForm from './DataForm';
@@ -28,6 +28,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
   const [companyEmail] = useLocalStorage('company-email', 'contact@example.com');
   const [companyAddress] = useLocalStorage('company-address', '123 Innovation Drive, Tech City');
   const [companyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
+  // FIX: Added provostSignature to provide to DataTable.
+  const [provostSignature] = useLocalStorage<string | null>('provost-signature', null);
+
+  // FIX: Add state for pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
 
   const fetchUserRecords = useCallback(async () => {
     try {
@@ -46,6 +52,21 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
   useEffect(() => {
     fetchUserRecords();
   }, [fetchUserRecords]);
+
+  // FIX: Add pagination calculations
+  const totalPages = Math.ceil(records.length / recordsPerPage);
+  const currentRecords = useMemo(() => {
+      const indexOfLastRecord = currentPage * recordsPerPage;
+      const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+      return records.slice(indexOfFirstRecord, indexOfLastRecord);
+  }, [records, currentPage]);
+
+  // FIX: Add effect to adjust page number if records are deleted, preventing empty pages
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   const addRecord = async (record: DataRecord) => {
     const dataURLtoFile = (dataurl: string, filename: string): File | null => {
@@ -132,12 +153,13 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
               </div>
             </div>
             
-            {isFormVisible && <DataForm onAddRecord={addRecord} />}
+            {isFormVisible && <DataForm onSubmitRecord={addRecord} recordToEdit={null} />}
           </div>
 
           <div className="mt-10">
+            {/* FIX: Pass all required props to DataTable, including provostSignature. */}
             <DataTable 
-              records={records} 
+              records={currentRecords} 
               onDeleteRecord={deleteRecord}
               selectedIds={[]}
               onSelectionChange={() => {}}
@@ -147,6 +169,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
               companyEmail={companyEmail}
               companyAddress={companyAddress}
               companyWebsite={companyWebsite}
+              provostSignature={provostSignature}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalRecords={records.length}
+              recordsPerPage={recordsPerPage}
             />
           </div>
         </main>
