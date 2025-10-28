@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { DataRecord } from '../types';
+import { DataRecord, IDCardLayoutSettings } from '../types';
 import { TrashIcon, TableIcon, IdCardIcon, PencilIcon } from './IconComponents';
 import IDCardModal from './IDCardModal';
 import PaginationControls from './PaginationControls';
@@ -17,6 +17,7 @@ interface DataTableProps {
   companyAddress: string;
   companyWebsite: string;
   provostSignature: string | null;
+  layoutSettings: IDCardLayoutSettings;
   // Pagination props
   currentPage: number;
   totalPages: number;
@@ -25,7 +26,7 @@ interface DataTableProps {
   recordsPerPage: number;
 }
 
-const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, onEditRecord, selectedIds, onSelectionChange, showAdminActions = true, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature, currentPage, totalPages, onPageChange, totalRecords, recordsPerPage }) => {
+const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, onEditRecord, selectedIds, onSelectionChange, showAdminActions = true, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature, layoutSettings, currentPage, totalPages, onPageChange, totalRecords, recordsPerPage }) => {
   const [selectedRecord, setSelectedRecord] = useState<DataRecord | null>(null);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,6 +160,7 @@ const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, onEditRe
             companyAddress={companyAddress}
             companyWebsite={companyWebsite}
             provostSignature={provostSignature}
+            layoutSettings={layoutSettings}
         />
       )}
     </>

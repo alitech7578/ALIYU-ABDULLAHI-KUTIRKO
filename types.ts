@@ -31,3 +31,17 @@ export interface Student {
   createdBy: string;
   photo: string; // Stored as a base64 Data URL
 }
+
+export interface FieldConfig {
+  id: string;
+  label: string;
+}
+
+export interface IDCardLayout {
+  visibleFields: string[];
+}
+
+export interface IDCardLayoutSettings {
+  staff: IDCardLayout;
+  student: IDCardLayout;
+}

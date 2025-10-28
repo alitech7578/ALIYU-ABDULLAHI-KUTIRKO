@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import { toPng } from 'html-to-image';
-import { Student } from '../types';
+import { Student, IDCardLayoutSettings } from '../types';
 import StudentIDCard from './StudentIDCard';
 import StudentIDCardBack from './StudentIDCardBack';
 import { XMarkIcon, DownloadIcon, SpinnerIcon } from './IconComponents';
@@ -15,9 +15,10 @@ interface BulkStudentIDPrintProps {
   companyAddress: string;
   companyWebsite: string;
   provostSignature: string | null;
+  layoutSettings: IDCardLayoutSettings;
 }
 
-const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature }) => {
+const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature, layoutSettings }) => {
   const [isGenerating, setIsGenerating] = useState(false);
     
   const handleDownloadPdf = async () => {
@@ -98,7 +99,7 @@ const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClo
                    <div key={student.id}>
                        <div id={`student-card-pair-${student.id}`} className="flex flex-row gap-4 items-start p-2 bg-gray-300">
                            <div className="transform scale-90">
-                               <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                               <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.student} />
                            </div>
                            <div className="transform scale-90">
                                <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />

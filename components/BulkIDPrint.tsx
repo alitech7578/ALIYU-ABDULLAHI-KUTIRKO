@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import { toPng } from 'html-to-image';
-import { DataRecord } from '../types';
+import { DataRecord, IDCardLayoutSettings } from '../types';
 import IDCard from './IDCard';
 import IDCardBack from './IDCardBack';
 import { XMarkIcon, DownloadIcon, SpinnerIcon } from './IconComponents';
@@ -15,9 +15,10 @@ interface BulkIDPrintProps {
   companyAddress: string;
   companyWebsite: string;
   provostSignature: string | null;
+  layoutSettings: IDCardLayoutSettings;
 }
 
-const BulkIDPrint: React.FC<BulkIDPrintProps> = ({ records, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature }) => {
+const BulkIDPrint: React.FC<BulkIDPrintProps> = ({ records, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature, layoutSettings }) => {
   const [isGenerating, setIsGenerating] = useState(false);
     
   const handleDownloadPdf = async () => {
@@ -94,7 +95,7 @@ const BulkIDPrint: React.FC<BulkIDPrintProps> = ({ records, onClose, companyName
                    <div key={record.id}>
                        <div id={`card-pair-${record.id}`} className="flex flex-row gap-4 items-start p-2 bg-gray-300">
                            <div className="transform scale-90">
-                               <IDCard record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                               <IDCard record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.staff} />
                            </div>
                            <div className="transform scale-90">
                                <IDCardBack record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />

@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { DataRecord, Student } from '../types';
+import { DataRecord, Student, IDCardLayoutSettings } from '../types';
 import IDCard from './IDCard';
 import StudentIDCard from './StudentIDCard';
 import { DatabaseIcon, UserCircleIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+
+// Helper to get initial layout settings to avoid mismatch
+const getInitialLayoutSettings = (): IDCardLayoutSettings => ({
+    staff: {
+        visibleFields: ['fullName', 'rank', 'department', 'bloodGroup', 'spNumber', 'qrCode'],
+    },
+    student: {
+        visibleFields: ['fullName', 'department', 'registrationNumber', 'qrCode'],
+    },
+});
 
 // Type guard to check if the record is a staff member (DataRecord)
 const isDataRecord = (person: DataRecord | Student): person is DataRecord => {
@@ -22,6 +32,7 @@ const ClientPage: React.FC = () => {
     const [companyAddress] = useLocalStorage('company-address', '123 Innovation Drive, Tech City');
     const [companyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
     const [companyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
+    const [layoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', getInitialLayoutSettings());
 
     useEffect(() => {
         const fetchRecordFromLocalStorage = () => {
@@ -86,8 +97,8 @@ const ClientPage: React.FC = () => {
                 
                 {person && (
                     isDataRecord(person)
-                        ? <IDCard record={person} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
-                        : <StudentIDCard student={person as Student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                        ? <IDCard record={person} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.staff} />
+                        : <StudentIDCard student={person as Student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.student} />
                 )}
             </main>
 

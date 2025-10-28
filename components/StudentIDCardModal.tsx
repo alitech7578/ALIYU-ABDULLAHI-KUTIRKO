@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { toPng } from 'html-to-image';
-import { Student } from '../types';
+import { Student, IDCardLayoutSettings } from '../types';
 import StudentIDCard from './StudentIDCard';
 import StudentIDCardBack from './StudentIDCardBack';
 import { XMarkIcon, DownloadIcon, PrinterIcon } from './IconComponents';
@@ -14,9 +14,10 @@ interface StudentIDCardModalProps {
   companyAddress: string;
   companyWebsite: string;
   provostSignature: string | null;
+  layoutSettings: IDCardLayoutSettings;
 }
 
-const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature }) => {
+const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature, layoutSettings }) => {
   const idCardRef = useRef<HTMLDivElement>(null);
 
   if (!student) return null;
@@ -62,7 +63,7 @@ const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClos
             </button>
             <div ref={idCardRef} className="printable-id-card">
               <div className="flex flex-row gap-4 items-start">
-                <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.student} />
                 <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />
               </div>
             </div>

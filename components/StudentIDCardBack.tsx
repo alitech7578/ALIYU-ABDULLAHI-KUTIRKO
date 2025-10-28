@@ -9,6 +9,11 @@ interface StudentIDCardBackProps {
   provostSignature: string | null;
 }
 
+const backgroundPatternStyle = {
+  backgroundImage: 'radial-gradient(circle at 1px 1px, #E5E7EB 1px, transparent 0)',
+  backgroundSize: '15px 15px',
+};
+
 const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyName, companyLogo, companyWebsite, provostSignature }) => {
   const renderCompanyName = (name: string) => {
     const parts = name.split(/(\(TECHNICAL\))/i);
@@ -28,7 +33,10 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
   };
 
   return (
-    <div className="w-[512px] h-[320px] bg-white rounded-xl shadow-lg p-0 overflow-hidden flex flex-col items-center justify-between font-sans text-gray-700">
+    <div
+      className="w-[512px] h-[320px] bg-white rounded-xl shadow-lg p-0 overflow-hidden flex flex-col items-center justify-between font-sans text-gray-700"
+      style={backgroundPatternStyle}
+    >
       {/* Top decorative element */}
       <div className="w-full h-8 bg-gray-700 relative flex items-center justify-between px-4">
           <div className="h-1 w-24 bg-yellow-400"></div>

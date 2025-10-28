@@ -1,6 +1,7 @@
 import React from 'react';
 import { DataRecord } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
+import { IDCardLayout } from '../types';
 
 interface IDCardProps {
   record: DataRecord;
@@ -8,10 +9,17 @@ interface IDCardProps {
   companyLogo: string | null;
   companyWebsite: string;
   companyAddress: string;
+  layoutSettings: IDCardLayout;
 }
 
-const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, companyWebsite, companyAddress }) => {
-  
+const backgroundPatternStyle = {
+  backgroundImage: 'radial-gradient(circle at 1px 1px, #E5E7EB 1px, transparent 0)',
+  backgroundSize: '15px 15px',
+};
+
+const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, companyWebsite, companyAddress, layoutSettings }) => {
+  const { visibleFields } = layoutSettings;
+
   const renderCompanyName = (name: string) => {
     // This function specifically looks for "(TECHNICAL)" to style it red, as per the sample image.
     const parts = name.split(/(\(TECHNICAL\))/i);
@@ -44,9 +52,13 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
     MaritalStatus: record.marriedStatus,
   });
 
+  const mainContentFields = ['department', 'bloodGroup'];
+  const visibleMainContentFields = visibleFields.filter(f => mainContentFields.includes(f));
+
   return (
     <div
       className="w-[320px] h-[512px] bg-white rounded-xl shadow-lg font-sans text-gray-800 flex flex-col p-4"
+      style={backgroundPatternStyle}
     >
         {/* Header */}
         <header className="flex flex-col items-center text-center">
@@ -60,44 +72,55 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         </header>
 
         {/* Main Content */}
-        <main className="flex flex-col items-center text-center flex-grow justify-around py-4">
-          <div>
+        <main className="flex flex-col items-center text-center flex-grow justify-center py-4 gap-4">
+          <div className="flex flex-col items-center">
             <img
               src={record.photo}
               alt={fullName}
               className="w-36 h-36 rounded-md object-cover border-2 border-gray-300 mx-auto"
             />
-            <h2 className="mt-3 text-2xl font-bold uppercase tracking-tight">
-              {fullName}
-            </h2>
-            <p className="text-sm text-gray-500 uppercase">{record.rank}</p>
+            {visibleFields.includes('fullName') && <h2 className="mt-3 text-2xl font-bold uppercase tracking-tight">{fullName}</h2>}
+            {visibleFields.includes('rank') && <p className="text-sm text-gray-500 uppercase">{record.rank}</p>}
           </div>
           
-          <div className="text-md text-center">
-              <p><span className="font-semibold">Dept.:</span> {record.department}</p>
-          </div>
-          <div className="text-md text-center">
-              <p><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>
-          </div>
-
-          <div title="Scan to view staff details" className="cursor-help">
-            <div className="p-1 bg-white border rounded-md shadow-sm">
-                <QRCodeCanvas value={qrCodeContent} size={64} />
+          {visibleMainContentFields.length > 0 && (
+            <div className="flex flex-col gap-1 text-md text-center">
+              {visibleMainContentFields.map(fieldId => {
+                if (fieldId === 'department') {
+                  return <p key={fieldId}><span className="font-semibold">Dept.:</span> {record.department}</p>;
+                }
+                if (fieldId === 'bloodGroup') {
+                  return <p key={fieldId}><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>;
+                }
+                return null;
+              })}
             </div>
-          </div>
+          )}
+          
+          <div className="flex-grow"></div> {/* Spacer to push QR code and other bottom elements down */}
+
+          {visibleFields.includes('qrCode') && (
+            <div title="Scan to view staff details" className="cursor-help">
+              <div className="p-1 bg-white border rounded-md shadow-sm">
+                  <QRCodeCanvas value={qrCodeContent} size={64} />
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Footer */}
         <footer className="w-full mt-auto">
-          <div className="relative h-8 bg-gray-800 mx-[-1rem] flex items-center justify-center">
-              <div 
-                  className="absolute top-1/2 left-0 w-full h-0.5 bg-yellow-400"
-                  style={{transform: 'translateY(-50%)'}}
-              ></div>
-              <div className="relative bg-gray-800 px-6 z-10">
-                  <span className="text-white font-bold text-lg">{record.spNumber}</span>
-              </div>
-          </div>
+          {visibleFields.includes('spNumber') && (
+            <div className="relative h-8 bg-gray-800 mx-[-1rem] flex items-center justify-center">
+                <div 
+                    className="absolute top-1/2 left-0 w-full h-0.5 bg-yellow-400"
+                    style={{transform: 'translateY(-50%)'}}
+                ></div>
+                <div className="relative bg-gray-800 px-6 z-10">
+                    <span className="text-white font-bold text-lg">{record.spNumber}</span>
+                </div>
+            </div>
+          )}
           <p className="text-center text-gray-600 mt-2 text-sm">{companyWebsite}</p>
         </footer>
     </div>

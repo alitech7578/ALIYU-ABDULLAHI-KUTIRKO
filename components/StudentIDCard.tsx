@@ -1,5 +1,5 @@
 import React from 'react';
-import { Student } from '../types';
+import { Student, IDCardLayout } from '../types';
 import { QRCodeCanvas } from 'qrcode.react';
 
 interface StudentIDCardProps {
@@ -8,10 +8,17 @@ interface StudentIDCardProps {
   companyLogo: string | null;
   companyWebsite: string;
   companyAddress: string;
+  layoutSettings: IDCardLayout;
 }
 
-const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress }) => {
-  
+const backgroundPatternStyle = {
+  backgroundImage: 'radial-gradient(circle at 1px 1px, #E5E7EB 1px, transparent 0)',
+  backgroundSize: '15px 15px',
+};
+
+const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress, layoutSettings }) => {
+  const { visibleFields } = layoutSettings;
+
   const renderCompanyName = (name: string) => {
     const parts = name.split(/(\(TECHNICAL\))/i);
     return (
@@ -41,6 +48,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
   return (
     <div
       className="w-[512px] h-[320px] bg-white rounded-xl shadow-lg p-0 flex flex-col font-sans text-gray-800 overflow-hidden"
+      style={backgroundPatternStyle}
     >
       <div className="flex flex-col h-full">
         {/* Header */}
@@ -69,24 +77,26 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           
           {/* Middle: Details */}
           <div className="flex-grow flex flex-col justify-center gap-2">
-            <h2 className="text-3xl font-bold uppercase tracking-tight leading-tight">
-              {fullName}
-            </h2>
-            <p className="text-md text-gray-600 uppercase">{student.department}</p>
-            <div className="mt-2 border-t pt-2">
-              <p className="font-semibold text-gray-500 text-xs">REGISTRATION NO.</p>
-              <p className="font-bold text-lg">{student.registrationNumber}</p>
-            </div>
+            {visibleFields.includes('fullName') && <h2 className="text-3xl font-bold uppercase tracking-tight leading-tight">{fullName}</h2>}
+            {visibleFields.includes('department') && <p className="text-md text-gray-600 uppercase">{student.department}</p>}
+            {visibleFields.includes('registrationNumber') && (
+              <div className="mt-2 border-t pt-2">
+                <p className="font-semibold text-gray-500 text-xs">REGISTRATION NO.</p>
+                <p className="font-bold text-lg">{student.registrationNumber}</p>
+              </div>
+            )}
           </div>
 
           {/* Right: QR Code */}
-          <div className="flex flex-col items-center justify-center gap-2 pr-2">
-              <div title="Scan to view student details" className="cursor-help">
-                <div className="p-1 bg-white border rounded-md shadow-sm">
-                    <QRCodeCanvas value={qrCodeContent} size={80} />
+          {visibleFields.includes('qrCode') && (
+            <div className="flex flex-col items-center justify-center gap-2 pr-2">
+                <div title="Scan to view student details" className="cursor-help">
+                  <div className="p-1 bg-white border rounded-md shadow-sm">
+                      <QRCodeCanvas value={qrCodeContent} size={80} />
+                  </div>
                 </div>
-              </div>
-          </div>
+            </div>
+          )}
         </main>
 
         {/* Footer */}

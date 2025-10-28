@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { toPng } from 'html-to-image';
-import { DataRecord } from '../types';
+import { DataRecord, IDCardLayoutSettings } from '../types';
 import IDCard from './IDCard';
 import IDCardBack from './IDCardBack';
 import { XMarkIcon, DownloadIcon, PrinterIcon } from './IconComponents';
@@ -14,9 +14,10 @@ interface IDCardModalProps {
   companyAddress: string;
   companyWebsite: string;
   provostSignature: string | null;
+  layoutSettings: IDCardLayoutSettings;
 }
 
-const IDCardModal: React.FC<IDCardModalProps> = ({ record, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature }) => {
+const IDCardModal: React.FC<IDCardModalProps> = ({ record, onClose, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, provostSignature, layoutSettings }) => {
   const idCardRef = useRef<HTMLDivElement>(null);
 
   if (!record) return null;
@@ -62,7 +63,7 @@ const IDCardModal: React.FC<IDCardModalProps> = ({ record, onClose, companyName,
             </button>
             <div ref={idCardRef} className="printable-id-card">
               <div className="flex flex-col lg:flex-row gap-4 items-start">
-                <IDCard record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} />
+                <IDCard record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.staff} />
                 <IDCardBack record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />
               </div>
             </div>
