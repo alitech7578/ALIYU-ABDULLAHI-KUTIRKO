@@ -72,19 +72,19 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         </header>
 
         {/* Main Content */}
-        <main className="flex flex-col items-center text-center flex-grow justify-center py-4 gap-4">
+        <main className="flex flex-col items-center text-center flex-grow py-2">
           <div className="flex flex-col items-center">
             <img
               src={record.photo}
               alt={fullName}
-              className="w-36 h-36 rounded-md object-cover border-2 border-gray-300 mx-auto"
+              className="w-32 h-32 rounded-md object-cover border-2 border-gray-300 mx-auto"
             />
-            {visibleFields.includes('fullName') && <h2 className="mt-3 text-2xl font-bold uppercase tracking-tight">{fullName}</h2>}
-            {visibleFields.includes('rank') && <p className="text-sm text-gray-500 uppercase">{record.rank}</p>}
+            {visibleFields.includes('fullName') && <h2 className="mt-2 text-xl font-bold uppercase tracking-tight">{fullName}</h2>}
+            {visibleFields.includes('rank') && <p className="text-sm text-gray-500 uppercase mt-1">{record.rank}</p>}
           </div>
           
           {visibleMainContentFields.length > 0 && (
-            <div className="flex flex-col gap-1 text-md text-center">
+            <div className="flex flex-col gap-1 text-sm text-center my-2">
               {visibleMainContentFields.map(fieldId => {
                 if (fieldId === 'department') {
                   return <p key={fieldId}><span className="font-semibold">Dept.:</span> {record.department}</p>;
@@ -102,7 +102,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {visibleFields.includes('qrCode') && (
             <div title="Scan to view staff details" className="cursor-help">
               <div className="p-1 bg-white border rounded-md shadow-sm">
-                  <QRCodeCanvas value={qrCodeContent} size={64} />
+                  <QRCodeCanvas value={qrCodeContent} size={56} />
               </div>
             </div>
           )}
