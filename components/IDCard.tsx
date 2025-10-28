@@ -39,18 +39,8 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
   };
   
   const fullName = [record.name, record.middleName, record.surname].filter(Boolean).join(' ');
-  const qrCodeContent = JSON.stringify({
-    ID: record.id,
-    FullName: fullName,
-    SP_Number: record.spNumber,
-    Rank: record.rank,
-    Department: record.department,
-    BloodGroup: record.bloodGroup,
-    StateOfOrigin: `${record.lg}, ${record.state}`,
-    Contact: record.phoneNumber,
-    Email: record.email,
-    MaritalStatus: record.marriedStatus,
-  });
+  // Generate a URL that points to the public view of the ID card
+  const qrCodeUrl = `${window.location.origin}${window.location.pathname}#/id/${record.id}`;
 
   const mainContentFields = ['department', 'bloodGroup'];
   const visibleMainContentFields = visibleFields.filter(f => mainContentFields.includes(f));
@@ -98,9 +88,9 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           )}
           
           {visibleFields.includes('qrCode') && (
-            <div title="Scan to view staff details" className="cursor-help mt-auto">
+            <div title="Scan to view public profile" className="cursor-help mt-auto">
               <div className="p-1 bg-white border rounded-md shadow-sm">
-                  <QRCodeCanvas value={qrCodeContent} size={50} />
+                  <QRCodeCanvas value={qrCodeUrl} size={50} />
               </div>
             </div>
           )}

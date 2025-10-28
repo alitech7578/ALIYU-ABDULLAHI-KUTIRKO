@@ -37,13 +37,8 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
   };
   
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
-  const qrCodeContent = JSON.stringify({
-    ID: student.id,
-    FullName: fullName,
-    RegistrationNumber: student.registrationNumber,
-    Department: student.department,
-    Email: student.email,
-  });
+  // Generate a URL that points to the public view of the ID card
+  const qrCodeUrl = `${window.location.origin}${window.location.pathname}#/id/${student.id}`;
 
   return (
     <div
@@ -90,9 +85,9 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           {/* Right: QR Code */}
           {visibleFields.includes('qrCode') && (
             <div className="flex flex-col items-center justify-center gap-2 pr-2">
-                <div title="Scan to view student details" className="cursor-help">
+                <div title="Scan to view public profile" className="cursor-help">
                   <div className="p-1 bg-white border rounded-md shadow-sm">
-                      <QRCodeCanvas value={qrCodeContent} size={80} />
+                      <QRCodeCanvas value={qrCodeUrl} size={80} />
                   </div>
                 </div>
             </div>
