@@ -63,9 +63,9 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         {/* Header */}
         <header className="flex flex-col items-center text-center">
           {companyLogo && (
-            <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain" />
+            <img src={companyLogo} alt="Company Logo" className="h-10 w-10 object-contain" />
           )}
-          <h1 className="mt-2 text-base font-bold text-gray-600 uppercase tracking-wide px-2">
+          <h1 className="mt-1 text-base font-bold text-gray-600 uppercase tracking-wide px-2">
             {renderCompanyName(companyName)}
           </h1>
           <p className="text-xs text-gray-500 mt-1">{companyAddress}</p>
@@ -77,14 +77,14 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
             <img
               src={record.photo}
               alt={fullName}
-              className="w-28 h-28 rounded-md object-cover border-2 border-gray-300 mx-auto"
+              className="w-24 h-24 rounded-md object-cover border-2 border-gray-300 mx-auto"
             />
-            {visibleFields.includes('fullName') && <h2 className="mt-2 text-lg font-bold uppercase tracking-tight">{fullName}</h2>}
+            {visibleFields.includes('fullName') && <h2 className="mt-1 text-base font-bold uppercase tracking-tight">{fullName}</h2>}
             {visibleFields.includes('rank') && <p className="text-sm text-gray-500 uppercase mt-1">{record.rank}</p>}
           </div>
           
           {visibleMainContentFields.length > 0 && (
-            <div className="flex flex-col gap-1 text-sm text-center my-3">
+            <div className="flex flex-col gap-1 text-sm text-center my-2">
               {visibleMainContentFields.map(fieldId => {
                 if (fieldId === 'department') {
                   return <p key={fieldId}><span className="font-semibold">Dept.:</span> {record.department}</p>;
@@ -100,7 +100,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {visibleFields.includes('qrCode') && (
             <div title="Scan to view staff details" className="cursor-help mt-auto">
               <div className="p-1 bg-white border rounded-md shadow-sm">
-                  <QRCodeCanvas value={qrCodeContent} size={52} />
+                  <QRCodeCanvas value={qrCodeContent} size={50} />
               </div>
             </div>
           )}
