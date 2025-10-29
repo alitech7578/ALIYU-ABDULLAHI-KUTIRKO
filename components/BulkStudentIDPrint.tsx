@@ -30,6 +30,9 @@ const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClo
     const margin = 10;
     let y = margin;
 
+    const availWidth = pageWidth - margin * 2;
+    const availHeight = pageHeight - margin * 2;
+
     for (const student of students) {
         const element = document.getElementById(`student-card-pair-${student.id}`);
         if (!element) continue;
@@ -40,15 +43,22 @@ const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClo
             const elWidth = element.offsetWidth;
             const elHeight = element.offsetHeight;
             const aspectRatio = elWidth / elHeight;
-            const pdfImageWidth = pageWidth - margin * 2;
-            const pdfImageHeight = pdfImageWidth / aspectRatio;
+            
+            let pdfImageWidth = availWidth;
+            let pdfImageHeight = pdfImageWidth / aspectRatio;
+
+            if (pdfImageHeight > availHeight) {
+                pdfImageHeight = availHeight;
+                pdfImageWidth = pdfImageHeight * aspectRatio;
+            }
 
             if (y + pdfImageHeight > pageHeight - margin) {
                 pdf.addPage();
                 y = margin;
             }
-
-            pdf.addImage(dataUrl, 'PNG', margin, y, pdfImageWidth, pdfImageHeight);
+            
+            const x = margin + (availWidth - pdfImageWidth) / 2;
+            pdf.addImage(dataUrl, 'PNG', x, y, pdfImageWidth, pdfImageHeight);
             y += pdfImageHeight + 5;
 
         } catch (error) {
