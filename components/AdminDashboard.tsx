@@ -107,6 +107,23 @@ const AdminDashboard: React.FC = () => {
   const [companyContent, setCompanyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
   const [provostSignature, setProvostSignature] = useLocalStorage<string | null>('provost-signature', null);
   const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
+  const [settingsReady, setSettingsReady] = useState(false);
+
+  useEffect(() => {
+    // This effect ensures that if the stored settings are partial (from an older version),
+    // they get merged with the latest default structure to prevent crashes.
+    setLayoutSettings(prev => ({
+        staff: {
+            ...initialLayoutSettings.staff,
+            ...(prev?.staff || {}),
+        },
+        student: {
+            ...initialLayoutSettings.student,
+            ...(prev?.student || {}),
+        }
+    }));
+    setSettingsReady(true);
+  }, []); // Run only once on mount to hydrate settings safely
   
 
 
@@ -594,40 +611,46 @@ const AdminDashboard: React.FC = () => {
 
               <div className="border-t border-brand-secondary/50 pt-4">
                 <h3 className="text-xl font-bold text-brand-light mb-4">ID Card Layout Customization</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <h4 className="font-semibold text-brand-light mb-2">Staff ID Card Fields</h4>
-                    <div className="space-y-2">
-                      {allStaffFields.map(field => (
-                        <label key={field.id} className="flex items-center gap-3 text-brand-light cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-brand-secondary text-brand-accent focus:ring-brand-accent bg-brand-primary"
-                            checked={layoutSettings.staff.visibleFields.includes(field.id)}
-                            onChange={(e) => handleLayoutChange('staff', field.id, e.target.checked)}
-                          />
-                          {field.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-brand-light mb-2">Student ID Card Fields</h4>
+                {settingsReady ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <h4 className="font-semibold text-brand-light mb-2">Staff ID Card Fields</h4>
                       <div className="space-y-2">
-                        {allStudentFields.map(field => (
+                        {allStaffFields.map(field => (
                           <label key={field.id} className="flex items-center gap-3 text-brand-light cursor-pointer">
                             <input
                               type="checkbox"
                               className="h-4 w-4 rounded border-brand-secondary text-brand-accent focus:ring-brand-accent bg-brand-primary"
-                              checked={layoutSettings.student.visibleFields.includes(field.id)}
-                              onChange={(e) => handleLayoutChange('student', field.id, e.target.checked)}
+                              checked={layoutSettings.staff.visibleFields.includes(field.id)}
+                              onChange={(e) => handleLayoutChange('staff', field.id, e.target.checked)}
                             />
                             {field.label}
                           </label>
                         ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-brand-light mb-2">Student ID Card Fields</h4>
+                        <div className="space-y-2">
+                          {allStudentFields.map(field => (
+                            <label key={field.id} className="flex items-center gap-3 text-brand-light cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 rounded border-brand-secondary text-brand-accent focus:ring-brand-accent bg-brand-primary"
+                                checked={layoutSettings.student.visibleFields.includes(field.id)}
+                                onChange={(e) => handleLayoutChange('student', field.id, e.target.checked)}
+                              />
+                              {field.label}
+                            </label>
+                          ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="h-24 flex items-center justify-center">
+                    <SpinnerIcon className="w-8 h-8 text-brand-muted animate-spin" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
