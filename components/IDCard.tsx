@@ -54,12 +54,12 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
     'END:VCARD'
   ].join('\n');
 
-  const mainContentFields = ['department', 'bloodGroup'];
-  const visibleMainContentFields = visibleFields.filter(f => mainContentFields.includes(f));
+  const textDetailFields = ['rank', 'department', 'bloodGroup'];
+  const visibleTextDetailFields = visibleFields.filter(f => textDetailFields.includes(f));
 
   return (
     <div
-      className="w-[320px] h-[512px] bg-white rounded-xl shadow-lg font-sans text-gray-800 flex flex-col p-4"
+      className="w-[320px] h-[512px] bg-white rounded-xl shadow-lg font-sans text-gray-800 flex flex-col p-3"
       style={backgroundPatternStyle}
     >
         {/* Header */}
@@ -67,42 +67,35 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {companyLogo && (
             <img src={companyLogo} alt="Company Logo" className="h-10 w-10 object-contain" />
           )}
-          <h1 className="mt-1 text-base font-bold text-gray-600 uppercase tracking-wide px-2">
+          <h1 className="mt-1 text-sm font-bold text-gray-600 uppercase tracking-wide px-2">
             {renderCompanyName(companyName)}
           </h1>
-          <p className="text-xs text-gray-500 mt-1">{companyAddress}</p>
+          <p className="text-xs text-gray-500 mt-1 leading-tight">{companyAddress}</p>
         </header>
 
         {/* Main Content */}
-        <main className="flex flex-col items-center text-center flex-grow py-2">
-          <div className="flex flex-col items-center">
+        <main className="flex flex-col items-center text-center flex-grow">
+          <div className="flex flex-col items-center mt-2">
             <img
               src={record.photo}
               alt={fullName}
-              className="w-28 h-36 rounded-md object-cover border-2 border-gray-300 mx-auto"
+              className="w-24 h-32 rounded-md object-cover border-2 border-gray-300 mx-auto"
             />
-            {visibleFields.includes('fullName') && <h2 className="mt-1 text-base font-bold uppercase tracking-tight">{fullName}</h2>}
-            {visibleFields.includes('rank') && <p className="text-sm text-gray-500 uppercase mt-1">{record.rank}</p>}
+            {visibleFields.includes('fullName') && <h2 className="mt-2 text-base font-bold uppercase tracking-tight leading-tight">{fullName}</h2>}
           </div>
           
-          {visibleMainContentFields.length > 0 && (
-            <div className="flex flex-col gap-1 text-sm text-center mt-2 mb-4">
-              {visibleMainContentFields.map(fieldId => {
-                if (fieldId === 'department') {
-                  return <p key={fieldId}><span className="font-semibold">Dept.:</span> {record.department}</p>;
-                }
-                if (fieldId === 'bloodGroup') {
-                  return <p key={fieldId}><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>;
-                }
-                return null;
-              })}
+          {visibleTextDetailFields.length > 0 && (
+            <div className="flex flex-col gap-0 text-sm text-center mt-2">
+              {visibleFields.includes('rank') && <p className="text-gray-500 uppercase">{record.rank}</p>}
+              {visibleFields.includes('department') && <p><span className="font-semibold">Dept.:</span> {record.department}</p>}
+              {visibleFields.includes('bloodGroup') && <p><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>}
             </div>
           )}
           
           {visibleFields.includes('qrCode') && (
-            <div title="Scan to save contact details (vCard)" className="cursor-help mt-auto">
+            <div title="Scan to save contact details (vCard)" className="cursor-help mt-auto mb-2">
               <div className="p-1 bg-white border rounded-md shadow-sm">
-                  <QRCodeCanvas value={vCardData} size={80} />
+                  <QRCodeCanvas value={vCardData} size={110} />
               </div>
             </div>
           )}
@@ -111,7 +104,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         {/* Footer */}
         <footer className="w-full">
           {visibleFields.includes('spNumber') && (
-            <div className="relative h-8 bg-gray-800 mx-[-1rem] flex items-center justify-center">
+            <div className="relative h-8 bg-gray-800 mx-[-0.75rem] flex items-center justify-center">
                 <div 
                     className="absolute top-1/2 left-0 w-full h-0.5 bg-yellow-400"
                     style={{transform: 'translateY(-50%)'}}
@@ -121,7 +114,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                 </div>
             </div>
           )}
-          <p className="text-center text-gray-600 mt-2 text-sm">{companyWebsite}</p>
+          <p className="text-center text-gray-600 mt-1 text-sm">{companyWebsite}</p>
         </footer>
     </div>
   );
