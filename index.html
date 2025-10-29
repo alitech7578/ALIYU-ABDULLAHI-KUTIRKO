@@ -5,17 +5,53 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Data Collector Pro</title>
+    <script>
+      // Theme setup script to prevent FOUC (Flash of Unstyled Content)
+      (function() {
+        const theme = localStorage.getItem('theme');
+        // Default to dark theme if no theme is set or it's explicitly 'dark'
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <style>
+      :root {
+        /* Light Theme */
+        --brand-primary: 247 250 252; /* slate-50 */
+        --brand-secondary: 226 232 240; /* slate-200 */
+        --brand-accent: 61 82 213;
+        --brand-light: 13 13 43; /* text color */
+        --brand-muted: 100 116 139; /* slate-500 */
+      }
+      html.dark {
+        /* Dark Theme (Original) */
+        --brand-primary: 13 13 43;
+        --brand-secondary: 30 30 72;
+        --brand-accent: 61 82 213;
+        --brand-light: 255 255 255; /* text color */
+        --brand-muted: 169 169 169;
+      }
+      body {
+        background-color: rgb(var(--brand-primary));
+        color: rgb(var(--brand-light));
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
-              'brand-primary': '#0D0D2B',
-              'brand-secondary': '#1E1E48',
-              'brand-accent': '#3D52D5',
-              'brand-light': '#FFFFFF',
-              'brand-muted': '#A9A9A9',
+              'brand-primary': 'rgb(var(--brand-primary) / <alpha-value>)',
+              'brand-secondary': 'rgb(var(--brand-secondary) / <alpha-value>)',
+              'brand-accent': 'rgb(var(--brand-accent) / <alpha-value>)',
+              'brand-light': 'rgb(var(--brand-light) / <alpha-value>)',
+              'brand-muted': 'rgb(var(--brand-muted) / <alpha-value>)',
             }
           }
         }
@@ -34,7 +70,7 @@
 }
 </script>
 </head>
-  <body class="bg-brand-primary">
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

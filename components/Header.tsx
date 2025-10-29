@@ -1,5 +1,5 @@
-import React from 'react';
-import { DatabaseIcon, UserCircleIcon, LogoutIcon } from './IconComponents';
+import React, { useState, useEffect } from 'react';
+import { DatabaseIcon, UserCircleIcon, LogoutIcon, MoonIcon, SunIcon } from './IconComponents';
 
 interface User {
   username: string;
@@ -14,6 +14,37 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLogo }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('theme') as 'light' | 'dark') || 'dark');
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+
+  const themeToggleButton = (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-full hover:bg-brand-secondary/80 transition-colors"
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+    >
+      {theme === 'dark' ? (
+        <SunIcon className="w-6 h-6 text-yellow-300" />
+      ) : (
+        <MoonIcon className="w-6 h-6 text-brand-light" />
+      )}
+    </button>
+  );
+
   return (
     <header className="relative">
       <div className="flex justify-between items-center pt-4">
@@ -35,6 +66,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLog
 
         {user ? (
           <div className="w-48 flex-shrink-0 flex items-center justify-end gap-3 text-brand-light">
+            {themeToggleButton}
             <UserCircleIcon className="w-8 h-8"/>
             <div className="text-left hidden md:block">
               <p className="font-bold whitespace-nowrap">{user.username}</p>
@@ -52,7 +84,9 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLog
             )}
           </div>
         ) : (
-           <div className="w-48 hidden sm:block flex-shrink-0"></div>
+           <div className="w-48 flex justify-end flex-shrink-0">
+               {themeToggleButton}
+           </div>
         )}
       </div>
     </header>
