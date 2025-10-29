@@ -40,28 +40,19 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
   
   const fullName = [record.name, record.middleName, record.surname].filter(Boolean).join(' ');
   
-  // Generate a vCard string with all the record's details
-  const generateVCard = (rec: DataRecord): string => {
-    const base64Photo = rec.photo.split(',')[1] || '';
-    
-    const vCard = `BEGIN:VCARD
-VERSION:3.0
-N:${rec.surname};${rec.name};${rec.middleName};;
-FN:${fullName}
-ORG:${companyName}
-TITLE:${rec.rank}
-EMAIL:${rec.email}
-TEL;TYPE=WORK,VOICE:${rec.phoneNumber}
-PHOTO;ENCODING=b64;TYPE=JPEG:${base64Photo}
-X-DEPARTMENT:${rec.department}
-X-SP-NUMBER:${rec.spNumber}
-X-BLOOD-GROUP:${rec.bloodGroup}
-NOTE:State: ${rec.state}\\nLG: ${rec.lg}\\nMarital Status: ${rec.marriedStatus}
-END:VCARD`;
-    return vCard;
-  };
-
-  const vCardData = generateVCard(record);
+  const vCardData = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${record.surname};${record.name};${record.middleName};;`,
+    `FN:${fullName}`,
+    `ORG:${companyName.replace(/,/g, '\\,')}`,
+    `TITLE:${record.rank}`,
+    `EMAIL;TYPE=INTERNET:${record.email}`,
+    `TEL;TYPE=CELL:${record.phoneNumber}`,
+    `ADR;TYPE=WORK:;;${companyAddress.replace(/,/g, '\\,')};;;;`,
+    `NOTE:SP Number: ${record.spNumber}\\nDepartment: ${record.department}\\nBlood Group: ${record.bloodGroup}\\nMarital Status: ${record.marriedStatus}\\nState of Origin: ${record.state} / ${record.lg}`,
+    'END:VCARD'
+  ].join('\n');
 
   const mainContentFields = ['department', 'bloodGroup'];
   const visibleMainContentFields = visibleFields.filter(f => mainContentFields.includes(f));
@@ -109,7 +100,7 @@ END:VCARD`;
           )}
           
           {visibleFields.includes('qrCode') && (
-            <div title="Scan to import contact details" className="cursor-help mt-auto">
+            <div title="Scan to save contact details (vCard)" className="cursor-help mt-auto">
               <div className="p-1 bg-white border rounded-md shadow-sm">
                   <QRCodeCanvas value={vCardData} size={80} />
               </div>

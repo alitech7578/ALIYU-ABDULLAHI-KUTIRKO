@@ -38,25 +38,17 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
   
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
   
-  // Generate a vCard string with all the student's details
-  const generateVCard = (stud: Student): string => {
-    const base64Photo = stud.photo.split(',')[1] || '';
-    
-    const vCard = `BEGIN:VCARD
-VERSION:3.0
-N:${stud.surname};${stud.firstName};${stud.middleName};;
-FN:${fullName}
-ORG:${companyName}
-TITLE:Student
-EMAIL:${stud.email}
-PHOTO;ENCODING=b64;TYPE=JPEG:${base64Photo}
-X-DEPARTMENT:${stud.department}
-X-REG-NUMBER:${stud.registrationNumber}
-END:VCARD`;
-    return vCard;
-  };
-
-  const vCardData = generateVCard(student);
+  const vCardData = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${student.surname};${student.firstName};${student.middleName};;`,
+    `FN:${fullName}`,
+    `ORG:${companyName.replace(/,/g, '\\,')}`,
+    `TITLE:Student`,
+    `EMAIL;TYPE=INTERNET:${student.email}`,
+    `NOTE:Registration No: ${student.registrationNumber}\\nDepartment: ${student.department}`,
+    'END:VCARD'
+  ].join('\n');
 
   return (
     <div
@@ -103,7 +95,7 @@ END:VCARD`;
           {/* Right: QR Code */}
           {visibleFields.includes('qrCode') && (
             <div className="flex flex-col items-center justify-center gap-2 pr-2">
-                <div title="Scan to import contact details" className="cursor-help">
+                <div title="Scan to save contact details (vCard)" className="cursor-help">
                   <div className="p-1 bg-white border rounded-md shadow-sm">
                       <QRCodeCanvas value={vCardData} size={96} />
                   </div>
