@@ -4,7 +4,7 @@ import Header from './Header';
 import DataForm from './DataForm';
 import DataTable from './DataTable';
 import BulkIDPrint from './BulkIDPrint';
-import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon } from './IconComponents';
+import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon, UserPlusIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import ImportModal from './ImportModal';
 import StudentForm from './StudentForm';
@@ -13,6 +13,7 @@ import StudentIDCardModal from './StudentIDCardModal';
 import BulkStudentIDPrint from './BulkStudentIDPrint';
 import StudentImportModal from './StudentImportModal';
 import ConfirmationModal from './ConfirmationModal';
+import BulkGenerateModal from './BulkGenerateModal';
 
 type SortDirection = 'ascending' | 'descending';
 interface SortConfig<T> {
@@ -84,6 +85,7 @@ const AdminDashboard: React.FC = () => {
   const [studentsToPrint, setStudentsToPrint] = useState<Student[]>([]);
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isStudentImportModalVisible, setIsStudentImportModalVisible] = useState(false);
+  const [isBulkGenerateModalVisible, setIsBulkGenerateModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'staff' | 'students'>('staff');
   const [selectedStudentForId, setSelectedStudentForId] = useState<Student | null>(null);
   const [editingRecord, setEditingRecord] = useState<DataRecord | null>(null);
@@ -255,6 +257,15 @@ const AdminDashboard: React.FC = () => {
   const handleImportRecords = (newRecords: DataRecord[]) => {
     setRecords(prev => [...newRecords, ...prev]);
     setIsImportModalVisible(false);
+  };
+  
+  const handleBulkAdd = (newItems: (DataRecord | Student)[]) => {
+    if (activeTab === 'staff') {
+        setRecords(prev => [...(newItems as DataRecord[]), ...prev]);
+    } else {
+        setStudents(prev => [...(newItems as Student[]), ...prev]);
+    }
+    setIsBulkGenerateModalVisible(false);
   };
 
   const handleAddOrUpdateStudent = (student: Student) => {
@@ -466,6 +477,10 @@ const AdminDashboard: React.FC = () => {
                         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-muted" />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
+                      <button onClick={() => setIsBulkGenerateModalVisible(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-primary/80 hover:bg-brand-primary rounded-lg text-white font-semibold transition-colors">
+                          <UserPlusIcon className="w-5 h-5" />
+                          <span>Bulk Add</span>
+                      </button>
                       <button onClick={() => setIsImportModalVisible(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-primary/80 hover:bg-brand-primary rounded-lg text-white font-semibold transition-colors">
                           <UploadIcon className="w-5 h-5" />
                           <span>Import</span>
@@ -527,6 +542,10 @@ const AdminDashboard: React.FC = () => {
                         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-muted" />
                     </div>
                      <div className="flex items-center gap-2 flex-wrap">
+                      <button onClick={() => setIsBulkGenerateModalVisible(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-primary/80 hover:bg-brand-primary rounded-lg text-white font-semibold transition-colors">
+                          <UserPlusIcon className="w-5 h-5" />
+                          <span>Bulk Add</span>
+                      </button>
                       <button onClick={() => setIsStudentImportModalVisible(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-primary/80 hover:bg-brand-primary rounded-lg text-white font-semibold transition-colors">
                           <UploadIcon className="w-5 h-5" />
                           <span>Import</span>
@@ -668,6 +687,14 @@ const AdminDashboard: React.FC = () => {
                 isOpen={isStudentImportModalVisible}
                 onClose={() => setIsStudentImportModalVisible(false)}
                 onImport={handleImportStudents}
+            />
+        )}
+        {isBulkGenerateModalVisible && (
+            <BulkGenerateModal
+                isOpen={isBulkGenerateModalVisible}
+                onClose={() => setIsBulkGenerateModalVisible(false)}
+                onBulkAdd={handleBulkAdd}
+                recordType={activeTab}
             />
         )}
         {selectedStudentForId && (
