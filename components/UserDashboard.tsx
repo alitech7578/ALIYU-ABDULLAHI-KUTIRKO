@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { DataRecord } from '../types';
+// FIX: Import IDCardLayoutSettings to use for layout settings state.
+import { DataRecord, IDCardLayoutSettings } from '../types';
 import Header from './Header';
 import DataForm from './DataForm';
 import DataTable from './DataTable';
@@ -7,6 +8,16 @@ import { PlusCircleIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const API_URL = 'http://localhost:3001/api';
+
+// FIX: Add initial layout settings to be used with useLocalStorage.
+const initialLayoutSettings: IDCardLayoutSettings = {
+    staff: {
+        visibleFields: ['fullName', 'rank', 'department', 'bloodGroup', 'spNumber', 'qrCode'],
+    },
+    student: {
+        visibleFields: ['fullName', 'department', 'registrationNumber', 'qrCode'],
+    },
+};
 
 interface User {
   username: string;
@@ -30,6 +41,11 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
   const [companyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
   // FIX: Added provostSignature to provide to DataTable.
   const [provostSignature] = useLocalStorage<string | null>('provost-signature', null);
+  // FIX: Add layoutSettings state to pass to DataTable.
+  const [layoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
+  // FIX: Add saveStatus state for DataForm.
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
 
   // FIX: Add state for pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,6 +68,17 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
   useEffect(() => {
     fetchUserRecords();
   }, [fetchUserRecords]);
+
+  // FIX: Add effect to handle form closure after a successful save.
+  useEffect(() => {
+    if (saveStatus === 'saved') {
+        const timer = setTimeout(() => {
+            setIsFormVisible(false);
+            setSaveStatus('idle');
+        }, 1500);
+        return () => clearTimeout(timer);
+    }
+  }, [saveStatus]);
 
   // FIX: Add pagination calculations
   const totalPages = Math.ceil(records.length / recordsPerPage);
@@ -98,6 +125,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
     });
     formData.append('photo', photoFile);
 
+    setSaveStatus('saving');
     try {
         setError('');
         const response = await fetch(`${API_URL}/records`, {
@@ -110,9 +138,10 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
             throw new Error(errData.message || 'Failed to add record.');
         }
         await fetchUserRecords();
-        setIsFormVisible(false);
+        setSaveStatus('saved');
     } catch (err: any) {
         setError(err.message);
+        setSaveStatus('idle');
     }
   };
 
@@ -153,11 +182,12 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
               </div>
             </div>
             
-            {isFormVisible && <DataForm onSubmitRecord={addRecord} recordToEdit={null} />}
+            {/* FIX: Pass saveStatus prop to DataForm. */}
+            {isFormVisible && <DataForm onSubmitRecord={addRecord} recordToEdit={null} saveStatus={saveStatus} />}
           </div>
 
           <div className="mt-10">
-            {/* FIX: Pass all required props to DataTable, including provostSignature. */}
+            {/* FIX: Pass all required props to DataTable, including provostSignature and layoutSettings. */}
             <DataTable 
               records={currentRecords} 
               onDeleteRecord={deleteRecord}
@@ -170,6 +200,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, token, onLogout }) 
               companyAddress={companyAddress}
               companyWebsite={companyWebsite}
               provostSignature={provostSignature}
+              layoutSettings={layoutSettings}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}

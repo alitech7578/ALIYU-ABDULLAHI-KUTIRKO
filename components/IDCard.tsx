@@ -21,19 +21,21 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
   const { visibleFields } = layoutSettings;
 
   const renderCompanyName = (name: string) => {
-    // This function specifically looks for "(TECHNICAL)" to style it red, as per the sample image.
+    // This function specifically looks for "(TECHNICAL)" to style it red and move it to a new line.
     const parts = name.split(/(\(TECHNICAL\))/i);
     return (
       <>
-        {parts.map((part, index) =>
-          part.toLowerCase() === '(technical)' ? (
-            <span key={index} className="text-red-500">
-              {part}
-            </span>
-          ) : (
-            part
-          )
-        )}
+        {parts.map((part, index) => {
+          if (part.toLowerCase() === '(technical)') {
+            return (
+              <React.Fragment key={index}>
+                <br />
+                <span className="text-red-500">{part}</span>
+              </React.Fragment>
+            );
+          }
+          return part;
+        })}
       </>
     );
   };
@@ -67,7 +69,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {companyLogo && (
             <img src={companyLogo} alt="Company Logo" className="h-10 w-10 object-contain" />
           )}
-          <h1 className="text-sm font-bold text-gray-600 uppercase tracking-wide px-2">
+          <h1 className="text-[15px] font-bold text-gray-600 uppercase tracking-wide leading-tight px-2">
             {renderCompanyName(companyName)}
           </h1>
           <p className="text-xs text-gray-500 leading-tight">{companyAddress}</p>
@@ -85,10 +87,10 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           </div>
           
           {visibleTextDetailFields.length > 0 && (
-            <div className="flex flex-col gap-0 text-xs text-center leading-tight mt-0.5">
-              {visibleFields.includes('rank') && <p className="text-gray-500 uppercase">{record.rank}</p>}
-              {visibleFields.includes('department') && <p><span className="font-semibold">Dept.:</span> {record.department}</p>}
-              {visibleFields.includes('bloodGroup') && <p><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>}
+            <div className="flex flex-col gap-0 text-center mt-0.5">
+              {visibleFields.includes('rank') && <p className="text-gray-500 uppercase leading-tight text-lg font-semibold">{record.rank}</p>}
+              {visibleFields.includes('department') && <p className="text-sm leading-tight"><span className="font-semibold">Dept.:</span> {record.department}</p>}
+              {visibleFields.includes('bloodGroup') && <p className="text-sm leading-tight"><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>}
             </div>
           )}
           
