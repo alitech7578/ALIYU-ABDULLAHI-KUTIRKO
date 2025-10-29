@@ -37,8 +37,26 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
   };
   
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
-  // Generate a URL that points to the public view of the ID card
-  const qrCodeUrl = `${window.location.origin}${window.location.pathname}#/id/${student.id}`;
+  
+  // Generate a vCard string with all the student's details
+  const generateVCard = (stud: Student): string => {
+    const base64Photo = stud.photo.split(',')[1] || '';
+    
+    const vCard = `BEGIN:VCARD
+VERSION:3.0
+N:${stud.surname};${stud.firstName};${stud.middleName};;
+FN:${fullName}
+ORG:${companyName}
+TITLE:Student
+EMAIL:${stud.email}
+PHOTO;ENCODING=b64;TYPE=JPEG:${base64Photo}
+X-DEPARTMENT:${stud.department}
+X-REG-NUMBER:${stud.registrationNumber}
+END:VCARD`;
+    return vCard;
+  };
+
+  const vCardData = generateVCard(student);
 
   return (
     <div
@@ -66,7 +84,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             <img
               src={student.photo}
               alt={fullName}
-              className="w-32 h-40 object-cover rounded-md border-2 border-gray-300"
+              className="w-28 h-36 object-cover rounded-md border-2 border-gray-300"
             />
           </div>
           
@@ -85,9 +103,9 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           {/* Right: QR Code */}
           {visibleFields.includes('qrCode') && (
             <div className="flex flex-col items-center justify-center gap-2 pr-2">
-                <div title="Scan to view public profile" className="cursor-help">
+                <div title="Scan to import contact details" className="cursor-help">
                   <div className="p-1 bg-white border rounded-md shadow-sm">
-                      <QRCodeCanvas value={qrCodeUrl} size={80} />
+                      <QRCodeCanvas value={vCardData} size={96} />
                   </div>
                 </div>
             </div>

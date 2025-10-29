@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DataRecord, MarriedStatus } from '../types';
 import { PlusIcon, UploadIcon, SpinnerIcon, CheckCircleIcon } from './IconComponents';
 import { nigeriaStates } from '../data/nigeria-data';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface DataFormProps {
   onSubmitRecord: (record: DataRecord) => void;
@@ -20,6 +21,7 @@ const InputField = ({ id, label, type, value, onChange, placeholder, isRequired 
     <input
       type={type}
       id={id}
+      name={id}
       value={value}
       onChange={onChange}
       placeholder={placeholder}
@@ -29,73 +31,83 @@ const InputField = ({ id, label, type, value, onChange, placeholder, isRequired 
   </div>
 );
 
+const initialFormState = {
+  name: '',
+  middleName: '',
+  surname: '',
+  email: '',
+  department: '',
+  spNumber: '',
+  rank: '',
+  state: '',
+  lg: '',
+  marriedStatus: 'Single' as MarriedStatus,
+  bloodGroup: '',
+  phoneNumber: '',
+  photo: '',
+};
+
+type FormState = typeof initialFormState;
+
 const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveStatus }) => {
-  const [name, setName] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [surname, setSurname] = useState('');
-  const [email, setEmail] = useState('');
-  const [department, setDepartment] = useState('');
-  const [spNumber, setSpNumber] = useState('');
-  const [rank, setRank] = useState('');
-  const [state, setState] = useState('');
-  const [lg, setLg] = useState('');
-  const [lgaOptions, setLgaOptions] = useState<string[]>([]);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [marriedStatus, setMarriedStatus] = useState<MarriedStatus>('Single');
-  const [bloodGroup, setBloodGroup] = useState('');
-  const [photoBase64, setPhotoBase64] = useState<string>('');
+  const isEditing = !!recordToEdit;
+  const [draft, setDraft] = useLocalStorage<FormState>('staff-form-draft', initialFormState);
+
+  const [fields, setFields] = useState<FormState>(() => {
+    if (isEditing) {
+      return {
+        name: recordToEdit.name,
+        middleName: recordToEdit.middleName,
+        surname: recordToEdit.surname,
+        email: recordToEdit.email,
+        department: recordToEdit.department,
+        spNumber: recordToEdit.spNumber,
+        rank: recordToEdit.rank,
+        state: recordToEdit.state,
+        lg: recordToEdit.lg,
+        marriedStatus: recordToEdit.marriedStatus,
+        bloodGroup: recordToEdit.bloodGroup,
+        phoneNumber: recordToEdit.phoneNumber,
+        photo: recordToEdit.photo,
+      };
+    }
+    return draft;
+  });
+  
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
+  const [lgaOptions, setLgaOptions] = useState<string[]>([]);
 
   useEffect(() => {
-    if (recordToEdit) {
-      setName(recordToEdit.name);
-      setMiddleName(recordToEdit.middleName);
-      setSurname(recordToEdit.surname);
-      setEmail(recordToEdit.email);
-      setDepartment(recordToEdit.department);
-      setSpNumber(recordToEdit.spNumber);
-      setRank(recordToEdit.rank);
-      setState(recordToEdit.state);
-      setLg(recordToEdit.lg);
-      setPhoneNumber(recordToEdit.phoneNumber);
-      setMarriedStatus(recordToEdit.marriedStatus);
-      setBloodGroup(recordToEdit.bloodGroup);
-      setPhotoBase64(recordToEdit.photo);
-      setPhotoPreview(recordToEdit.photo);
-    } else {
-      setName('');
-      setMiddleName('');
-      setSurname('');
-      setEmail('');
-      setDepartment('');
-      setSpNumber('');
-      setRank('');
-      setState('');
-      setLg('');
-      setPhoneNumber('');
-      setMarriedStatus('Single');
-      setBloodGroup('');
-      setPhotoBase64('');
-      setPhotoPreview('');
-      setError('');
+    setPhotoPreview(fields.photo);
+  }, [fields.photo]);
+
+  // Update draft in local storage when fields change in 'add new' mode
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(fields);
     }
-  }, [recordToEdit]);
+  }, [fields, isEditing, setDraft]);
 
   useEffect(() => {
-    if (state) {
-      setLgaOptions(nigeriaStates[state] || []);
-      // Do not reset lg if we are editing and state is the same
-      if (recordToEdit && recordToEdit.state !== state) {
-        setLg('');
-      } else if (!recordToEdit) {
-        setLg('');
-      }
+    if (fields.state) {
+      setLgaOptions(nigeriaStates[fields.state] || []);
     } else {
       setLgaOptions([]);
-      setLg('');
     }
-  }, [state, recordToEdit]);
+  }, [fields.state]);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const updatedFields = { ...fields, [name]: value };
+
+    // If state changes, reset LG
+    if (name === 'state') {
+        updatedFields.lg = '';
+    }
+
+    setFields(updatedFields);
+  };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -107,7 +119,7 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
       const reader = new FileReader();
       reader.onloadend = () => {
           const base64String = reader.result as string;
-          setPhotoBase64(base64String);
+          setFields(prev => ({ ...prev, photo: base64String }));
           setPhotoPreview(base64String);
       };
       reader.readAsDataURL(file);
@@ -117,7 +129,7 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !surname || !email || !state || !lg || !phoneNumber || !photoBase64 || !marriedStatus || !department || !spNumber || !rank || !bloodGroup) {
+    if (!fields.name || !fields.surname || !fields.email || !fields.state || !fields.lg || !fields.phoneNumber || !fields.photo || !fields.marriedStatus || !fields.department || !fields.spNumber || !fields.rank || !fields.bloodGroup) {
       setError('All fields, including photo, are required.');
       return;
     }
@@ -126,8 +138,7 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
     if (recordToEdit) {
        const updatedRecord: DataRecord = {
         ...recordToEdit,
-        name, middleName, surname, email, department, spNumber, rank, state, lg, phoneNumber, marriedStatus, bloodGroup,
-        photo: photoBase64
+        ...fields,
       };
       onSubmitRecord(updatedRecord);
     } else {
@@ -135,10 +146,10 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         createdBy: 'admin', // Hardcoded as there are no users
-        name, middleName, surname, email, department, spNumber, rank, state, lg, phoneNumber, marriedStatus, bloodGroup,
-        photo: photoBase64
+        ...fields
       };
       onSubmitRecord(newRecord);
+      setDraft(initialFormState); // Clear draft after submission
     }
   };
 
@@ -178,18 +189,18 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <InputField id="name" label="First Name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., John" />
-        <InputField id="middleName" label="Middle Name (Optional)" type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} placeholder="e.g., Quincy" isRequired={false} />
-        <InputField id="surname" label="Surname" type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="e.g., Doe" />
+        <InputField id="name" label="First Name" type="text" value={fields.name} onChange={handleChange} placeholder="e.g., John" />
+        <InputField id="middleName" label="Middle Name (Optional)" type="text" value={fields.middleName} onChange={handleChange} placeholder="e.g., Quincy" isRequired={false} />
+        <InputField id="surname" label="Surname" type="text" value={fields.surname} onChange={handleChange} placeholder="e.g., Doe" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <InputField id="email" label="Associated Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contact@example.com" />
-        <InputField id="phoneNumber" label="Phone Number" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="e.g., 08012345678" />
+        <InputField id="email" label="Associated Email" type="email" value={fields.email} onChange={handleChange} placeholder="contact@example.com" />
+        <InputField id="phoneNumber" label="Phone Number" type="tel" value={fields.phoneNumber} onChange={handleChange} placeholder="e.g., 08012345678" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <InputField id="department" label="Department" type="text" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g., Operations" />
-        <InputField id="spNumber" label="SP Number" type="text" value={spNumber} onChange={(e) => setSpNumber(e.target.value)} placeholder="e.g., SP12345" />
-        <InputField id="rank" label="Rank" type="text" value={rank} onChange={(e) => setRank(e.target.value)} placeholder="e.g., Officer" />
+        <InputField id="department" label="Department" type="text" value={fields.department} onChange={handleChange} placeholder="e.g., Operations" />
+        <InputField id="spNumber" label="SP Number" type="text" value={fields.spNumber} onChange={handleChange} placeholder="e.g., SP12345" />
+        <InputField id="rank" label="Rank" type="text" value={fields.rank} onChange={handleChange} placeholder="e.g., Officer" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -199,8 +210,9 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
           </label>
           <select
             id="state"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
+            name="state"
+            value={fields.state}
+            onChange={handleChange}
             required
             className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors"
           >
@@ -216,9 +228,10 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
           </label>
           <select
             id="lg"
-            value={lg}
-            onChange={(e) => setLg(e.target.value)}
-            disabled={!state}
+            name="lg"
+            value={fields.lg}
+            onChange={handleChange}
+            disabled={!fields.state}
             required
             className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors disabled:bg-brand-secondary/50 disabled:cursor-not-allowed"
           >
@@ -237,8 +250,9 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
           </label>
           <select
             id="marriedStatus"
-            value={marriedStatus}
-            onChange={(e) => setMarriedStatus(e.target.value as MarriedStatus)}
+            name="marriedStatus"
+            value={fields.marriedStatus}
+            onChange={handleChange}
             required
             className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors"
           >
@@ -253,8 +267,9 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
           </label>
           <select
             id="bloodGroup"
-            value={bloodGroup}
-            onChange={(e) => setBloodGroup(e.target.value)}
+            name="bloodGroup"
+            value={fields.bloodGroup}
+            onChange={handleChange}
             required
             className="block w-full px-4 py-3 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent transition-colors"
           >

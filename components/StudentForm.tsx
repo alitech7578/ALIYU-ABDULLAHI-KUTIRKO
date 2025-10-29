@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
 import { PlusIcon, UploadIcon, SpinnerIcon, CheckCircleIcon } from './IconComponents';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface StudentFormProps {
   onSubmitStudent: (student: Student) => void;
@@ -16,6 +17,7 @@ const InputField = ({ id, label, type, value, onChange, placeholder, isRequired 
     <input
       type={type}
       id={id}
+      name={id}
       value={value}
       onChange={onChange}
       placeholder={placeholder}
@@ -25,53 +27,68 @@ const InputField = ({ id, label, type, value, onChange, placeholder, isRequired 
   </div>
 );
 
+const initialFormState = {
+  firstName: '',
+  middleName: '',
+  surname: '',
+  email: '',
+  department: '',
+  registrationNumber: '',
+  photo: '',
+};
+
+type FormState = typeof initialFormState;
+
 const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdit, saveStatus }) => {
-  const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [surname, setSurname] = useState('');
-  const [email, setEmail] = useState('');
-  const [department, setDepartment] = useState('');
-  const [registrationNumber, setRegistrationNumber] = useState('');
-  const [photoBase64, setPhotoBase64] = useState<string>('');
+  const isEditing = !!studentToEdit;
+  const [draft, setDraft] = useLocalStorage<FormState>('student-form-draft', initialFormState);
+
+  const [fields, setFields] = useState<FormState>(() => {
+      if (isEditing) {
+          return {
+              firstName: studentToEdit.firstName,
+              middleName: studentToEdit.middleName,
+              surname: studentToEdit.surname,
+              email: studentToEdit.email,
+              department: studentToEdit.department,
+              registrationNumber: studentToEdit.registrationNumber,
+              photo: studentToEdit.photo,
+          };
+      }
+      return draft;
+  });
+
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
   
   useEffect(() => {
-    if (studentToEdit) {
-      setFirstName(studentToEdit.firstName);
-      setMiddleName(studentToEdit.middleName);
-      setSurname(studentToEdit.surname);
-      setEmail(studentToEdit.email);
-      setDepartment(studentToEdit.department);
-      setRegistrationNumber(studentToEdit.registrationNumber);
-      setPhotoBase64(studentToEdit.photo);
-      setPhotoPreview(studentToEdit.photo);
-    } else {
-      setFirstName('');
-      setMiddleName('');
-      setSurname('');
-      setEmail('');
-      setDepartment('');
-      setRegistrationNumber('');
-      setPhotoBase64('');
-      setPhotoPreview('');
-      setError('');
+    setPhotoPreview(fields.photo);
+  }, [fields.photo]);
+
+  // Update draft in local storage when fields change in 'add new' mode
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(fields);
     }
-  }, [studentToEdit]);
+  }, [fields, isEditing, setDraft]);
+
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      setFields(prev => ({ ...prev, [name]: value }));
+  };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setError(''); // Clear previous error
 
-      // Validate file type
       const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         setError('Invalid file format. Please upload a PNG, JPG, or WEBP image.');
         return;
       }
 
-      // Validate file size
       if (file.size > 2 * 1024 * 1024) { // 2MB limit
         setError('Image size should not exceed 2MB.');
         return;
@@ -80,7 +97,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
       const reader = new FileReader();
       reader.onloadend = () => {
           const base64String = reader.result as string;
-          setPhotoBase64(base64String);
+          setFields(prev => ({ ...prev, photo: base64String }));
           setPhotoPreview(base64String);
       };
       reader.readAsDataURL(file);
@@ -89,7 +106,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !surname || !email || !department || !registrationNumber || !photoBase64) {
+    if (!fields.firstName || !fields.surname || !fields.email || !fields.department || !fields.registrationNumber || !fields.photo) {
       setError('All fields, including photo, are required.');
       return;
     }
@@ -98,8 +115,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
     if (studentToEdit) {
       const updatedStudent: Student = {
         ...studentToEdit,
-        firstName, middleName, surname, email, department, registrationNumber,
-        photo: photoBase64,
+        ...fields
       };
       onSubmitStudent(updatedStudent);
     } else {
@@ -107,10 +123,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         createdBy: 'admin', // Hardcoded as there are no users
-        firstName, middleName, surname, email, department, registrationNumber,
-        photo: photoBase64,
+        ...fields
       };
       onSubmitStudent(newStudent);
+      setDraft(initialFormState); // Clear draft after submission
     }
   };
 
@@ -150,16 +166,16 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <InputField id="firstName" label="First Name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="e.g., Jane" />
-        <InputField id="middleName" label="Middle Name (Optional)" type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} placeholder="e.g., Marie" isRequired={false} />
-        <InputField id="surname" label="Surname" type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder="e.g., Smith" />
+        <InputField id="firstName" label="First Name" type="text" value={fields.firstName} onChange={handleChange} placeholder="e.g., Jane" />
+        <InputField id="middleName" label="Middle Name (Optional)" type="text" value={fields.middleName} onChange={handleChange} placeholder="e.g., Marie" isRequired={false} />
+        <InputField id="surname" label="Surname" type="text" value={fields.surname} onChange={handleChange} placeholder="e.g., Smith" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <InputField id="email" label="Student Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="student.email@example.com" />
-        <InputField id="registrationNumber" label="Registration Number" type="text" value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} placeholder="e.g., 2024/CS/001" />
+        <InputField id="email" label="Student Email" type="email" value={fields.email} onChange={handleChange} placeholder="student.email@example.com" />
+        <InputField id="registrationNumber" label="Registration Number" type="text" value={fields.registrationNumber} onChange={handleChange} placeholder="e.g., 2024/CS/001" />
       </div>
       <div className="grid grid-cols-1">
-        <InputField id="department" label="Department" type="text" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g., Computer Science" />
+        <InputField id="department" label="Department" type="text" value={fields.department} onChange={handleChange} placeholder="e.g., Computer Science" />
       </div>
       
       <div className="flex justify-end">

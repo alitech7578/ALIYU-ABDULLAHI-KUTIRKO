@@ -39,8 +39,29 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
   };
   
   const fullName = [record.name, record.middleName, record.surname].filter(Boolean).join(' ');
-  // Generate a URL that points to the public view of the ID card
-  const qrCodeUrl = `${window.location.origin}${window.location.pathname}#/id/${record.id}`;
+  
+  // Generate a vCard string with all the record's details
+  const generateVCard = (rec: DataRecord): string => {
+    const base64Photo = rec.photo.split(',')[1] || '';
+    
+    const vCard = `BEGIN:VCARD
+VERSION:3.0
+N:${rec.surname};${rec.name};${rec.middleName};;
+FN:${fullName}
+ORG:${companyName}
+TITLE:${rec.rank}
+EMAIL:${rec.email}
+TEL;TYPE=WORK,VOICE:${rec.phoneNumber}
+PHOTO;ENCODING=b64;TYPE=JPEG:${base64Photo}
+X-DEPARTMENT:${rec.department}
+X-SP-NUMBER:${rec.spNumber}
+X-BLOOD-GROUP:${rec.bloodGroup}
+NOTE:State: ${rec.state}\\nLG: ${rec.lg}\\nMarital Status: ${rec.marriedStatus}
+END:VCARD`;
+    return vCard;
+  };
+
+  const vCardData = generateVCard(record);
 
   const mainContentFields = ['department', 'bloodGroup'];
   const visibleMainContentFields = visibleFields.filter(f => mainContentFields.includes(f));
@@ -67,14 +88,14 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
             <img
               src={record.photo}
               alt={fullName}
-              className="w-24 h-24 rounded-md object-cover border-2 border-gray-300 mx-auto"
+              className="w-28 h-36 rounded-md object-cover border-2 border-gray-300 mx-auto"
             />
             {visibleFields.includes('fullName') && <h2 className="mt-1 text-base font-bold uppercase tracking-tight">{fullName}</h2>}
             {visibleFields.includes('rank') && <p className="text-sm text-gray-500 uppercase mt-1">{record.rank}</p>}
           </div>
           
           {visibleMainContentFields.length > 0 && (
-            <div className="flex flex-col gap-1 text-sm text-center my-2">
+            <div className="flex flex-col gap-1 text-sm text-center mt-2 mb-4">
               {visibleMainContentFields.map(fieldId => {
                 if (fieldId === 'department') {
                   return <p key={fieldId}><span className="font-semibold">Dept.:</span> {record.department}</p>;
@@ -88,9 +109,9 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           )}
           
           {visibleFields.includes('qrCode') && (
-            <div title="Scan to view public profile" className="cursor-help mt-auto">
+            <div title="Scan to import contact details" className="cursor-help mt-auto">
               <div className="p-1 bg-white border rounded-md shadow-sm">
-                  <QRCodeCanvas value={qrCodeUrl} size={50} />
+                  <QRCodeCanvas value={vCardData} size={80} />
               </div>
             </div>
           )}
