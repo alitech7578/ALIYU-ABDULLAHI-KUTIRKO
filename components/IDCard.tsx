@@ -95,7 +95,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {visibleFields.includes('qrCode') && (
             <div title="Scan to save contact details (vCard)" className="cursor-help mt-auto mb-0">
               <div className="p-1.5 bg-white border rounded-md shadow-sm">
-                  <QRCodeCanvas value={vCardData} size={160} />
+                  <QRCodeCanvas value={vCardData} size={192} />
               </div>
             </div>
           )}
