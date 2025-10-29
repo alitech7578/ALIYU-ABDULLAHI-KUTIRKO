@@ -65,7 +65,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
       style={backgroundPatternStyle}
     >
         {/* Header */}
-        <header className="flex flex-col items-center text-center flex-shrink-0">
+        <header className="flex flex-col items-center text-center flex-shrink-0 pt-1">
           {companyLogo && (
             <img src={companyLogo} alt="Company Logo" className="h-10 w-10 object-contain" />
           )}
@@ -81,16 +81,16 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
             <img
               src={record.photo}
               alt={fullName}
-              className="w-22 h-26 rounded-md object-cover border-2 border-gray-300"
+              className="w-32 h-40 rounded-md object-cover border-2 border-gray-300"
             />
-            {visibleFields.includes('fullName') && <h2 className="mt-0.5 text-[15px] font-bold uppercase tracking-tighter leading-tight px-1">{fullName}</h2>}
+            {visibleFields.includes('fullName') && <h2 className="mt-1 text-base font-bold uppercase tracking-tighter leading-tight px-1">{fullName}</h2>}
           </div>
           
           {visibleTextDetailFields.length > 0 && (
-            <div className="flex flex-col gap-0 text-center mt-0.5">
-              {visibleFields.includes('rank') && <p className="text-gray-500 uppercase leading-tight text-lg font-semibold">{record.rank}</p>}
-              {visibleFields.includes('department') && <p className="text-sm leading-tight"><span className="font-semibold">Dept.:</span> {record.department}</p>}
-              {visibleFields.includes('bloodGroup') && <p className="text-sm leading-tight"><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>}
+            <div className="flex flex-col gap-0 text-center mt-1">
+              {visibleFields.includes('rank') && <p className="text-gray-500 uppercase leading-tight text-base font-semibold">{record.rank}</p>}
+              {visibleFields.includes('department') && <p className="text-xs leading-tight mt-px"><span className="font-semibold">Dept.:</span> {record.department}</p>}
+              {visibleFields.includes('bloodGroup') && <p className="text-xs leading-tight mt-px"><span className="font-semibold">Blood Group:</span> {record.bloodGroup}</p>}
             </div>
           )}
           
@@ -98,9 +98,9 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           <div className="flex-grow" />
 
           {visibleFields.includes('qrCode') && (
-            <div title="Scan to save contact details (vCard)" className="cursor-help mb-0.5">
-              <div className="p-1.5 bg-white border rounded-md shadow-sm">
-                  <QRCodeCanvas value={vCardData} size={100} />
+            <div title="Scan to save contact details (vCard)" className="cursor-help mb-1">
+              <div className="p-1 bg-white border rounded-md shadow-sm">
+                  <QRCodeCanvas value={vCardData} size={84} />
               </div>
             </div>
           )}
