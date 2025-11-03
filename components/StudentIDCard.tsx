@@ -89,7 +89,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                 <span className="block break-words">{student.surname}</span>
               </h2>
             )}
-            {visibleFields.includes('department') && <p className="text-md text-gray-600 uppercase font-bold break-words mt-1">{student.department}</p>}
+            {visibleFields.includes('department') && <p className="text-md text-gray-500 uppercase font-bold break-words mt-1">{student.department}</p>}
             {visibleFields.includes('registrationNumber') && (
               <div className="mt-1 border-t pt-1">
                 <p className="font-semibold text-gray-500 text-xs">REGISTRATION NO.</p>
