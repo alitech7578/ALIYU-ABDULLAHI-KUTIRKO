@@ -90,9 +90,6 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                     </span>
                   </h2>
                 )}
-                {visibleFields.includes('department') && (
-                  <p className="text-gray-600 uppercase leading-tight text-xs font-semibold mt-1 break-words">{record.department}</p>
-                )}
               </div>
               
               {visibleFields.includes('qrCode') && (
@@ -106,17 +103,23 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           </div>
           
           {/* Details below photo and name */}
-          <div className="mt-4 space-y-1.5 text-left">
+          <div className="mt-3 space-y-1 text-left">
+            {visibleFields.includes('department') &&
+              <div>
+                <p className="text-gray-500 uppercase leading-tight text-[10px] font-semibold">Department</p>
+                <p className="text-gray-800 uppercase leading-tight text-base font-bold break-words">{record.department}</p>
+              </div>
+            }
             {visibleFields.includes('rank') && 
               <div>
                 <p className="text-gray-500 uppercase leading-tight text-[10px] font-semibold">Position</p>
-                <p className="text-gray-800 uppercase leading-tight text-sm font-bold">{record.rank}</p>
+                <p className="text-gray-800 uppercase leading-tight text-base font-bold">{record.rank}</p>
               </div>
             }
             {visibleFields.includes('bloodGroup') && 
               <div>
                 <p className="text-gray-500 uppercase leading-tight text-[10px] font-semibold">Blood Group</p>
-                <p className="text-gray-800 leading-tight text-sm font-bold">{record.bloodGroup}</p>
+                <p className="text-gray-800 leading-tight text-base font-bold">{record.bloodGroup}</p>
               </div>
             }
           </div>

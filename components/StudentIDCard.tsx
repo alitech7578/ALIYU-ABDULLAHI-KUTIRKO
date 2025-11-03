@@ -81,9 +81,15 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           </div>
           
           {/* Middle: Details */}
-          <div className="flex-grow flex flex-col justify-center gap-2">
-            {visibleFields.includes('fullName') && <h2 className="text-3xl font-bold uppercase tracking-tight leading-tight">{fullName}</h2>}
-            {visibleFields.includes('department') && <p className="text-md text-gray-600 uppercase">{student.department}</p>}
+          <div className="flex-grow flex flex-col justify-center gap-1 min-w-0">
+            {visibleFields.includes('fullName') && (
+              <h2 className="text-2xl font-extrabold uppercase tracking-tighter leading-tight">
+                <span className="break-words">{student.firstName}</span>
+                {student.middleName && <span className="block break-words">{student.middleName}</span>}
+                <span className="block break-words">{student.surname}</span>
+              </h2>
+            )}
+            {visibleFields.includes('department') && <p className="text-md text-gray-600 uppercase font-semibold break-words">{student.department}</p>}
             {visibleFields.includes('registrationNumber') && (
               <div className="mt-2 border-t pt-2">
                 <p className="font-semibold text-gray-500 text-xs">REGISTRATION NO.</p>
