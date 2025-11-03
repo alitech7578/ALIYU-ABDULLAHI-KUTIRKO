@@ -83,7 +83,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           {/* Middle: Details */}
           <div className="flex-grow flex flex-col justify-center gap-0 min-w-0">
             {visibleFields.includes('fullName') && (
-              <h2 className="text-xl font-extrabold uppercase tracking-tighter leading-tight">
+              <h2 className="text-lg font-extrabold uppercase tracking-tighter leading-tight">
                 <span className="break-words">{student.firstName}</span>
                 {student.middleName && <span className="block break-words">{student.middleName}</span>}
                 <span className="block break-words">{student.surname}</span>
