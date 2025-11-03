@@ -57,7 +57,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
     >
       <div className="flex flex-col h-full">
         {/* Header */}
-        <header className="flex items-center gap-3 p-3 border-b">
+        <header className="flex items-center gap-3 p-2 border-b">
           {companyLogo && (
             <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain" />
           )}
@@ -70,7 +70,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
         </header>
 
         {/* Main Content */}
-        <main className="flex-grow flex items-center p-3 gap-4">
+        <main className="flex-grow flex items-center p-2 gap-4">
           {/* Left: Photo */}
           <div className="flex-shrink-0">
             <img
@@ -81,17 +81,17 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           </div>
           
           {/* Middle: Details */}
-          <div className="flex-grow flex flex-col justify-center gap-1 min-w-0">
+          <div className="flex-grow flex flex-col justify-center gap-0 min-w-0">
             {visibleFields.includes('fullName') && (
-              <h2 className="text-2xl font-extrabold uppercase tracking-tighter leading-tight">
+              <h2 className="text-xl font-extrabold uppercase tracking-tighter leading-tight">
                 <span className="break-words">{student.firstName}</span>
                 {student.middleName && <span className="block break-words">{student.middleName}</span>}
                 <span className="block break-words">{student.surname}</span>
               </h2>
             )}
-            {visibleFields.includes('department') && <p className="text-md text-gray-600 uppercase font-semibold break-words">{student.department}</p>}
+            {visibleFields.includes('department') && <p className="text-md text-gray-600 uppercase font-bold break-words mt-1">{student.department}</p>}
             {visibleFields.includes('registrationNumber') && (
-              <div className="mt-2 border-t pt-2">
+              <div className="mt-1 border-t pt-1">
                 <p className="font-semibold text-gray-500 text-xs">REGISTRATION NO.</p>
                 <p className="font-bold text-lg">{student.registrationNumber}</p>
               </div>
@@ -103,7 +103,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             <div className="flex flex-col items-center justify-center gap-2 pr-2">
                 <div title="Scan to save contact details (vCard)" className="cursor-help">
                   <div className="p-1 bg-white border rounded-md shadow-sm">
-                      <QRCodeCanvas value={vCardData} size={96} />
+                      <QRCodeCanvas value={vCardData} size={80} />
                   </div>
                 </div>
             </div>

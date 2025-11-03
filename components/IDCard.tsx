@@ -21,14 +21,14 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
   const { visibleFields } = layoutSettings;
 
   const renderCompanyName = (name: string) => {
-    // This function specifically looks for "(TECHNICAL)" to style it red.
+    // This function specifically looks for "(TECHNICAL)" to style it.
     const parts = name.split(/(\(TECHNICAL\))/i);
     return (
       <>
         {parts.map((part, index) => {
           if (part.toLowerCase() === '(technical)') {
             return (
-              <span key={index} className="text-red-500">{part}</span>
+              <span key={index} className="text-orange-500 font-semibold">{part}</span>
             );
           }
           return part;
@@ -55,85 +55,76 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
 
   return (
     <div
-      className="w-[320px] h-[512px] bg-white rounded-xl shadow-lg font-sans text-gray-800 flex flex-col p-3"
+      className="w-[320px] h-[512px] bg-white rounded-xl shadow-lg font-sans text-gray-800 flex flex-col overflow-hidden"
       style={backgroundPatternStyle}
     >
         {/* Header */}
-        <header className="flex flex-col items-center text-center flex-shrink-0">
+        <header className="flex flex-col items-center text-center flex-shrink-0 pt-5 px-4">
           {companyLogo && (
-            <img src={companyLogo} alt="Company Logo" className="h-10 w-10 object-contain" />
+            <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain" />
           )}
-          <h1 className="text-xs font-bold text-gray-700 uppercase tracking-wide leading-tight px-2 mt-1">
+          <h1 className="text-sm font-bold text-gray-600 uppercase tracking-wide leading-tight px-2 mt-2">
             {renderCompanyName(companyName)}
           </h1>
           <p className="text-[10px] text-gray-500 leading-tight">{companyAddress}</p>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col mt-4">
-          <div className="flex gap-3 items-start">
-            {/* Photo */}
-            <img
-              src={record.photo}
-              alt={fullName}
-              className="w-[100px] h-[120px] rounded-md object-cover border-2 border-gray-300 flex-shrink-0"
-            />
-            
-            {/* Details Right of Photo */}
-            <div className="flex-1 flex justify-between min-w-0">
-              <div className="flex-1 flex flex-col min-w-0">
-                {visibleFields.includes('fullName') && (
-                  <h2 className="text-xl font-extrabold uppercase tracking-tighter leading-tight break-words">
-                    {record.name}
-                    <span className="block">
-                      {[record.middleName, record.surname].filter(Boolean).join(' ')}
-                    </span>
-                  </h2>
-                )}
-              </div>
-              
-              {visibleFields.includes('qrCode') && (
-                <div title="Scan to save contact details (vCard)" className="cursor-help flex-shrink-0 ml-2">
-                  <div className="p-1 bg-white border rounded-md shadow-sm">
-                    <QRCodeCanvas value={vCardData} size={56} />
-                  </div>
-                </div>
-              )}
+        {/* Main Content - Centered with gaps */}
+        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-4">
+          {/* Photo */}
+          <img
+            src={record.photo}
+            alt={fullName}
+            className="w-[120px] h-[140px] rounded-md object-cover border-2 border-gray-200"
+          />
+          
+          {/* Details Section */}
+          <div>
+            {visibleFields.includes('fullName') && (
+              <h2 className="text-lg font-extrabold uppercase tracking-tight leading-snug px-2">
+                {fullName}
+              </h2>
+            )}
+             {visibleFields.includes('rank') && (
+              <p className="text-md uppercase font-semibold mt-1">{record.rank}</p>
+             )}
+            <div className="text-xs space-y-0.5 mt-2 font-medium">
+                {visibleFields.includes('department') &&
+                    <p className="break-words">
+                        <span className="font-bold">Dept.:</span> {record.department}
+                    </p>
+                }
+                {visibleFields.includes('bloodGroup') && 
+                    <p>
+                        <span className="font-bold">Blood Group:</span> {record.bloodGroup}
+                    </p>
+                }
             </div>
           </div>
           
-          {/* Details below photo and name */}
-          <div className="mt-3 space-y-1 text-left">
-            {visibleFields.includes('department') &&
-              <div>
-                <p className="text-gray-500 uppercase leading-tight text-[10px] font-semibold">Department</p>
-                <p className="text-gray-800 uppercase leading-tight text-base font-bold break-words">{record.department}</p>
+           {/* QR Code */}
+           {visibleFields.includes('qrCode') && (
+            <div title="Scan to save contact details (vCard)" className="cursor-help">
+              <div className="p-1 bg-white border rounded-md shadow-sm">
+                <QRCodeCanvas value={vCardData} size={80} />
               </div>
-            }
-            {visibleFields.includes('rank') && 
-              <div>
-                <p className="text-gray-500 uppercase leading-tight text-[10px] font-semibold">Position</p>
-                <p className="text-gray-800 uppercase leading-tight text-base font-bold">{record.rank}</p>
-              </div>
-            }
-            {visibleFields.includes('bloodGroup') && 
-              <div>
-                <p className="text-gray-500 uppercase leading-tight text-[10px] font-semibold">Blood Group</p>
-                <p className="text-gray-800 leading-tight text-base font-bold">{record.bloodGroup}</p>
-              </div>
-            }
-          </div>
-          
-          <div className="flex-grow" />
-          
-          {/* SP Number / Registration Number at the bottom */}
-          {visibleFields.includes('spNumber') && (
-            <div className="text-left mt-2">
-                <p className="text-gray-500 uppercase leading-tight text-[10px] font-semibold">REGISTRATION NO.</p>
-                <p className="text-gray-800 uppercase leading-tight text-base font-bold tracking-wider">{record.spNumber}</p>
             </div>
           )}
         </main>
+
+        {/* Footer */}
+        <footer className="w-full mt-auto flex-shrink-0">
+            {visibleFields.includes('spNumber') && (
+                <div className="bg-gray-800 text-white text-center py-1.5 flex items-center justify-center gap-4">
+                  <div className="h-0.5 w-16 bg-yellow-400"></div>
+                    <p className="font-bold text-lg tracking-wider">{record.spNumber}</p>
+                  <div className="h-0.5 w-16 bg-yellow-400"></div>
+                </div>
+            )}
+             <div className="bg-white py-1">
+                <p className="text-center text-sm text-gray-600 font-medium">{companyWebsite}</p>
+            </div>
+        </footer>
     </div>
   );
 };
