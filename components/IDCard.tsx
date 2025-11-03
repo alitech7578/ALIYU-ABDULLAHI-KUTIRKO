@@ -59,7 +59,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
       style={backgroundPatternStyle}
     >
         {/* Header */}
-        <header className="flex flex-col items-center text-center flex-shrink-0 pt-5 px-4">
+        <header className="flex flex-col items-center text-center flex-shrink-0 pt-4 px-4">
           {companyLogo && (
             <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain" />
           )}
@@ -70,7 +70,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         </header>
 
         {/* Main Content - Centered with gaps */}
-        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-3">
+        <main className="flex-1 flex flex-col items-center text-center px-4 justify-around py-2">
           {/* Photo */}
           <img
             src={record.photo}
@@ -81,14 +81,14 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {/* Details Section */}
           <div>
             {visibleFields.includes('fullName') && (
-              <h2 className="text-lg font-extrabold uppercase tracking-tight leading-snug px-2 break-words">
+              <h2 className="text-base font-extrabold uppercase tracking-tight leading-snug px-2 break-words">
                 {fullName}
               </h2>
             )}
              {visibleFields.includes('rank') && (
-              <p className="text-md uppercase font-semibold mt-1 break-words">{record.rank}</p>
+              <p className="text-sm uppercase font-semibold mt-1 break-words">{record.rank}</p>
              )}
-            <div className="text-sm space-y-0.5 mt-1 font-bold">
+            <div className="text-xs space-y-0.5 mt-1 font-bold">
                 {visibleFields.includes('department') &&
                     <p className="break-words">
                         <span className="font-semibold">Dept.:</span> {record.department}
@@ -104,9 +104,9 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           
            {/* QR Code */}
            {visibleFields.includes('qrCode') && (
-            <div title="Scan to save contact details (vCard)" className="cursor-help pt-1">
+            <div title="Scan to save contact details (vCard)" className="cursor-help">
               <div className="p-1 bg-white border rounded-md shadow-sm">
-                <QRCodeCanvas value={vCardData} size={80} />
+                <QRCodeCanvas value={vCardData} size={72} />
               </div>
             </div>
           )}
