@@ -69,8 +69,8 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           <p className="text-[10px] text-gray-500 leading-tight">{companyAddress}</p>
         </header>
 
-        {/* Main Content - Reduced gaps to prevent overflow */}
-        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-y-0.5 py-1">
+        {/* Main Content - Using justify-evenly for robust vertical spacing */}
+        <main className="flex-1 flex flex-col items-center text-center px-4 justify-evenly">
           {/* Photo */}
           <img
             src={record.photo}
@@ -79,7 +79,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           />
           
           {/* Details Section */}
-          <div className="mt-1">
+          <div className="">
             {visibleFields.includes('fullName') && (
               <h2 className="text-base font-extrabold uppercase tracking-tight leading-tight px-2 break-words">
                 {fullName}
