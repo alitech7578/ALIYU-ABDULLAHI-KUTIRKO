@@ -70,7 +70,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         </header>
 
         {/* Main Content - Centered with gaps */}
-        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-6 py-2">
+        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-2 py-1">
           {/* Photo */}
           <img
             src={record.photo}
@@ -81,12 +81,12 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {/* Details Section */}
           <div>
             {visibleFields.includes('fullName') && (
-              <h2 className="text-base font-extrabold uppercase tracking-tight leading-snug px-2 break-words">
+              <h2 className="text-base font-extrabold uppercase tracking-tight leading-tight px-2 break-words">
                 {fullName}
               </h2>
             )}
              {visibleFields.includes('rank') && (
-              <p className="text-sm uppercase font-semibold mt-1 break-words">{record.rank}</p>
+              <p className="text-sm uppercase font-semibold mt-1 break-words leading-tight">{record.rank}</p>
              )}
             <div className="text-xs space-y-0.5 mt-1 font-bold">
                 {visibleFields.includes('department') &&
