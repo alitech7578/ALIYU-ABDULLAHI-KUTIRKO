@@ -67,7 +67,7 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
               <img src={companyLogo} alt="Company Logo" className="h-14 w-14 object-contain mb-3 mx-auto" />
             )}
             <p className="text-xs text-gray-500">This card is the property of</p>
-            <h2 className="text-lg font-bold mt-1 text-gray-800">
+            <h2 className="text-lg font-bold mt-1 text-gray-600">
               {renderCompanyName(companyName)}
             </h2>
 
