@@ -64,14 +64,14 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
       <main className="flex-grow flex flex-col items-center text-center px-4 py-4 w-full justify-around">
         <div>
             {companyLogo && (
-              <img src={companyLogo} alt="Company Logo" className="h-14 w-14 object-contain mb-3 mx-auto" />
+              <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain mb-3 mx-auto" />
             )}
-            <p className="text-xs text-gray-500">This card is the property of</p>
-            <h2 className="text-lg font-bold mt-1 text-gray-600">
+            <p className="text-[11px] text-gray-500">This card is the property of</p>
+            <h2 className="text-sm font-bold mt-1 text-gray-600 uppercase tracking-wide leading-tight px-2">
               {renderCompanyName(companyName)}
             </h2>
 
-            <p className="text-xs mt-4 text-gray-600">
+            <p className="text-[11px] mt-4 text-gray-600">
               If found, please return to the <br /> Provost/Security Unit
             </p>
         </div>
@@ -85,13 +85,13 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
                 )}
             </div>
             <div className="w-48 border-t border-gray-600 mt-1"></div>
-            <p className="text-xs mt-1 text-gray-600">Provost Signature</p>
+            <p className="text-[11px] mt-1 text-gray-600">Provost Signature</p>
         </div>
 
         {/* QR Code */}
         <div title="Scan to save contact details (vCard)" className="cursor-help">
           <div className="p-1 bg-white border rounded-md shadow-sm">
-            <QRCodeCanvas value={vCardData} size={100} />
+            <QRCodeCanvas value={vCardData} size={90} />
           </div>
         </div>
       </main>

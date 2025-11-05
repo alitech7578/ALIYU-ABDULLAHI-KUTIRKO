@@ -62,12 +62,12 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
             {companyLogo && (
               <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain mb-2 mx-auto" />
             )}
-            <p className="text-xs text-gray-500">This card is the property of</p>
-            <h2 className="text-lg font-bold mt-1 text-gray-800">
+            <p className="text-[10px] text-gray-500">This card is the property of</p>
+            <h2 className="text-lg font-bold mt-1 text-gray-800 uppercase tracking-wide">
               {renderCompanyName(companyName)}
             </h2>
 
-            <p className="text-xs mt-3 text-gray-600">
+            <p className="text-[10px] mt-3 text-gray-600">
               If found, please return to the <br /> Provost/Security Unit
             </p>
         </div>
@@ -81,7 +81,7 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
                 )}
             </div>
             <div className="w-full border-t border-gray-600 mt-1"></div>
-            <p className="text-xs mt-1 text-gray-600">Provost Signature</p>
+            <p className="text-[10px] mt-1 text-gray-600">Provost Signature</p>
         </div>
 
         {/* QR Code */}
