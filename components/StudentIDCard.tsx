@@ -97,17 +97,6 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
               </div>
             )}
           </div>
-
-          {/* Right: QR Code */}
-          {visibleFields.includes('qrCode') && (
-            <div className="flex flex-col items-center justify-center gap-2 pr-2">
-                <div title="Scan to save contact details (vCard)" className="cursor-help">
-                  <div className="p-1 bg-white border rounded-md shadow-sm">
-                      <QRCodeCanvas value={vCardData} size={80} />
-                  </div>
-                </div>
-            </div>
-          )}
         </main>
 
         {/* Footer */}

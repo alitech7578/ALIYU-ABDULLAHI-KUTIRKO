@@ -70,7 +70,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         </header>
 
         {/* Main Content - Centered with gaps */}
-        <main className="flex-1 flex flex-col items-center text-center px-4 justify-around py-2">
+        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-6 py-2">
           {/* Photo */}
           <img
             src={record.photo}
@@ -101,15 +101,6 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                 }
             </div>
           </div>
-          
-           {/* QR Code */}
-           {visibleFields.includes('qrCode') && (
-            <div title="Scan to save contact details (vCard)" className="cursor-help">
-              <div className="p-1 bg-white border rounded-md shadow-sm">
-                <QRCodeCanvas value={vCardData} size={72} />
-              </div>
-            </div>
-          )}
         </main>
 
         {/* Footer */}

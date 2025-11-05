@@ -1,5 +1,6 @@
 import React from 'react';
 import { DataRecord } from '../types';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface IDCardBackProps {
   record: DataRecord;
@@ -31,6 +32,21 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
       </>
     );
   };
+  
+  const fullName = [record.name, record.middleName, record.surname].filter(Boolean).join(' ');
+  const vCardData = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${record.surname};${record.name};${record.middleName};;`,
+    `FN:${fullName}`,
+    `ORG:${companyName.replace(/,/g, '\\,')}`,
+    `TITLE:${record.rank}`,
+    `EMAIL;TYPE=INTERNET:${record.email}`,
+    `TEL;TYPE=CELL:${record.phoneNumber}`,
+    `NOTE:SP Number: ${record.spNumber}\\nDepartment: ${record.department}\\nBlood Group: ${record.bloodGroup}\\nMarital Status: ${record.marriedStatus}\\nState of Origin: ${record.state} / ${record.lg}`,
+    'END:VCARD'
+  ].join('\n');
+
 
   return (
     <div
@@ -70,6 +86,13 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
             </div>
             <div className="w-48 border-t border-gray-600 mt-1"></div>
             <p className="text-xs mt-1 text-gray-600">Provost Signature</p>
+        </div>
+
+        {/* QR Code */}
+        <div title="Scan to save contact details (vCard)" className="cursor-help">
+          <div className="p-1 bg-white border rounded-md shadow-sm">
+            <QRCodeCanvas value={vCardData} size={100} />
+          </div>
         </div>
       </main>
 

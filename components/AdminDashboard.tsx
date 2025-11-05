@@ -26,14 +26,12 @@ const allStaffFields: FieldConfig[] = [
     { id: 'department', label: 'Department' },
     { id: 'bloodGroup', label: 'Blood Group' },
     { id: 'spNumber', label: 'SP Number (Footer)' },
-    { id: 'qrCode', label: 'QR Code' },
 ];
 
 const allStudentFields: FieldConfig[] = [
     { id: 'fullName', label: 'Full Name' },
     { id: 'department', label: 'Department' },
     { id: 'registrationNumber', label: 'Registration No.' },
-    { id: 'qrCode', label: 'QR Code' },
 ];
 
 const initialLayoutSettings: IDCardLayoutSettings = {

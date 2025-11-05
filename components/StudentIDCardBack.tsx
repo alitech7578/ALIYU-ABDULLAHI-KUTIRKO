@@ -1,5 +1,6 @@
 import React from 'react';
 import { Student } from '../types';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface StudentIDCardBackProps {
   student: Student;
@@ -32,6 +33,19 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
     );
   };
 
+  const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
+  const vCardData = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${student.surname};${student.firstName};${student.middleName};;`,
+    `FN:${fullName}`,
+    `ORG:${companyName.replace(/,/g, '\\,')}`,
+    `TITLE:Student`,
+    `EMAIL;TYPE=INTERNET:${student.email}`,
+    `NOTE:Registration No: ${student.registrationNumber}\\nDepartment: ${student.department}`,
+    'END:VCARD'
+  ].join('\n');
+
   return (
     <div
       className="w-[512px] h-[320px] bg-white rounded-xl shadow-lg p-0 overflow-hidden flex flex-col items-center justify-between font-sans text-gray-700"
@@ -43,8 +57,8 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
           <div className="h-1 w-24 bg-yellow-400"></div>
       </div>
 
-      <main className="flex-grow flex flex-col items-center text-center px-4 py-2 w-full justify-around">
-        <div>
+      <main className="flex-grow flex flex-row items-center text-center px-4 py-2 w-full justify-around">
+        <div className="flex-1">
             {companyLogo && (
               <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain mb-2 mx-auto" />
             )}
@@ -58,17 +72,25 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
             </p>
         </div>
         
-        <div className="flex flex-col items-center w-full">
-            <div className="w-48 h-12 flex items-center justify-center">
+        <div className="flex flex-col items-center w-48 flex-shrink-0">
+            <div className="w-full h-12 flex items-center justify-center">
                 {provostSignature ? (
                     <img src={provostSignature} alt="Provost's Signature" className="max-h-12 object-contain" />
                 ) : (
                     <div className="w-full h-12"></div> // empty space for signature
                 )}
             </div>
-            <div className="w-48 border-t border-gray-600 mt-1"></div>
+            <div className="w-full border-t border-gray-600 mt-1"></div>
             <p className="text-xs mt-1 text-gray-600">Provost Signature</p>
         </div>
+
+        {/* QR Code */}
+        <div title="Scan to save contact details (vCard)" className="cursor-help flex-1">
+          <div className="p-1 bg-white border rounded-md shadow-sm inline-block">
+            <QRCodeCanvas value={vCardData} size={90} />
+          </div>
+        </div>
+
       </main>
 
       {/* Bottom decorative element */}
