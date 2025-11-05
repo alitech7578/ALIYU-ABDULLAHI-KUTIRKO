@@ -69,8 +69,8 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           <p className="text-[10px] text-gray-500 leading-tight">{companyAddress}</p>
         </header>
 
-        {/* Main Content - Centered with gaps */}
-        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-2 py-1">
+        {/* Main Content - Reduced gaps to prevent overflow */}
+        <main className="flex-1 flex flex-col items-center text-center px-4 justify-center gap-1 py-1">
           {/* Photo */}
           <img
             src={record.photo}
@@ -90,12 +90,12 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
              )}
             <div className="text-xs space-y-0.5 mt-1 font-bold">
                 {visibleFields.includes('department') &&
-                    <p className="break-words">
+                    <p className="break-words leading-tight">
                         <span className="font-semibold">Dept.:</span> {record.department}
                     </p>
                 }
                 {visibleFields.includes('bloodGroup') && 
-                    <p>
+                    <p className="leading-tight">
                         <span className="font-semibold">Blood Group:</span> {record.bloodGroup}
                     </p>
                 }
