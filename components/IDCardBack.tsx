@@ -31,15 +31,15 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
     if (parts.length > 1) {
       return (
         <>
-          <span className="block">{parts[0].trim().toUpperCase()}</span>
+          <span className="block font-extrabold">{parts[0].trim().toUpperCase()}</span>
           <span className="block">
-            <span className="text-amber-500 font-bold">(TECHNICAL)</span>
-            {parts.slice(2).join('').toUpperCase()}
+            <span className="text-amber-500 font-extrabold">(TECHNICAL)</span>
+            <span className="font-extrabold">{parts.slice(2).join('').toUpperCase()}</span>
           </span>
         </>
       );
     }
-    return <>{name.toUpperCase()}</>;
+    return <span className="font-extrabold">{name.toUpperCase()}</span>;
   };
 
   return (
@@ -60,7 +60,7 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
             )}
             
             <p className="text-[5.5px] text-slate-500 mb-0.5">This card is the property of</p>
-            <h3 className="text-[6.5px] font-bold text-slate-800 leading-tight mb-3 px-1">
+            <h3 className="text-[6.5px] font-extrabold text-slate-900 leading-tight mb-3 px-1">
                 {renderCompanyName(companyName)}
             </h3>
 

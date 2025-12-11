@@ -18,15 +18,15 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
     if (parts.length > 1) {
       return (
         <>
-          <span className="block">{parts[0].trim().toUpperCase()}</span>
+          <span className="block font-extrabold">{parts[0].trim().toUpperCase()}</span>
           <span className="block">
-            <span className="text-amber-500 font-bold">(TECHNICAL)</span>
-            {parts.slice(2).join('').toUpperCase()}
+            <span className="text-amber-500 font-extrabold">(TECHNICAL)</span>
+            <span className="font-extrabold">{parts.slice(2).join('').toUpperCase()}</span>
           </span>
         </>
       );
     }
-    return <>{name.toUpperCase()}</>;
+    return <span className="font-extrabold">{name.toUpperCase()}</span>;
   };
 
   const fullName = [record.name, record.middleName, record.surname].filter(Boolean).join(' ');
@@ -53,10 +53,10 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                 </div>
             )}
             
-            <h1 className="text-[6.5px] font-bold leading-normal tracking-wide text-slate-800 px-1">
+            <h1 className="text-[9px] font-extrabold leading-normal tracking-wide text-slate-900 px-1">
                 {renderCompanyName(companyName)}
             </h1>
-            <p className="text-[5.5px] text-slate-500 mt-0.5 font-medium">{companyAddress}</p>
+            <p className="text-[5.5px] text-slate-500 mt-0.5 font-bold">{companyAddress}</p>
        </div>
 
        {/* Photo Section */}

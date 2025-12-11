@@ -29,15 +29,15 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
     if (parts.length > 1) {
       return (
         <>
-          <span className="block">{parts[0].trim().toUpperCase()}</span>
+          <span className="block font-extrabold">{parts[0].trim().toUpperCase()}</span>
           <span className="block">
-            <span className="text-amber-500 font-bold">(TECHNICAL)</span>
-            {parts.slice(2).join('').toUpperCase()}
+            <span className="text-amber-500 font-extrabold">(TECHNICAL)</span>
+            <span className="font-extrabold">{parts.slice(2).join('').toUpperCase()}</span>
           </span>
         </>
       );
     }
-    return <>{name.toUpperCase()}</>;
+    return <span className="font-extrabold">{name.toUpperCase()}</span>;
   };
 
   return (
@@ -58,7 +58,7 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
                     <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mx-auto mb-1" />
                  )}
                  <p className="text-[5px] text-slate-500 mb-0.5">Property of</p>
-                 <h3 className="text-[6px] font-bold uppercase mb-2 text-slate-800 leading-tight">
+                 <h3 className="text-[6px] font-extrabold uppercase mb-2 text-slate-900 leading-tight">
                     {renderCompanyName(companyName)}
                  </h3>
                  
