@@ -53,7 +53,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                 </div>
             )}
             
-            <h1 className="text-[6.5px] font-bold leading-tight tracking-wide text-slate-800 px-1">
+            <h1 className="text-[6.5px] font-bold leading-normal tracking-wide text-slate-800 px-1">
                 {renderCompanyName(companyName)}
             </h1>
             <p className="text-[5.5px] text-slate-500 mt-0.5 font-medium">{companyAddress}</p>
@@ -69,25 +69,25 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
        {/* Details Section */}
        <div className="relative z-10 flex-1 w-full px-2 flex flex-col items-center text-center gap-1">
             {visibleFields.includes('fullName') && (
-                <h2 className="text-[10px] font-extrabold text-slate-900 uppercase tracking-tight leading-tight">
+                <h2 className="text-[10px] font-extrabold text-slate-900 uppercase tracking-tight leading-snug">
                     {fullName}
                 </h2>
             )}
             
             {visibleFields.includes('rank') && (
-                 <p className="text-[9px] font-bold text-slate-700 uppercase leading-none">
+                 <p className="text-[9px] font-bold text-slate-700 uppercase leading-tight">
                     {record.rank}
                  </p>
             )}
 
             <div className="flex flex-col gap-0.5 mt-0.5">
                 {visibleFields.includes('department') && (
-                    <p className="text-[7.5px] font-semibold text-slate-800 leading-none">
+                    <p className="text-[7.5px] font-semibold text-slate-800 leading-tight">
                         Dept.: {record.department}
                     </p>
                 )}
                 {visibleFields.includes('bloodGroup') && (
-                    <p className="text-[7.5px] font-semibold text-slate-800 leading-none">
+                    <p className="text-[7.5px] font-semibold text-slate-800 leading-tight">
                         Blood Group: {record.bloodGroup}
                     </p>
                 )}

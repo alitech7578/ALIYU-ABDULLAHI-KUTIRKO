@@ -67,7 +67,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                      {companyLogo && (
                         <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mb-0.5" />
                      )}
-                     <h1 className="text-[6.5px] font-bold text-slate-800 leading-tight">
+                     <h1 className="text-[6.5px] font-bold text-slate-800 leading-normal">
                         {renderCompanyName(companyName)}
                      </h1>
                  </div>
@@ -75,10 +75,10 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                  {visibleFields.includes('fullName') && (
                     <div className="mb-1.5">
                         <p className="text-[6px] text-slate-500 uppercase font-semibold">Name</p>
-                        <h2 className="text-[12px] font-extrabold text-slate-900 uppercase leading-none">
+                        <h2 className="text-[12px] font-extrabold text-slate-900 uppercase leading-tight">
                             {student.surname}
                         </h2>
-                        <p className="text-[9px] font-bold text-slate-700 uppercase leading-none">
+                        <p className="text-[9px] font-bold text-slate-700 uppercase leading-tight">
                             {student.firstName} {student.middleName}
                         </p>
                     </div>
