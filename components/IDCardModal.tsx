@@ -30,7 +30,8 @@ const IDCardModal: React.FC<IDCardModalProps> = ({ record, onClose, companyName,
       return;
     }
     try {
-      const dataUrl = await toPng(idCardRef.current, { cacheBust: true, pixelRatio: 2 });
+      // With the card size set to ~54mm (approx 200px), a pixelRatio of 4 gives ~800px width, suitable for print.
+      const dataUrl = await toPng(idCardRef.current, { cacheBust: true, pixelRatio: 4 });
       const link = document.createElement('a');
       link.download = filename;
       link.href = dataUrl;

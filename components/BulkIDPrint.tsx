@@ -23,41 +23,53 @@ const BulkIDPrint: React.FC<BulkIDPrintProps> = ({ records, onClose, companyName
     
   const handleDownloadPdf = async () => {
     setIsGenerating(true);
+    // Use Landscape A4 for Portrait ID Cards to fit 2 columns of pairs
     const pdf = new jsPDF('l', 'mm', 'a4');
-    const pageHeight = pdf.internal.pageSize.getHeight();
     const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 10;
-    let y = margin;
+    const itemGap = 5; 
 
-    const availWidth = pageWidth - margin * 2;
-    const availHeight = pageHeight - margin * 2;
+    let currentX = margin;
+    let currentY = margin;
+    
+    // Standard CR80 Height in mm
+    const targetHeight = 85.6; 
 
     for (const record of records) {
       const element = document.getElementById(`card-pair-${record.id}`);
       if (!element) continue;
 
       try {
-        const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 2 });
+        // High pixelRatio ensures crisp text when scaled in PDF
+        const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 4 });
+        
         const elWidth = element.offsetWidth;
         const elHeight = element.offsetHeight;
         const aspectRatio = elWidth / elHeight;
         
-        let pdfImageWidth = availWidth;
-        let pdfImageHeight = pdfImageWidth / aspectRatio;
+        // Scale width based on fixed target height to maintain 1:1 scale
+        const pdfItemHeight = targetHeight;
+        const pdfItemWidth = pdfItemHeight * aspectRatio;
 
-        if (pdfImageHeight > availHeight) {
-            pdfImageHeight = availHeight;
-            pdfImageWidth = pdfImageHeight * aspectRatio;
+        // Check if we need to wrap to next row
+        if (currentX + pdfItemWidth > pageWidth - margin) {
+            currentX = margin;
+            currentY += pdfItemHeight + itemGap;
         }
 
-        if (y + pdfImageHeight > pageHeight - margin) {
+        // Check if we need a new page
+        if (currentY + pdfItemHeight > pageHeight - margin) {
           pdf.addPage();
-          y = margin;
+          currentX = margin;
+          currentY = margin;
         }
 
-        const x = margin + (availWidth - pdfImageWidth) / 2;
-        pdf.addImage(dataUrl, 'PNG', x, y, pdfImageWidth, pdfImageHeight);
-        y += pdfImageHeight + 5;
+        pdf.addImage(dataUrl, 'PNG', currentX, currentY, pdfItemWidth, pdfItemHeight);
+        
+        // Move X cursor for next item
+        currentX += pdfItemWidth + itemGap;
+
       } catch (error) {
         console.error(`Failed to process card for ${record.name}`, error);
       }
@@ -99,15 +111,16 @@ const BulkIDPrint: React.FC<BulkIDPrintProps> = ({ records, onClose, companyName
             </div>
         </header>
 
-        <main className="p-4 sm:p-8 bg-gray-300">
+        <main className="p-4 sm:p-8 bg-gray-300 min-h-screen">
             <div className="flex flex-wrap justify-center gap-8">
                 {records.map(record => (
                    <div key={record.id}>
+                       {/* This container captures both front and back as one image unit */}
                        <div id={`card-pair-${record.id}`} className="flex flex-row gap-4 items-start p-2 bg-gray-300">
-                           <div className="transform scale-90">
+                           <div className="transform scale-100">
                                <IDCard record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.staff} />
                            </div>
-                           <div className="transform scale-90">
+                           <div className="transform scale-100">
                                <IDCardBack record={record} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />
                            </div>
                        </div>

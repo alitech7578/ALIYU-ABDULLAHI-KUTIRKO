@@ -1,6 +1,5 @@
 import React from 'react';
 import { Student, IDCardLayout } from '../types';
-import { QRCodeCanvas } from 'qrcode.react';
 
 interface StudentIDCardProps {
   student: Student;
@@ -11,101 +10,106 @@ interface StudentIDCardProps {
   layoutSettings: IDCardLayout;
 }
 
-const backgroundPatternStyle = {
-  backgroundImage: 'radial-gradient(circle at 1px 1px, #E5E7EB 1px, transparent 0)',
-  backgroundSize: '15px 15px',
-};
-
-const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress, layoutSettings }) => {
+const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, layoutSettings }) => {
   const { visibleFields } = layoutSettings;
 
   const renderCompanyName = (name: string) => {
     const parts = name.split(/(\(TECHNICAL\))/i);
-    return (
-      <>
-        {parts.map((part, index) =>
-          part.toLowerCase() === '(technical)' ? (
-            <span key={index} className="text-red-500">
-              {part}
-            </span>
-          ) : (
-            part
-          )
-        )}
-      </>
-    );
+    if (parts.length > 1) {
+      return (
+        <>
+          <span className="block">{parts[0].trim().toUpperCase()}</span>
+          <span className="block">
+            <span className="text-amber-500 font-bold">(TECHNICAL)</span>
+            {parts.slice(2).join('').toUpperCase()}
+          </span>
+        </>
+      );
+    }
+    return <>{name.toUpperCase()}</>;
   };
   
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
-  
-  const vCardData = [
-    'BEGIN:VCARD',
-    'VERSION:3.0',
-    `N:${student.surname};${student.firstName};${student.middleName};;`,
-    `FN:${fullName}`,
-    `ORG:${companyName.replace(/,/g, '\\,')}`,
-    `TITLE:Student`,
-    `EMAIL;TYPE=INTERNET:${student.email}`,
-    `NOTE:Registration No: ${student.registrationNumber}\\nDepartment: ${student.department}`,
-    'END:VCARD'
-  ].join('\n');
 
   return (
-    <div
-      className="w-[512px] h-[320px] bg-white rounded-xl shadow-lg p-0 flex flex-col font-sans text-gray-800 overflow-hidden"
-      style={backgroundPatternStyle}
-    >
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <header className="flex items-center gap-3 p-2 border-b">
-          {companyLogo && (
-            <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain" />
-          )}
-          <div className="text-left">
-            <h1 className="text-lg font-bold text-gray-600 uppercase tracking-wide">
-              {renderCompanyName(companyName)}
-            </h1>
-            <p className="text-xs text-gray-500">{companyAddress}</p>
-          </div>
-        </header>
+    <div className="w-[85.6mm] h-[54mm] bg-white rounded-[6px] shadow-xl overflow-hidden relative flex flex-col print:shadow-none font-sans text-slate-900 leading-normal">
+        {/* Background Dot Pattern */}
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:12px_12px] opacity-60"></div>
+        
+        {/* Watermark Pattern (20 Logos in 5x4 Grid) */}
+        {companyLogo && (
+            <div className="absolute inset-0 z-0 grid grid-cols-5 grid-rows-4 items-center justify-items-center p-2 pointer-events-none opacity-[0.10] overflow-hidden">
+                {[...Array(20)].map((_, i) => (
+                    <img key={i} src={companyLogo} alt="" className="h-10 w-auto -rotate-12 sepia saturate-[6] hue-rotate-15 brightness-[0.85] contrast-[1.2]" />
+                ))}
+            </div>
+        )}
 
-        {/* Main Content */}
-        <main className="flex-grow flex items-center p-2 gap-4">
-          {/* Left: Photo */}
-          <div className="flex-shrink-0">
-            <img
-              src={student.photo}
-              alt={fullName}
-              className="w-28 h-36 object-cover rounded-md border-2 border-gray-300"
-            />
-          </div>
-          
-          {/* Middle: Details */}
-          <div className="flex-grow flex flex-col justify-center gap-0 min-w-0">
-            {visibleFields.includes('fullName') && (
-              <h2 className="text-base font-extrabold uppercase tracking-tighter leading-tight">
-                <span className="break-words">{student.firstName}</span>
-                {student.middleName && <span className="block break-words">{student.middleName}</span>}
-                <span className="block break-words">{student.surname}</span>
-              </h2>
-            )}
-            {visibleFields.includes('department') && <p className="text-md text-gray-500 uppercase font-bold break-words mt-1">{student.department}</p>}
-            {visibleFields.includes('registrationNumber') && (
-              <div className="mt-1 border-t pt-1">
-                <p className="font-semibold text-gray-500 text-xs">REGISTRATION NO.</p>
-                <p className="font-bold text-lg">{student.registrationNumber}</p>
-              </div>
-            )}
-          </div>
-        </main>
+        {/* Top Header Strip - Matching Staff Style */}
+        <div className="relative z-10 bg-slate-800 h-[18px] w-full flex items-center justify-between px-4">
+            <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
+            <span className="text-white text-[6px] font-bold uppercase tracking-widest px-2">Student Identity Card</span>
+            <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
+        </div>
+        
+        {/* Main Content Area */}
+        <div className="relative z-10 flex-1 flex p-3 gap-3 items-center">
+             {/* Photo */}
+            <div className="flex-shrink-0">
+                <div className="w-[90px] h-[100px] bg-gray-200 rounded-md shadow-md border border-gray-200 overflow-hidden">
+                    <img src={student.photo} alt={fullName} className="w-full h-full object-cover" />
+                </div>
+            </div>
 
-        {/* Footer */}
-        <footer className="w-full">
-          <div className="h-6 bg-gray-800 flex items-center justify-center">
-              <p className="text-white text-sm font-semibold tracking-wider">{companyWebsite}</p>
-          </div>
-        </footer>
-      </div>
+            {/* Details */}
+            <div className="flex-grow flex flex-col justify-center h-full">
+                 <div className="mb-2">
+                     {companyLogo && (
+                        <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mb-0.5" />
+                     )}
+                     <h1 className="text-[6.5px] font-bold text-slate-800 leading-tight">
+                        {renderCompanyName(companyName)}
+                     </h1>
+                 </div>
+
+                 {visibleFields.includes('fullName') && (
+                    <div className="mb-1.5">
+                        <p className="text-[6px] text-slate-500 uppercase font-semibold">Name</p>
+                        <h2 className="text-[12px] font-extrabold text-slate-900 uppercase leading-none">
+                            {student.surname}
+                        </h2>
+                        <p className="text-[9px] font-bold text-slate-700 uppercase leading-none">
+                            {student.firstName} {student.middleName}
+                        </p>
+                    </div>
+                 )}
+
+                 <div className="space-y-1">
+                    {visibleFields.includes('registrationNumber') && (
+                        <div>
+                            <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">Reg No:</span>
+                            <span className="text-[8.5px] font-bold text-slate-900">{student.registrationNumber}</span>
+                        </div>
+                    )}
+                     {visibleFields.includes('department') && (
+                        <div>
+                             <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">Dept:</span>
+                             <span className="text-[8px] font-bold text-slate-800">{student.department}</span>
+                        </div>
+                    )}
+                 </div>
+            </div>
+        </div>
+
+        {/* Footer Accent - Matching Staff Style */}
+        <div className="relative z-10 w-full">
+            <div className="bg-slate-800 h-[6px] w-full flex items-center justify-center">
+                <div className="w-1/3 h-[2px] bg-amber-400 rounded-full"></div>
+            </div>
+            <div className="bg-white py-0.5 text-center border-t border-slate-100">
+                <p className="text-[5px] text-slate-800 font-bold tracking-wide">{companyWebsite}</p>
+            </div>
+        </div>
     </div>
   );
 };
