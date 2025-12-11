@@ -83,7 +83,12 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
             {/* Right Column: QR Code */}
             <div className="w-1/3 flex flex-col items-center justify-center">
                 <div className="p-1 bg-white rounded-lg shadow-sm border border-gray-100 mb-0.5">
-                    <QRCodeCanvas value={vCardData} size={50} />
+                    <QRCodeCanvas 
+                        value={vCardData} 
+                        size={256} 
+                        style={{ width: '50px', height: '50px' }} 
+                        level="M"
+                    />
                 </div>
                 <p className="text-[5px] text-slate-400 font-medium">Scan for Details</p>
             </div>

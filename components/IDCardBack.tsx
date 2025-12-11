@@ -81,7 +81,12 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
             </div>
 
             <div className="bg-white p-0.5 rounded-sm shadow-sm">
-                <QRCodeCanvas value={vCardData} size={55} />
+                <QRCodeCanvas 
+                    value={vCardData} 
+                    size={256} 
+                    style={{ width: '55px', height: '55px' }}
+                    level="M"
+                />
             </div>
        </div>
 
