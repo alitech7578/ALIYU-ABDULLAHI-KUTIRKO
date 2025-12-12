@@ -14,7 +14,7 @@ type ImportResult = {
     errors: string[];
 };
 
-const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','Department','RegistrationNumber','Photo'];
+const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','School','Department','RegistrationNumber','ExpirationDate','Photo'];
 const CSV_TEMPLATE = CSV_HEADERS.join(',');
 
 const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose, onImport }) => {
@@ -82,10 +82,10 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                     continue;
                 }
                 
-                const [firstName, middleName, surname, email, department, registrationNumber, photo] = rowData.map(d => d.trim());
+                const [firstName, middleName, surname, email, school, department, registrationNumber, expirationDate, photo] = rowData.map(d => d.trim());
                 
                 // Basic validation (photo is optional)
-                if (!firstName || !surname || !email || !department || !registrationNumber) {
+                if (!firstName || !surname || !email || !school || !department || !registrationNumber || !expirationDate) {
                      errors.push(`Row ${i + 1}: Missing one or more required fields (excluding Photo).`);
                      continue;
                 }
@@ -96,8 +96,10 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                     middleName,
                     surname,
                     email,
+                    school,
                     department,
                     registrationNumber,
+                    expirationDate,
                     createdAt: new Date().toISOString(),
                     photo: photo || '', // Use photo from CSV, or empty string if not provided
                     createdBy: 'admin-import',

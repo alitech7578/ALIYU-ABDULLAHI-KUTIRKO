@@ -10,7 +10,7 @@ interface StudentIDCardProps {
   layoutSettings: IDCardLayout;
 }
 
-const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, layoutSettings }) => {
+const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress, layoutSettings }) => {
   const { visibleFields } = layoutSettings;
 
   const renderCompanyName = (name: string) => {
@@ -63,13 +63,14 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
 
             {/* Details */}
             <div className="flex-grow flex flex-col justify-center h-full">
-                 <div className="mb-2">
+                 <div className="mb-2 w-full flex flex-col items-center text-center">
                      {companyLogo && (
                         <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mb-0.5" />
                      )}
                      <h1 className="text-[9px] font-extrabold text-slate-900 leading-normal">
                         {renderCompanyName(companyName)}
                      </h1>
+                     <p className="text-[5px] font-bold text-slate-500 mt-0.5 uppercase">{companyAddress}</p>
                  </div>
 
                  {visibleFields.includes('fullName') && (
@@ -91,10 +92,22 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                             <span className="text-[8.5px] font-bold text-slate-900">{student.registrationNumber}</span>
                         </div>
                     )}
+                    {visibleFields.includes('school') && (
+                        <div>
+                             <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">School:</span>
+                             <span className="text-[8px] font-bold text-slate-800">{student.school}</span>
+                        </div>
+                    )}
                      {visibleFields.includes('department') && (
                         <div>
                              <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">Dept:</span>
                              <span className="text-[8px] font-bold text-slate-800">{student.department}</span>
+                        </div>
+                    )}
+                     {visibleFields.includes('expirationDate') && student.expirationDate && (
+                        <div>
+                             <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">Exp:</span>
+                             <span className="text-[8.5px] font-bold text-slate-900">{student.expirationDate}</span>
                         </div>
                     )}
                  </div>

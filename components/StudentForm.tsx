@@ -32,8 +32,10 @@ const initialFormState = {
   middleName: '',
   surname: '',
   email: '',
+  school: '',
   department: '',
   registrationNumber: '',
+  expirationDate: '',
   photo: '',
 };
 
@@ -50,8 +52,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
               middleName: studentToEdit.middleName,
               surname: studentToEdit.surname,
               email: studentToEdit.email,
+              school: studentToEdit.school || '',
               department: studentToEdit.department,
               registrationNumber: studentToEdit.registrationNumber,
+              expirationDate: studentToEdit.expirationDate || '',
               photo: studentToEdit.photo,
           };
       }
@@ -106,8 +110,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fields.firstName || !fields.surname || !fields.email || !fields.department || !fields.registrationNumber || !fields.photo) {
-      setError('All fields, including photo, are required.');
+    if (!fields.firstName || !fields.surname || !fields.email || !fields.school || !fields.department || !fields.registrationNumber || !fields.expirationDate || !fields.photo) {
+      setError('All fields, including photo and expiration date, are required.');
       return;
     }
     setError('');
@@ -174,8 +178,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
         <InputField id="email" label="Student Email" type="email" value={fields.email} onChange={handleChange} placeholder="student.email@example.com" />
         <InputField id="registrationNumber" label="Registration Number" type="text" value={fields.registrationNumber} onChange={handleChange} placeholder="e.g., 2024/CS/001" />
       </div>
-      <div className="grid grid-cols-1">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <InputField id="school" label="School" type="text" value={fields.school} onChange={handleChange} placeholder="e.g., School of Sciences" />
         <InputField id="department" label="Department" type="text" value={fields.department} onChange={handleChange} placeholder="e.g., Computer Science" />
+        <InputField id="expirationDate" label="Expiration Date" type="date" value={fields.expirationDate} onChange={handleChange} placeholder="" />
       </div>
       
       <div className="flex justify-end">

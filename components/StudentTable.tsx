@@ -101,8 +101,10 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Middle Name</th>
               <SortableHeader label="Surname" columnKey="surname" sortConfig={sortConfig} onSort={onSort} />
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Email</th>
+              <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">School</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Department</th>
               <SortableHeader label="Registration No." columnKey="registrationNumber" sortConfig={sortConfig} onSort={onSort} />
+              <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Exp. Date</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Created At</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Actions</th>
             </tr>
@@ -126,8 +128,10 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
                 <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.middleName}</td>
                 <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.surname}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-muted whitespace-nowrap">{record.email}</td>
+                <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.school}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.department}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.registrationNumber}</td>
+                <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.expirationDate}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-muted whitespace-nowrap">{new Date(record.createdAt).toLocaleDateString()}</td>
                 <td className="p-4 sm:p-5 text-sm">
                   <div className="flex items-center gap-3">

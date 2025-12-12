@@ -30,8 +30,10 @@ const allStaffFields: FieldConfig[] = [
 
 const allStudentFields: FieldConfig[] = [
     { id: 'fullName', label: 'Full Name' },
+    { id: 'school', label: 'School' },
     { id: 'department', label: 'Department' },
     { id: 'registrationNumber', label: 'Registration No.' },
+    { id: 'expirationDate', label: 'Exp. Date' },
 ];
 
 const initialLayoutSettings: IDCardLayoutSettings = {
@@ -100,7 +102,7 @@ const AdminDashboard: React.FC = () => {
   const [companyName, setCompanyName] = useLocalStorage('company-name', 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI');
   const [companyLogo, setCompanyLogo] = useLocalStorage<string | null>('company-logo', null);
   const [companyEmail, setCompanyEmail] = useLocalStorage('company-email', 'contact@fcetbichi.edu.ng');
-  const [companyAddress, setCompanyAddress] = useLocalStorage('company-address', 'P.M.B. 3473, Kano');
+  const [companyAddress, setCompanyAddress] = useLocalStorage('company-address', 'P.M.B 3473 KANO, KANO STATE');
   const [companyWebsite, setCompanyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
   const [companyContent, setCompanyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
   const [provostSignature, setProvostSignature] = useLocalStorage<string | null>('provost-signature', null);
@@ -335,8 +337,8 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleExportStudents = (studentsToExport: Student[]) => {
-      const studentHeaders = ['FirstName','MiddleName','Surname','Email','Department','RegistrationNumber','Photo'];
-      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'department', 'registrationNumber', 'photo'];
+      const studentHeaders = ['FirstName','MiddleName','Surname','Email','School','Department','RegistrationNumber','ExpirationDate','Photo'];
+      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'school', 'department', 'registrationNumber', 'expirationDate', 'photo'];
       handleExport(studentsToExport, studentKeys, studentHeaders, 'student-records-export');
   };
 
