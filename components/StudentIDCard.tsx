@@ -75,7 +75,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
 
                  {visibleFields.includes('fullName') && (
                     <div className="mb-1.5">
-                        <p className="text-[6px] text-slate-500 uppercase font-semibold">Name</p>
+                        <p className="text-[6px] text-slate-500 uppercase font-bold">NAME</p>
                         <h2 className="text-[12px] font-extrabold text-slate-900 uppercase leading-tight">
                             {student.surname}
                         </h2>
@@ -88,25 +88,25 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                  <div className="space-y-1">
                     {visibleFields.includes('registrationNumber') && (
                         <div>
-                            <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">Reg No:</span>
+                            <span className="text-[6.5px] text-slate-500 uppercase font-bold mr-1">REG NO:</span>
                             <span className="text-[8.5px] font-bold text-slate-900">{student.registrationNumber}</span>
                         </div>
                     )}
                     {visibleFields.includes('school') && (
                         <div>
-                             <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">School:</span>
+                             <span className="text-[6.5px] text-slate-500 uppercase font-bold mr-1">SCHOOL:</span>
                              <span className="text-[8px] font-bold text-slate-800">{student.school}</span>
                         </div>
                     )}
                      {visibleFields.includes('department') && (
                         <div>
-                             <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">Dept:</span>
+                             <span className="text-[6.5px] text-slate-500 uppercase font-bold mr-1">DEPT:</span>
                              <span className="text-[8px] font-bold text-slate-800">{student.department}</span>
                         </div>
                     )}
                      {visibleFields.includes('expirationDate') && student.expirationDate && (
                         <div>
-                             <span className="text-[6.5px] text-slate-500 uppercase font-semibold mr-1">Exp:</span>
+                             <span className="text-[6.5px] text-slate-500 uppercase font-bold mr-1">EXP DATE:</span>
                              <span className="text-[8.5px] font-bold text-slate-900">{student.expirationDate}</span>
                         </div>
                     )}
@@ -114,9 +114,9 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             </div>
         </div>
 
-        {/* Footer Accent - Matching Staff Style */}
+        {/* Footer Accent - Adjusted floor */}
         <div className="relative z-10 w-full">
-            <div className="bg-slate-800 h-[6px] w-full flex items-center justify-center">
+            <div className="bg-slate-800 h-[12px] w-full flex items-center justify-center">
                 <div className="w-1/3 h-[2px] bg-amber-400 rounded-full"></div>
             </div>
             <div className="bg-white py-0.5 text-center border-t border-slate-100">
