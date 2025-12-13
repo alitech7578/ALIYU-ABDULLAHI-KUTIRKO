@@ -68,19 +68,19 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
              </div>
         </div>
         
-        {/* Main Content Area - Reduced Padding and Gap to fit content */}
+        {/* Main Content Area */}
         <div className="relative z-10 flex-1 flex pl-3 pr-2 py-1 gap-2 items-start overflow-hidden">
-             {/* Photo - Size adjusted to fit better vertically */}
-            <div className="flex-shrink-0 mt-1">
-                <div className="w-[80px] h-[88px] bg-white rounded-xl shadow-lg border-2 border-white overflow-hidden ring-1 ring-gray-100">
+             {/* Photo - Adjusted position and standard aspect ratio */}
+            <div className="flex-shrink-0 mt-4">
+                <div className="w-[76px] h-[95px] bg-white rounded-md shadow-md border-[2px] border-white overflow-hidden ring-1 ring-gray-100">
                     <img src={student.photo} alt={fullName} className="w-full h-full object-cover" />
                 </div>
             </div>
 
-            {/* Details Column - Compact layout */}
+            {/* Details Column */}
             <div className="flex-grow flex flex-col items-center h-full">
-                 {/* Header Info - Compacted */}
-                 <div className="mb-1 w-full flex flex-col items-center text-center">
+                 {/* Header Info */}
+                 <div className="mb-2 w-full flex flex-col items-center text-center">
                      {companyLogo && (
                         <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mb-0.5 drop-shadow-sm" />
                      )}
@@ -90,21 +90,21 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                      <p className="text-[5px] font-bold text-slate-500 mt-0.5 uppercase tracking-wide opacity-80 leading-none">{companyAddress}</p>
                  </div>
 
-                 {/* Student Fields - Reduced spacing */}
-                 <div className="w-full pl-1 space-y-0.5 text-left">
+                 {/* Student Fields - Increased spacing */}
+                 <div className="w-full pl-1 text-left">
                      {visibleFields.includes('fullName') && (
-                        <div className="mb-0.5">
-                            <p className="text-[5px] text-slate-500 font-bold uppercase tracking-wider mb-0 leading-none">NAME</p>
-                            <h2 className="text-[12px] font-black text-slate-900 uppercase leading-[0.85] tracking-tight">
+                        <div className="mb-2">
+                            <p className="text-[5px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 leading-none">NAME</p>
+                            <h2 className="text-[12px] font-black text-slate-900 uppercase leading-tight tracking-tight">
                                 {student.surname}
                             </h2>
-                            <p className="text-[9px] font-bold text-slate-700 uppercase leading-none">
+                            <p className="text-[9px] font-bold text-slate-700 uppercase leading-snug">
                                 {student.firstName} {student.middleName}
                             </p>
                         </div>
                      )}
 
-                     <div className="space-y-px">
+                     <div className="space-y-1">
                         {visibleFields.includes('registrationNumber') && (
                             <div className="flex items-baseline gap-1">
                                 <span className="text-[6px] text-slate-500 font-bold uppercase tracking-wide min-w-[30px]">REG NO:</span>
