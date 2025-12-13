@@ -71,7 +71,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
         {/* Main Content Area */}
         <div className="relative z-10 flex-1 flex pl-3 pr-2 py-1 gap-2 items-start overflow-hidden">
              {/* Photo - Adjusted position and standard aspect ratio */}
-            <div className="flex-shrink-0 mt-4">
+            <div className="flex-shrink-0 mt-7">
                 <div className="w-[76px] h-[95px] bg-white rounded-md shadow-md border-[2px] border-white overflow-hidden ring-1 ring-gray-100">
                     <img src={student.photo} alt={fullName} className="w-full h-full object-cover" />
                 </div>
