@@ -120,7 +120,7 @@ const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClo
                                <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.student} />
                            </div>
                            <div className="transform scale-90">
-                               <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />
+                               <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} provostSignature={provostSignature} />
                            </div>
                        </div>
                    </div>

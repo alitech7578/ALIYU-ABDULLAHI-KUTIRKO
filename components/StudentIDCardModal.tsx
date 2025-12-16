@@ -64,7 +64,7 @@ const StudentIDCardModal: React.FC<StudentIDCardModalProps> = ({ student, onClos
             <div ref={idCardRef} className="printable-id-card">
               <div className="flex flex-row gap-4 items-start">
                 <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.student} />
-                <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />
+                <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} provostSignature={provostSignature} />
               </div>
             </div>
             <div className="mt-4 flex justify-center gap-4">

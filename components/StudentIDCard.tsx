@@ -13,131 +13,136 @@ interface StudentIDCardProps {
 const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress, layoutSettings }) => {
   const { visibleFields } = layoutSettings;
 
-  const renderCompanyName = (name: string) => {
-    const parts = name.split(/(\(TECHNICAL\))/i);
-    if (parts.length > 1) {
-      return (
-        <div className="flex flex-col items-center">
-          <span className="block font-black text-slate-900 tracking-tight leading-none">{parts[0].trim().toUpperCase()}</span>
-          <span className="block mt-0.5 leading-none">
-            <span className="text-amber-500 font-black tracking-wide">(TECHNICAL)</span>
-            <span className="font-black text-slate-900 tracking-wide ml-1">{parts.slice(2).join('').trim().toUpperCase()}</span>
-          </span>
-        </div>
-      );
+  // Function to format the college name logic specifically for "(TECHNICAL)" coloring
+  const renderHeader = () => {
+    // Check if the name follows the pattern "FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI"
+    const nameUpper = companyName.toUpperCase();
+    if (nameUpper.includes("TECHNICAL")) {
+        const parts = nameUpper.split("(TECHNICAL)");
+        return (
+            <div className="text-center leading-none">
+                <h1 className="text-[10px] font-black text-slate-800 tracking-tight scale-y-110">
+                    {parts[0].trim()} <span className="text-red-600 inline-block mx-0.5">(TECHNICAL)</span> {parts[1]?.trim()}
+                </h1>
+            </div>
+        )
     }
-    return <span className="font-black tracking-tight leading-none">{name.toUpperCase()}</span>;
+    return (
+        <h1 className="text-[10px] font-black text-slate-800 text-center leading-none tracking-tight uppercase scale-y-110">
+            {companyName}
+        </h1>
+    );
   };
 
   const formatExpirationDate = (dateString: string) => {
     if (!dateString) return '';
-    const parts = dateString.split('-');
-    if (parts.length >= 2) {
-        const year = parts[0];
-        const monthIndex = parseInt(parts[1], 10) - 1;
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        if (monthIndex >= 0 && monthIndex < 12) {
-            return `${monthNames[monthIndex]} ${year}`;
-        }
-    }
-    return dateString;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return `${month} ${year}`;
   };
-  
-  const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
 
   return (
-    <div className="w-[85.6mm] h-[54mm] bg-white rounded-[8px] shadow-xl overflow-hidden relative flex flex-col print:shadow-none font-sans text-slate-900 leading-normal border border-gray-100">
-        {/* Background Dot Pattern */}
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:12px_12px] opacity-50"></div>
+    <div className="w-[85.6mm] h-[54mm] bg-white rounded-[8px] shadow-xl overflow-hidden relative flex flex-col font-sans text-slate-900 border border-gray-100 print:shadow-none">
+        {/* Corner Designs */}
+        {/* Top Left Green Triangle */}
+        <div className="absolute top-0 left-0 w-[55px] h-[55px] bg-green-600 z-0" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
+        <div className="absolute top-0 left-0 w-[60px] h-[60px] bg-yellow-400 -z-10" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
         
-        {/* Watermark Pattern */}
+        {/* Bottom Right Green Triangle */}
+        <div className="absolute bottom-0 right-0 w-[40px] h-[40px] bg-green-600 z-0" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
+        <div className="absolute bottom-0 right-0 w-[45px] h-[45px] bg-yellow-400 -z-10" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
+
+        {/* Background Texture */}
+        <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(#22c55e_0.5px,transparent_0.5px)] [background-size:8px_8px]"></div>
+
+        {/* Watermark Logo Pattern */}
         {companyLogo && (
-            <div className="absolute inset-0 z-0 grid grid-cols-5 grid-rows-4 items-center justify-items-center p-2 pointer-events-none opacity-[0.08] overflow-hidden">
-                {[...Array(20)].map((_, i) => (
-                    <img key={i} src={companyLogo} alt="" className="h-10 w-auto -rotate-12 sepia saturate-[6] hue-rotate-15 brightness-[0.85] contrast-[1.2]" />
+            <div className="absolute inset-0 z-0 grid grid-cols-6 grid-rows-4 items-center justify-items-center p-2 pointer-events-none opacity-[0.07] overflow-hidden">
+                {[...Array(24)].map((_, i) => (
+                    <img key={i} src={companyLogo} alt="" className="w-8 -rotate-12 grayscale contrast-125" />
                 ))}
             </div>
         )}
 
-        {/* Top Header Strip */}
-        <div className="relative z-10 bg-slate-900 h-[14px] w-full flex items-center justify-center px-4 shadow-sm shrink-0">
-             <div className="flex items-center w-full max-w-[90%] gap-4">
-                <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
-                <span className="text-white text-[6px] font-bold uppercase tracking-[0.2em]">Student Identity Card</span>
-                <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
-             </div>
-        </div>
-        
-        {/* Main Content Area */}
-        <div className="relative z-10 flex-1 flex pl-3 pr-2 py-1 gap-2 items-center overflow-hidden">
-             {/* Photo - Centered vertically */}
-            <div className="flex-shrink-0">
-                <div className="w-[76px] h-[95px] bg-white rounded-md shadow-md border-[2px] border-white overflow-hidden ring-1 ring-gray-100">
-                    <img src={student.photo} alt={fullName} className="w-full h-full object-cover" />
+        {/* Header Section */}
+        <div className="relative z-10 w-full pt-4 px-2 flex flex-row items-start pl-3">
+            {/* Logo positioned top left - over the green shape */}
+            <div className="w-12 h-12 flex-shrink-0 z-20 mr-2 -mt-0.5 bg-white rounded-full p-0.5 shadow-sm">
+                {companyLogo && (
+                    <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
+                )}
+            </div>
+            
+            {/* Header Text */}
+            <div className="flex-grow flex flex-col items-center justify-start -ml-2 pt-1">
+                {renderHeader()}
+                <p className="text-[6px] font-bold text-slate-700 mt-1.5 uppercase tracking-wide leading-none">{companyAddress}</p>
+                <div className="flex flex-wrap justify-center gap-x-2 gap-y-0 text-[5px] text-red-600 font-bold mt-1.5 leading-none">
+                    <span>website:- {companyWebsite.replace(/^https?:\/\//, '')}</span>
+                    <span>email:- info@{companyWebsite.replace(/^https?:\/\//, '').replace(/^www\./, '')}</span>
                 </div>
             </div>
-
-            {/* Details Column */}
-            <div className="flex-grow flex flex-col items-center h-full">
-                 {/* Header Info */}
-                 <div className="mb-2 w-full flex flex-col items-center text-center mt-1">
-                     {companyLogo && (
-                        <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mb-0.5 drop-shadow-sm" />
-                     )}
-                     <div className="text-[9px] leading-none">
-                        {renderCompanyName(companyName)}
-                     </div>
-                     <p className="text-[5px] font-bold text-slate-500 mt-0.5 uppercase tracking-wide opacity-80 leading-none">{companyAddress}</p>
-                 </div>
-
-                 {/* Student Fields - Increased spacing */}
-                 <div className="w-full pl-1 text-left">
-                     {visibleFields.includes('fullName') && (
-                        <div className="mb-2">
-                            <p className="text-[5px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 leading-none">NAME</p>
-                            <h2 className="text-[12px] font-black text-slate-900 uppercase leading-tight tracking-tight">
-                                {student.surname}
-                            </h2>
-                            <p className="text-[9px] font-bold text-slate-700 uppercase leading-snug">
-                                {student.firstName} {student.middleName}
-                            </p>
-                        </div>
-                     )}
-
-                     <div className="space-y-1">
-                        {visibleFields.includes('registrationNumber') && (
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-[6px] text-slate-500 font-bold uppercase tracking-wide min-w-[30px]">REG NO:</span>
-                                <span className="text-[9px] font-bold text-slate-900 uppercase tracking-tight leading-none">{student.registrationNumber}</span>
-                            </div>
-                        )}
-                        {visibleFields.includes('department') && (
-                            <div className="flex items-baseline gap-1">
-                                 <span className="text-[6px] text-slate-500 font-bold uppercase tracking-wide min-w-[30px]">DEPT:</span>
-                                 <span className="text-[8px] font-bold text-slate-900 uppercase tracking-tight leading-none">{student.department}</span>
-                            </div>
-                        )}
-                         {visibleFields.includes('school') && (
-                            <div className="flex items-baseline gap-1">
-                                 <span className="text-[6px] text-slate-500 font-bold uppercase tracking-wide min-w-[30px]">SCHOOL:</span>
-                                 <span className="text-[8px] font-bold text-slate-900 uppercase tracking-tight leading-none">{student.school}</span>
-                            </div>
-                        )}
-                         {visibleFields.includes('expirationDate') && student.expirationDate && (
-                            <div className="flex items-baseline gap-1">
-                                 <span className="text-[6px] text-slate-500 font-bold uppercase tracking-wide min-w-[30px]">EXP:</span>
-                                 <span className="text-[8px] font-bold text-slate-900 uppercase tracking-tight leading-none">{formatExpirationDate(student.expirationDate)}</span>
-                            </div>
-                        )}
-                     </div>
-                 </div>
-            </div>
         </div>
 
-        {/* Footer Accent */}
-        <div className="relative z-10 w-full mt-auto shrink-0">
-            <div className="bg-slate-900 h-[8px] w-full flex items-center justify-center relative overflow-hidden">
-                <div className="absolute bottom-0 w-1/3 h-[3px] bg-amber-400 rounded-t-lg"></div>
+        {/* Main Content Body */}
+        <div className="relative z-10 flex-1 flex flex-row px-4 pt-0 pb-1">
+            {/* Left: Photo */}
+            <div className="flex flex-col justify-start w-[80px] mr-2 pt-5">
+                 <div className="w-[75px] h-[85px] bg-gray-100 border-2 border-white shadow-md overflow-hidden rounded-sm">
+                    <img src={student.photo} alt="Student" className="w-full h-full object-cover" />
+                 </div>
+            </div>
+
+            {/* Right: Details */}
+            <div className="flex-1 flex flex-col pt-3">
+                {/* Banner */}
+                <div className="self-center transform -skew-x-12 bg-green-700 text-white px-5 py-0.5 mb-2 shadow-sm border-b-2 border-black/20">
+                    <span className="block transform skew-x-12 text-[9px] font-black uppercase tracking-wider font-sans leading-none">Student I.D. Card</span>
+                </div>
+
+                {/* Fields - Adjusted Spacing */}
+                <div className="flex flex-col pl-1 w-full space-y-1.5">
+                    {visibleFields.includes('fullName') && (
+                        <div className="flex items-baseline">
+                            <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0">Name:</span>
+                            <span className="flex-1 text-[9px] font-black text-black uppercase leading-tight">
+                                {student.surname} {student.firstName} {student.middleName}
+                            </span>
+                        </div>
+                    )}
+                     {visibleFields.includes('registrationNumber') && (
+                        <div className="flex items-baseline">
+                             <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0">Reg. No.:</span>
+                             <span className="flex-1 text-[9px] font-black text-black uppercase leading-tight">{student.registrationNumber}</span>
+                        </div>
+                    )}
+                    {visibleFields.includes('department') && (
+                        <div className="flex items-baseline">
+                             <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0">Dept.:</span>
+                             <span className="flex-1 text-[8px] font-black text-black uppercase leading-tight">{student.department}</span>
+                        </div>
+                    )}
+                     {visibleFields.includes('school') && (
+                        <div className="flex items-baseline">
+                             <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0">School:</span>
+                             <span className="flex-1 text-[7.5px] font-black text-black uppercase leading-tight">
+                                {student.school}
+                             </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Expiration Date Footer */}
+                <div className="mt-auto self-center flex items-center mb-1">
+                     <div className="bg-black text-white text-[6px] font-bold px-2 py-0.5 rounded-l-sm leading-none">
+                        EXP. DATE
+                     </div>
+                     <div className="bg-gray-200 text-[7px] font-bold text-slate-800 px-2 py-0.5 rounded-r-sm uppercase min-w-[50px] text-center border-y border-r border-gray-300 leading-none">
+                        {student.expirationDate ? formatExpirationDate(student.expirationDate) : 'DEC 2025'}
+                     </div>
+                </div>
             </div>
         </div>
     </div>

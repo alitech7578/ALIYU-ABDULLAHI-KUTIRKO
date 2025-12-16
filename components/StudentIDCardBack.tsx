@@ -7,10 +7,11 @@ interface StudentIDCardBackProps {
   companyName: string;
   companyLogo: string | null;
   companyWebsite: string;
+  companyAddress: string;
   provostSignature: string | null;
 }
 
-const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyName, companyLogo, companyWebsite, provostSignature }) => {
+const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress, provostSignature }) => {
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
   const vCardData = [
     'BEGIN:VCARD',
@@ -24,86 +25,105 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
     'END:VCARD'
   ].join('\n');
 
-  const renderCompanyName = (name: string) => {
-    const parts = name.split(/(\(TECHNICAL\))/i);
-    if (parts.length > 1) {
-      return (
-        <>
-          <span className="block font-extrabold">{parts[0].trim().toUpperCase()}</span>
-          <span className="block">
-            <span className="text-amber-500 font-extrabold">(TECHNICAL)</span>
-            <span className="font-extrabold">{parts.slice(2).join('').toUpperCase()}</span>
-          </span>
-        </>
-      );
+  // Function to format the college name logic specifically for "(TECHNICAL)" coloring (Matching Front)
+  const renderHeader = () => {
+    const nameUpper = companyName.toUpperCase();
+    if (nameUpper.includes("TECHNICAL")) {
+        const parts = nameUpper.split("(TECHNICAL)");
+        return (
+            <div className="text-center leading-none">
+                <h1 className="text-[10px] font-black text-slate-800 tracking-tight scale-y-110">
+                    {parts[0].trim()} <span className="text-red-600 inline-block mx-0.5">(TECHNICAL)</span> {parts[1]?.trim()}
+                </h1>
+            </div>
+        )
     }
-    return <span className="font-extrabold">{name.toUpperCase()}</span>;
+    return (
+        <h1 className="text-[10px] font-black text-slate-800 text-center leading-none tracking-tight uppercase scale-y-110">
+            {companyName}
+        </h1>
+    );
   };
 
   return (
-    <div className="w-[85.6mm] h-[54mm] bg-white rounded-[6px] shadow-xl overflow-hidden relative flex flex-col font-sans print:shadow-none text-slate-900 leading-normal">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:12px_12px] opacity-60"></div>
+    <div className="w-[85.6mm] h-[54mm] bg-white rounded-[8px] shadow-xl overflow-hidden relative flex flex-col font-sans text-slate-900 border border-gray-100 print:shadow-none">
+        {/* Corner Designs - Identical to Front */}
+        {/* Top Left Green Triangle */}
+        <div className="absolute top-0 left-0 w-[55px] h-[55px] bg-green-600 z-0" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
+        <div className="absolute top-0 left-0 w-[60px] h-[60px] bg-yellow-400 -z-10" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}></div>
         
-        {/* Top Bar */}
-        <div className="relative z-10 bg-slate-800 w-full h-[14px] flex items-center justify-between px-8 mt-2">
-             <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
-             <div className="w-4"></div>
-             <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
+        {/* Bottom Right Green Triangle */}
+        <div className="absolute bottom-0 right-0 w-[40px] h-[40px] bg-green-600 z-0" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
+        <div className="absolute bottom-0 right-0 w-[45px] h-[45px] bg-yellow-400 -z-10" style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}></div>
+
+        {/* Background Texture */}
+        <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(#22c55e_0.5px,transparent_0.5px)] [background-size:8px_8px]"></div>
+
+        {/* Watermark Logo Pattern */}
+        {companyLogo && (
+            <div className="absolute inset-0 z-0 grid grid-cols-6 grid-rows-4 items-center justify-items-center p-2 pointer-events-none opacity-[0.07] overflow-hidden">
+                {[...Array(24)].map((_, i) => (
+                    <img key={i} src={companyLogo} alt="" className="w-8 -rotate-12 grayscale contrast-125" />
+                ))}
+            </div>
+        )}
+
+        {/* Header Section - Identical to Front */}
+        <div className="relative z-10 w-full pt-4 px-2 flex flex-row items-start pl-3">
+            {/* Logo positioned top left - over the green shape */}
+            <div className="w-12 h-12 flex-shrink-0 z-20 mr-2 -mt-1 bg-white rounded-full p-0.5 shadow-sm">
+                {companyLogo && (
+                    <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
+                )}
+            </div>
+            
+            {/* Header Text */}
+            <div className="flex-grow flex flex-col items-center justify-start -ml-2">
+                {renderHeader()}
+                <p className="text-[6px] font-bold text-slate-700 mt-1.5 uppercase tracking-wide">{companyAddress}</p>
+                <div className="flex flex-wrap justify-center gap-x-2 gap-y-0 text-[5px] text-red-600 font-bold mt-1.5 leading-tight">
+                    <span>website:- {companyWebsite.replace(/^https?:\/\//, '')}</span>
+                    <span>email:- info@{companyWebsite.replace(/^https?:\/\//, '').replace(/^www\./, '')}</span>
+                </div>
+            </div>
         </div>
 
-        <div className="flex-1 relative z-10 flex p-3 gap-4 items-center justify-center">
-            {/* Left Column: Disclaimer & Signature */}
-            <div className="flex-1 flex flex-col justify-center text-center items-center">
-                 {companyLogo && (
-                    <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mx-auto mb-1" />
-                 )}
-                 <p className="text-[5px] text-slate-500 mb-0.5">Property of</p>
-                 <h3 className="text-[6px] font-extrabold uppercase mb-2 text-slate-900 leading-tight">
-                    {renderCompanyName(companyName)}
-                 </h3>
-                 
-                 <p className="text-[5px] text-slate-600 leading-relaxed mb-2 max-w-[140px]">
-                    This card remains the property of the institution. If found, please return to the Security Unit.
+        {/* Main Content Body */}
+        <div className="relative z-10 flex-1 flex flex-row px-6 pt-1 pb-3 items-center">
+            {/* Left: Disclaimer & Signature */}
+            <div className="flex-1 flex flex-col items-center text-center pr-4">
+                 <h3 className="text-[9px] font-black uppercase text-green-700 mb-2 mt-1">Property of the Institution</h3>
+                 <p className="text-[7px] leading-relaxed text-slate-800 font-semibold mb-3">
+                    This card remains the property of the College. If found, please return to the Security Unit or the Student Affairs Division.
                  </p>
-
-                 <div className="flex flex-col items-center w-full">
+                 
+                 {/* Signature */}
+                 <div className="flex flex-col items-center mt-auto w-full">
                     {provostSignature ? (
-                        <img src={provostSignature} alt="Signature" className="h-5 object-contain mb-0.5" />
+                        <img src={provostSignature} alt="Signature" className="h-8 object-contain mb-0.5" />
                     ) : (
-                         <div className="h-5 w-16 border-b border-dashed border-slate-300"></div>
+                         <div className="h-8 w-24 border-b border-dashed border-slate-400"></div>
                     )}
-                    <div className="w-20 border-t border-slate-400 mt-0.5"></div>
-                    <p className="text-[5px] text-slate-500 mt-0.5">Registrar / Provost</p>
+                    <div className="w-32 border-t border-slate-800 mt-0.5"></div>
+                    <p className="text-[6px] font-bold text-slate-900 mt-0.5 uppercase tracking-wide">Registrar / Provost</p>
                  </div>
             </div>
 
-            {/* Vertical Divider */}
-            <div className="w-px h-20 bg-slate-200"></div>
+            {/* Vertical Separator */}
+            <div className="w-px h-[70%] bg-slate-200 mx-2"></div>
 
-            {/* Right Column: QR Code */}
-            <div className="w-1/3 flex flex-col items-center justify-center">
-                <div className="p-1 bg-white rounded-lg shadow-sm border border-gray-100 mb-0.5">
+            {/* Right: QR Code */}
+             <div className="flex flex-col items-center justify-center pl-2">
+                <div className="bg-white p-1 rounded-sm shadow-sm border border-gray-100">
                     <QRCodeCanvas 
                         value={vCardData} 
                         size={256} 
-                        style={{ width: '50px', height: '50px' }} 
+                        style={{ width: '55px', height: '55px' }} 
                         level="M"
                     />
                 </div>
-                <p className="text-[5px] text-slate-400 font-medium">Scan for Details</p>
-            </div>
-        </div>
-        
-        {/* Bottom Bar */}
-        <div className="relative z-10 w-full mt-auto">
-             <div className="bg-slate-800 w-full h-[14px] flex items-center justify-between px-8">
-                 <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
-                 <div className="w-4"></div>
-                 <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
-            </div>
-             <div className="bg-white py-0.5 text-center border-t border-slate-100 mb-0.5">
-                <p className="text-[5px] text-slate-800 font-bold tracking-wide">{companyWebsite}</p>
-            </div>
+                <span className="text-[5px] font-bold text-slate-500 mt-1 uppercase tracking-wider">Scan for Details</span>
+             </div>
         </div>
     </div>
   );
