@@ -69,9 +69,9 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
         </div>
         
         {/* Main Content Area */}
-        <div className="relative z-10 flex-1 flex pl-3 pr-2 py-1 gap-2 items-start overflow-hidden">
-             {/* Photo - Adjusted position and standard aspect ratio */}
-            <div className="flex-shrink-0 mt-7">
+        <div className="relative z-10 flex-1 flex pl-3 pr-2 py-1 gap-2 items-center overflow-hidden">
+             {/* Photo - Centered vertically */}
+            <div className="flex-shrink-0">
                 <div className="w-[76px] h-[95px] bg-white rounded-md shadow-md border-[2px] border-white overflow-hidden ring-1 ring-gray-100">
                     <img src={student.photo} alt={fullName} className="w-full h-full object-cover" />
                 </div>
@@ -80,7 +80,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             {/* Details Column */}
             <div className="flex-grow flex flex-col items-center h-full">
                  {/* Header Info */}
-                 <div className="mb-2 w-full flex flex-col items-center text-center">
+                 <div className="mb-2 w-full flex flex-col items-center text-center mt-1">
                      {companyLogo && (
                         <img src={companyLogo} alt="Logo" className="w-6 h-6 object-contain mb-0.5 drop-shadow-sm" />
                      )}
