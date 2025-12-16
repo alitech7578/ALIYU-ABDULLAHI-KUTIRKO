@@ -11,7 +11,7 @@ const getInitialLayoutSettings = (): IDCardLayoutSettings => ({
         visibleFields: ['fullName', 'rank', 'department', 'bloodGroup', 'spNumber', 'qrCode'],
     },
     student: {
-        visibleFields: ['fullName', 'department', 'registrationNumber', 'qrCode'],
+        visibleFields: ['fullName', 'department', 'registrationNumber', 'school', 'qrCode'],
     },
 });
 

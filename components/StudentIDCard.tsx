@@ -127,7 +127,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                      {visibleFields.includes('school') && (
                         <div className="flex items-baseline">
                              <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0">School:</span>
-                             <span className="flex-1 text-[7.5px] font-black text-black uppercase leading-tight">
+                             <span className="flex-1 text-[8px] font-black text-black uppercase leading-tight">
                                 {student.school}
                              </span>
                         </div>
