@@ -64,7 +64,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
 
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
-  
+      
   useEffect(() => {
     setPhotoPreview(fields.photo);
   }, [fields.photo]);
