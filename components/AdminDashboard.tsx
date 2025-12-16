@@ -112,18 +112,35 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     // This effect ensures that if the stored settings are partial (from an older version),
     // they get merged with the latest default structure to prevent crashes.
-    setLayoutSettings(prev => ({
-        staff: {
-            ...initialLayoutSettings.staff,
-            ...(prev?.staff || {}),
-        },
-        student: {
-            ...initialLayoutSettings.student,
-            ...(prev?.student || {}),
+    setLayoutSettings(prev => {
+        // Use initialLayoutSettings.student/staff as fallback if stored value is missing or empty
+        const prevStudent = prev?.student || initialLayoutSettings.student;
+        const prevStaff = prev?.staff || initialLayoutSettings.staff;
+
+        // Force 'school' into visibleFields if it's missing (migration for existing users)
+        let studentVisibleFields = prevStudent.visibleFields || initialLayoutSettings.student.visibleFields;
+        if (!studentVisibleFields.includes('school')) {
+            studentVisibleFields = [...studentVisibleFields, 'school'];
+            // Re-sort to match default order by filtering allStudentFields
+            studentVisibleFields = allStudentFields
+                .map(f => f.id)
+                .filter(id => studentVisibleFields.includes(id));
         }
-    }));
+
+        return {
+            staff: {
+                ...initialLayoutSettings.staff,
+                ...prevStaff,
+            },
+            student: {
+                ...initialLayoutSettings.student,
+                ...prevStudent,
+                visibleFields: studentVisibleFields
+            }
+        };
+    });
     setSettingsReady(true);
-  }, []); // Run only once on mount to hydrate settings safely
+  }, []); 
   
 
 
