@@ -13,6 +13,16 @@ interface StudentIDCardBackProps {
 
 const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress, provostSignature }) => {
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
+
+  const formatExpirationDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+    return `${month} ${year}`;
+  };
+
   const vCardData = [
     'BEGIN:VCARD',
     'VERSION:3.0',
@@ -21,7 +31,7 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
     `ORG:${companyName.replace(/,/g, '\\,')}`,
     `TITLE:Student`,
     `EMAIL;TYPE=INTERNET:${student.email}`,
-    `NOTE:Registration No: ${student.registrationNumber}\\nDepartment: ${student.department}`,
+    `NOTE:Registration No: ${student.registrationNumber}\\nDepartment: ${student.department}\\nSchool: ${student.school}\\nExpiration Date: ${formatExpirationDate(student.expirationDate)}`,
     'END:VCARD'
   ].join('\n');
 
