@@ -14,7 +14,7 @@ type ImportResult = {
     errors: string[];
 };
 
-const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','Department','SPNumber','Rank','State','LGA','MaritalStatus','BloodGroup','PhoneNumber', 'Photo'];
+const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','Department','SPNumber','Rank','State','LGA','MaritalStatus','BloodGroup','PhoneNumber'];
 const CSV_TEMPLATE = CSV_HEADERS.join(',');
 
 const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) => {
@@ -82,11 +82,11 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                     continue;
                 }
                 
-                const [name, middleName, surname, email, department, spNumber, rank, state, lg, marriedStatus, bloodGroup, phoneNumber, photo] = rowData.map(d => d.trim());
+                const [name, middleName, surname, email, department, spNumber, rank, state, lg, marriedStatus, bloodGroup, phoneNumber] = rowData.map(d => d.trim());
                 
-                // Basic validation (photo is optional)
+                // Basic validation
                 if (!name || !surname || !email || !department || !spNumber || !rank || !state || !lg || !marriedStatus || !bloodGroup || !phoneNumber) {
-                     errors.push(`Row ${i + 1}: Missing one or more required fields (excluding Photo).`);
+                     errors.push(`Row ${i + 1}: Missing one or more required fields.`);
                      continue;
                 }
 
@@ -105,7 +105,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                     bloodGroup,
                     phoneNumber,
                     createdAt: new Date().toISOString(),
-                    photo: photo || '', // Use photo from CSV, or empty string if not provided
+                    photo: '', // Photo must be added manually after import
                     createdBy: 'admin-import',
                 });
                 successfulImports++;
@@ -142,8 +142,8 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                             Upload a CSV file with the following columns in order: <br/>
                             <code className="text-xs bg-brand-primary p-1 rounded break-all">{CSV_HEADERS.join(', ')}</code>
                         </p>
-                        <p className="text-brand-muted mt-2 text-sm">
-                           The 'Photo' column should contain the full base64 Data URL for the image (e.g., "data:image/png;base64,..."). If left empty, no photo will be assigned.
+                        <p className="text-brand-muted mt-2 text-sm font-medium">
+                           Note: Photos cannot be imported via CSV. Please edit records individually to upload photos after importing.
                         </p>
                         <button onClick={downloadTemplate} className="mt-3 text-sm text-brand-accent hover:underline">Download CSV Template</button>
                     </div>
