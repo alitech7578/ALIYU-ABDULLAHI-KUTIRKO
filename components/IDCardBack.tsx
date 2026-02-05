@@ -59,13 +59,14 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
                  <img src={companyLogo} alt="Logo" className="w-8 h-8 object-contain mb-1.5" />
             )}
             
-            <p className="text-[5.5px] text-slate-500 mb-0.5">This card is the property of</p>
+            <p className="text-[5.5px] text-slate-700 mb-0.5">This card is the property of</p>
             <h3 className="text-[6.5px] font-extrabold text-slate-900 leading-tight mb-3 px-1">
                 {renderCompanyName(companyName)}
             </h3>
 
-            <p className="text-[6px] text-slate-600 leading-relaxed mb-2 max-w-[120px]">
+            <p className="text-[6px] text-slate-600 leading-relaxed mb-2 max-w-[250px]">
                 If found, please return to the<br/>
+                <br/>
                 Provost/Security Unit
             </p>
 

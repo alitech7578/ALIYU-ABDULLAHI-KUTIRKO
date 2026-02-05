@@ -56,7 +56,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
             <h1 className="text-[9px] font-extrabold leading-normal tracking-wide text-slate-900 px-1">
                 {renderCompanyName(companyName)}
             </h1>
-            <p className="text-[5.5px] text-slate-500 mt-0.5 font-bold">{companyAddress}</p>
+            <p className="text-[5.5px] text-slate-600 mt-0.9 font-bold">{companyAddress}</p>
        </div>
 
        {/* Photo Section */}
@@ -86,6 +86,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                         Dept.: {record.department}
                     </p>
                 )}
+                
                 {visibleFields.includes('bloodGroup') && (
                     <p className="text-[7.5px] font-semibold text-slate-800 leading-tight">
                         Blood Group: {record.bloodGroup}
