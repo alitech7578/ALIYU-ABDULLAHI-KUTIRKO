@@ -36,7 +36,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
        {/* Background Dot Pattern */}
        <div className="absolute inset-0 z-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:12px_12px] opacity-60"></div>
        
-       {/* Watermark Logo Pattern (20 Logos in 4x5 Grid) */}
+       {/* Watermark Logo Pattern */}
        {companyLogo && (
         <div className="absolute inset-0 z-0 grid grid-cols-4 grid-rows-5 items-center justify-items-center p-2 pointer-events-none opacity-[0.10] overflow-hidden">
             {[...Array(20)].map((_, i) => (
@@ -59,15 +59,19 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
             <p className="text-[5.5px] text-slate-600 mt-0.9 font-bold">{companyAddress}</p>
        </div>
 
-       {/* Photo Section */}
-       <div className="relative z-10 mt-2 mb-1">
-            <div className="w-[90px] h-[100px] bg-gray-200 rounded-md shadow-sm overflow-hidden border border-gray-200">
-                <img src={record.photo} alt={fullName} className="w-full h-full object-cover" />
-            </div>
-       </div>
+       {/* Photo Section - Conditional Rendering */}
+       {record.photo ? (
+           <div className="relative z-10 mt-2 mb-1">
+                <div className="w-[90px] h-[100px] bg-gray-200 rounded-md shadow-sm overflow-hidden border border-gray-200">
+                    <img src={record.photo} alt={fullName} className="w-full h-full object-cover" />
+                </div>
+           </div>
+       ) : (
+           <div className="h-4"></div> // Small spacer if no photo
+       )}
 
        {/* Details Section */}
-       <div className="relative z-10 flex-1 w-full px-2 flex flex-col items-center text-center gap-1">
+       <div className={`relative z-10 flex-1 w-full px-2 flex flex-col items-center text-center gap-1 ${!record.photo ? 'justify-center' : ''}`}>
             {visibleFields.includes('fullName') && (
                 <h2 className="text-[10px] font-extrabold text-slate-900 uppercase tracking-tight leading-snug">
                     {fullName}
@@ -95,22 +99,17 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
             </div>
        </div>
 
-       {/* Footer Section - Matches Screenshot */}
+       {/* Footer Section */}
        <div className="relative z-10 w-full mt-auto">
-            {/* Dark Bar with SP Number and Yellow Lines */}
             <div className="bg-slate-800 w-full h-[22px] flex items-center justify-between px-3">
                 <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
-                
                 {visibleFields.includes('spNumber') && (
                     <span className="text-white font-bold text-[9px] mx-2 uppercase tracking-wider">
                         {record.spNumber}
                     </span>
                 )}
-                
                 <div className="h-[2px] flex-1 bg-amber-400 rounded-full"></div>
             </div>
-            
-            {/* Website Link */}
             <div className="bg-white w-full py-1 text-center border-t border-slate-100">
                 <p className="text-[5.5px] text-slate-800 font-bold tracking-wide">{companyWebsite}</p>
             </div>

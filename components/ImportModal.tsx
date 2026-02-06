@@ -14,7 +14,7 @@ type ImportResult = {
     errors: string[];
 };
 
-const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','Department','SPNumber','Rank','State','LGA','MaritalStatus','BloodGroup','PhoneNumber'];
+const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','Department','SPNumber','Rank','State','LGA','MaritalStatus','BloodGroup','PhoneNumber','Photo'];
 const CSV_TEMPLATE = CSV_HEADERS.join(',');
 
 const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) => {
@@ -41,7 +41,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
         const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.setAttribute('download', 'import-template.csv');
+        link.setAttribute('download', 'staff-import-template.csv');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -77,12 +77,12 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
 
             for (let i = 1; i < rows.length; i++) {
                 const rowData = rows[i].trim().split(',');
-                if (rowData.length !== CSV_HEADERS.length) {
+                if (rowData.length < CSV_HEADERS.length - 1) { // Photo is optional at the end
                     errors.push(`Row ${i + 1}: Incorrect number of columns.`);
                     continue;
                 }
                 
-                const [name, middleName, surname, email, department, spNumber, rank, state, lg, marriedStatus, bloodGroup, phoneNumber] = rowData.map(d => d.trim());
+                const [name, middleName, surname, email, department, spNumber, rank, state, lg, marriedStatus, bloodGroup, phoneNumber, photo] = rowData.map(d => d?.trim() || '');
                 
                 // Basic validation
                 if (!name || !surname || !email || !department || !spNumber || !rank || !state || !lg || !marriedStatus || !bloodGroup || !phoneNumber) {
@@ -105,14 +105,14 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                     bloodGroup,
                     phoneNumber,
                     createdAt: new Date().toISOString(),
-                    photo: '', // Photo must be added manually after import
+                    photo: photo || '', // Use photo string if provided in CSV
                     createdBy: 'admin-import',
                 });
                 successfulImports++;
             }
 
             onImport(newRecords);
-            setImportResult({ success: successfulImports, failed: errors.length, errors: errors.slice(0, 10) }); // Show first 10 errors
+            setImportResult({ success: successfulImports, failed: errors.length, errors: errors.slice(0, 10) });
             setIsProcessing(false);
             setFile(null);
         };
@@ -129,7 +129,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
             <div className="bg-brand-secondary/90 rounded-2xl shadow-2xl w-full max-w-2xl p-8" onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-6">
-                    <h2 id="import-modal-title" className="text-2xl font-bold text-brand-light">Import Records</h2>
+                    <h2 id="import-modal-title" className="text-2xl font-bold text-brand-light">Import Staff Records</h2>
                     <button onClick={onClose} className="p-2 text-brand-muted hover:text-brand-light rounded-full transition-colors" aria-label="Close import dialog">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
@@ -142,8 +142,8 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                             Upload a CSV file with the following columns in order: <br/>
                             <code className="text-xs bg-brand-primary p-1 rounded break-all">{CSV_HEADERS.join(', ')}</code>
                         </p>
-                        <p className="text-brand-muted mt-2 text-sm font-medium">
-                           Note: Photos cannot be imported via CSV. Please edit records individually to upload photos after importing.
+                        <p className="text-brand-muted mt-2 text-sm">
+                           The 'Photo' column is optional and should contain a base64 Data URL.
                         </p>
                         <button onClick={downloadTemplate} className="mt-3 text-sm text-brand-accent hover:underline">Download CSV Template</button>
                     </div>
@@ -160,7 +160,6 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                         <label htmlFor="csv-upload" className={`cursor-pointer ${isProcessing ? 'cursor-not-allowed' : ''}`}>
                             <UploadIcon className="w-12 h-12 mx-auto text-brand-muted" />
                             <p className="mt-2 font-semibold text-brand-light">{file ? file.name : 'Click to upload a file'}</p>
-                            <p className="text-xs text-brand-muted">{file ? `(${(file.size / 1024).toFixed(2)} KB)` : 'CSV up to 5MB'}</p>
                         </label>
                     </div>
 
@@ -171,14 +170,6 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                             <h4 className="font-semibold text-brand-light">Import Complete</h4>
                             <p className="text-green-400">Successfully imported: {importResult.success} record(s).</p>
                             <p className="text-red-400">Failed to import: {importResult.failed} record(s).</p>
-                            {importResult.errors.length > 0 && (
-                                <div className="mt-2 text-xs text-red-300">
-                                    <p className="font-bold">Error Details (first 10):</p>
-                                    <ul className="list-disc list-inside">
-                                        {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
-                                    </ul>
-                                </div>
-                            )}
                         </div>
                     )}
 
@@ -189,7 +180,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onImport }) 
                         <button
                             onClick={processImport}
                             disabled={!file || isProcessing}
-                            className="flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-opacity-80 rounded-lg text-white font-semibold transition-colors disabled:bg-brand-accent/50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-brand-accent hover:bg-opacity-80 rounded-lg text-white font-semibold transition-colors disabled:bg-brand-accent/50 disabled:cursor-not-allowed"
                         >
                             {isProcessing ? 'Processing...' : 'Start Import'}
                         </button>

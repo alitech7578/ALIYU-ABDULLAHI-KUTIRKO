@@ -14,7 +14,7 @@ type ImportResult = {
     errors: string[];
 };
 
-const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','School','Department','RegistrationNumber','ExpirationDate'];
+const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','School','Department','RegistrationNumber','ExpirationDate','Photo'];
 const CSV_TEMPLATE = CSV_HEADERS.join(',');
 
 const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose, onImport }) => {
@@ -77,12 +77,12 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
 
             for (let i = 1; i < rows.length; i++) {
                 const rowData = rows[i].trim().split(',');
-                if (rowData.length !== CSV_HEADERS.length) {
+                if (rowData.length < CSV_HEADERS.length - 1) { // Photo is optional
                     errors.push(`Row ${i + 1}: Incorrect number of columns.`);
                     continue;
                 }
                 
-                const [firstName, middleName, surname, email, school, department, registrationNumber, expirationDate] = rowData.map(d => d.trim());
+                const [firstName, middleName, surname, email, school, department, registrationNumber, expirationDate, photo] = rowData.map(d => d?.trim() || '');
                 
                 // Basic validation
                 if (!firstName || !surname || !email || !school || !department || !registrationNumber || !expirationDate) {
@@ -101,14 +101,14 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                     registrationNumber,
                     expirationDate,
                     createdAt: new Date().toISOString(),
-                    photo: '', // Photo must be added manually after import
+                    photo: photo || '', // Use photo if provided
                     createdBy: 'admin-import',
                 });
                 successfulImports++;
             }
 
             onImport(newStudents);
-            setImportResult({ success: successfulImports, failed: errors.length, errors: errors.slice(0, 10) }); // Show first 10 errors
+            setImportResult({ success: successfulImports, failed: errors.length, errors: errors.slice(0, 10) });
             setIsProcessing(false);
             setFile(null);
         };
@@ -138,8 +138,8 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                             Upload a CSV file with the following columns in order: <br/>
                             <code className="text-xs bg-brand-primary p-1 rounded break-all">{CSV_HEADERS.join(', ')}</code>
                         </p>
-                        <p className="text-brand-muted mt-2 text-sm font-medium">
-                           Note: Photos cannot be imported via CSV. Please edit records individually to upload photos after importing.
+                        <p className="text-brand-muted mt-2 text-sm">
+                           The 'Photo' column is optional at the end of the row.
                         </p>
                         <button onClick={downloadTemplate} className="mt-3 text-sm text-brand-accent hover:underline">Download Student CSV Template</button>
                     </div>
@@ -156,7 +156,6 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                         <label htmlFor="student-csv-upload" className={`cursor-pointer ${isProcessing ? 'cursor-not-allowed' : ''}`}>
                             <UploadIcon className="w-12 h-12 mx-auto text-brand-muted" />
                             <p className="mt-2 font-semibold text-brand-light">{file ? file.name : 'Click to upload a file'}</p>
-                            <p className="text-xs text-brand-muted">{file ? `(${(file.size / 1024).toFixed(2)} KB)` : 'CSV up to 5MB'}</p>
                         </label>
                     </div>
 
@@ -166,15 +165,6 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                         <div className="bg-brand-primary/50 p-4 rounded-lg" role="status">
                             <h4 className="font-semibold text-brand-light">Import Complete</h4>
                             <p className="text-green-400">Successfully imported: {importResult.success} record(s).</p>
-                            <p className="text-red-400">Failed to import: {importResult.failed} record(s).</p>
-                            {importResult.errors.length > 0 && (
-                                <div className="mt-2 text-xs text-red-300">
-                                    <p className="font-bold">Error Details (first 10):</p>
-                                    <ul className="list-disc list-inside">
-                                        {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
-                                    </ul>
-                                </div>
-                            )}
                         </div>
                     )}
 
@@ -185,7 +175,7 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                         <button
                             onClick={processImport}
                             disabled={!file || isProcessing}
-                            className="flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-opacity-80 rounded-lg text-white font-semibold transition-colors disabled:bg-brand-accent/50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-brand-accent hover:bg-opacity-80 rounded-lg text-white font-semibold transition-colors disabled:bg-brand-accent/50 disabled:cursor-not-allowed"
                         >
                             {isProcessing ? 'Processing...' : 'Start Import'}
                         </button>
