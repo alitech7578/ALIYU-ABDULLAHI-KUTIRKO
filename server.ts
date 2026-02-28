@@ -2,14 +2,30 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import fs from "fs";
 import path from "path";
+import session from "express-session";
+import cookieParser from "cookie-parser";
+import bcrypt from "bcryptjs";
+
+declare module 'express-session' {
+  interface SessionData {
+    userId: string;
+  }
+}
 
 const DATA_FILE = path.resolve("data.json");
 
 // Initialize data file if it doesn't exist
 if (!fs.existsSync(DATA_FILE)) {
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync("admin123", salt);
+  
   fs.writeFileSync(DATA_FILE, JSON.stringify({
     records: [],
     students: [],
+    auth: {
+      username: "admin",
+      password: hashedPassword
+    },
     branding: {
       companyName: 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI',
       companyLogo: null,
@@ -26,9 +42,28 @@ if (!fs.existsSync(DATA_FILE)) {
 function readData() {
   try {
     const content = fs.readFileSync(DATA_FILE, "utf-8");
-    return JSON.parse(content);
+    const data = JSON.parse(content);
+    // Ensure auth exists for existing files
+    if (!data.auth) {
+      const salt = bcrypt.genSaltSync(10);
+      data.auth = {
+        username: "admin",
+        password: bcrypt.hashSync("admin123", salt)
+      };
+      writeData(data);
+    }
+    return data;
   } catch (e) {
-    return { records: [], students: [], branding: {} };
+    const salt = bcrypt.genSaltSync(10);
+    return { 
+      records: [], 
+      students: [], 
+      auth: {
+        username: "admin",
+        password: bcrypt.hashSync("admin123", salt)
+      },
+      branding: {} 
+    };
   }
 }
 
@@ -41,14 +76,84 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json({ limit: '50mb' }));
+  app.use(cookieParser());
+  app.use(session({
+    secret: 'data-collector-secret-key-123',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
 
-  // API routes
-  app.get("/api/data", (req, res) => {
-    res.json(readData());
+  // Auth middleware
+  const isAuthenticated = (req: any, res: any, next: any) => {
+    if (req.session.userId) {
+      next();
+    } else {
+      res.status(401).json({ error: "Unauthorized" });
+    }
+  };
+
+  // Auth routes
+  app.post("/api/login", async (req, res) => {
+    const { username, password } = req.body;
+    const data = readData();
+    
+    if (username === data.auth.username && bcrypt.compareSync(password, data.auth.password)) {
+      req.session.userId = username;
+      res.json({ status: "ok", username });
+    } else {
+      res.status(401).json({ error: "Invalid credentials" });
+    }
   });
 
-  app.post("/api/data", (req, res) => {
-    writeData(req.body);
+  app.post("/api/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) return res.status(500).json({ error: "Could not log out" });
+      res.json({ status: "ok" });
+    });
+  });
+
+  app.get("/api/auth/status", (req, res) => {
+    if (req.session.userId) {
+      res.json({ authenticated: true, username: req.session.userId });
+    } else {
+      res.json({ authenticated: false });
+    }
+  });
+
+  app.post("/api/auth/update", isAuthenticated, async (req, res) => {
+    const { username, password } = req.body;
+    const data = readData();
+    
+    if (username) data.auth.username = username;
+    if (password) {
+      const salt = bcrypt.genSaltSync(10);
+      data.auth.password = bcrypt.hashSync(password, salt);
+    }
+    
+    writeData(data);
+    res.json({ status: "ok" });
+  });
+
+  // API routes
+  app.get("/api/data", isAuthenticated, (req, res) => {
+    const data = readData();
+    // Don't send auth data to frontend
+    const { auth, ...publicData } = data;
+    res.json(publicData);
+  });
+
+  app.post("/api/data", isAuthenticated, (req, res) => {
+    const data = readData();
+    const newData = { ...data, ...req.body };
+    // Preserve auth data
+    newData.auth = data.auth;
+    writeData(newData);
     res.json({ status: "ok" });
   });
 

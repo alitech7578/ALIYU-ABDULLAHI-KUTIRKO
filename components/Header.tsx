@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DatabaseIcon, UserCircleIcon, LogoutIcon, MoonIcon, SunIcon } from './IconComponents';
+import { DatabaseIcon, UserCircleIcon, LogoutIcon, MoonIcon, SunIcon, DownloadIcon } from './IconComponents';
 
 interface User {
   username: string;
@@ -15,6 +15,25 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLogo }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('theme') as 'light' | 'dark') || 'dark');
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -31,18 +50,30 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLog
   };
 
   const themeToggleButton = (
-    <button
-      onClick={toggleTheme}
-      className="p-2 rounded-full hover:bg-brand-secondary/80 transition-colors"
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-    >
-      {theme === 'dark' ? (
-        <SunIcon className="w-6 h-6 text-yellow-300" />
-      ) : (
-        <MoonIcon className="w-6 h-6 text-brand-light" />
+    <div className="flex items-center gap-2">
+      {deferredPrompt && (
+        <button
+          onClick={handleInstall}
+          className="flex items-center gap-2 px-3 py-1.5 bg-brand-accent hover:bg-opacity-80 text-white text-xs font-bold rounded-lg transition-all animate-pulse"
+          title="Install as Desktop App"
+        >
+          <DownloadIcon className="w-4 h-4" />
+          <span className="hidden md:inline">DOWNLOAD APP</span>
+        </button>
       )}
-    </button>
+      <button
+        onClick={toggleTheme}
+        className="p-2 rounded-full hover:bg-brand-secondary/80 transition-colors"
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        {theme === 'dark' ? (
+          <SunIcon className="w-6 h-6 text-yellow-300" />
+        ) : (
+          <MoonIcon className="w-6 h-6 text-brand-light" />
+        )}
+      </button>
+    </div>
   );
 
   return (

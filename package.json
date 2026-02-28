@@ -6,11 +6,18 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
+    "@types/express-session": "^1.18.2",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "html-to-image": "^1.11.11",
     "jspdf": "^2.5.1",
     "qrcode.react": "^3.1.0",

@@ -14,6 +14,7 @@ import StudentIDCardModal from './StudentIDCardModal';
 import BulkStudentIDPrint from './BulkStudentIDPrint';
 import StudentImportModal from './StudentImportModal';
 import ConfirmationModal from './ConfirmationModal';
+import PWAInstallPrompt from './PWAInstallPrompt';
 
 type SortDirection = 'ascending' | 'descending';
 interface SortConfig<T> {
@@ -72,7 +73,11 @@ const EditableField = ({ label, value, isEditing, onEditToggle, tempValue, onTem
     </div>
   );
 
-const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  onLogout: () => void;
+}
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [records, setRecords, recordsSaveStatus] = useLocalStorage<DataRecord[]>('data-records', []);
   const [students, setStudents, studentsSaveStatus] = useLocalStorage<Student[]>('student-records', []);
   
@@ -110,6 +115,12 @@ const AdminDashboard: React.FC = () => {
   const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
   const [settingsReady, setSettingsReady] = useState(false);
   const [serverSyncStatus, setServerSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
+
+  // Security Settings State
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [securityMessage, setSecurityMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Load from server on mount
   useEffect(() => {
@@ -469,6 +480,30 @@ const AdminDashboard: React.FC = () => {
     });
   };
 
+  const handleUpdateSecurity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSecurityLoading(true);
+    setSecurityMessage(null);
+    try {
+      const response = await fetch('/api/auth/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: newUsername, password: newPassword })
+      });
+      if (response.ok) {
+        setSecurityMessage({ type: 'success', text: 'Credentials updated successfully!' });
+        setNewUsername('');
+        setNewPassword('');
+      } else {
+        setSecurityMessage({ type: 'error', text: 'Failed to update credentials.' });
+      }
+    } catch (err) {
+      setSecurityMessage({ type: 'error', text: 'An error occurred.' });
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
   if (isPrintViewVisible) {
     return <BulkIDPrint records={recordsToPrint} onClose={() => setIsPrintViewVisible(false)} companyName={companyName} companyLogo={companyLogo} companyEmail={companyEmail} companyAddress={companyAddress} companyWebsite={companyWebsite} provostSignature={provostSignature} layoutSettings={layoutSettings} />;
   }
@@ -483,6 +518,12 @@ const AdminDashboard: React.FC = () => {
         <Header companyName={companyName} companyLogo={companyLogo} />
 
         <div className="absolute top-4 right-4 text-xs text-brand-muted flex flex-col items-end gap-1">
+          <button 
+            onClick={onLogout}
+            className="mb-2 px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded border border-red-500/30 transition-colors text-xs font-bold"
+          >
+            LOGOUT
+          </button>
           <div className="flex items-center gap-2">
             {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving to Browser...</span></>}
             {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Browser</span></>}
@@ -661,43 +702,90 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="mt-12 bg-brand-secondary/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-brand-light mb-4">Branding Settings</h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                  <EditableField label="Company Name" value={companyName} isEditing={isEditingName} onEditToggle={setIsEditingName} tempValue={tempCompanyName} onTempChange={setTempCompanyName} onSave={() => { setCompanyName(tempCompanyName); setIsEditingName(false); }} />
-                  <EditableField label="Company Email" value={companyEmail} isEditing={isEditingEmail} onEditToggle={setIsEditingEmail} tempValue={tempCompanyEmail} onTempChange={setTempCompanyEmail} onSave={() => { setCompanyEmail(tempCompanyEmail); setIsEditingEmail(false); }} />
-                  <EditableField label="Company Address" value={companyAddress} isEditing={isEditingAddress} onEditToggle={setIsEditingAddress} tempValue={tempCompanyAddress} onTempChange={setTempCompanyAddress} onSave={() => { setCompanyAddress(tempCompanyAddress); setIsEditingAddress(false); }} />
-                  <EditableField label="Company Website" value={companyWebsite} isEditing={isEditingWebsite} onEditToggle={setIsEditingWebsite} tempValue={tempCompanyWebsite} onTempChange={setTempCompanyWebsite} onSave={() => { setCompanyWebsite(tempCompanyWebsite); setIsEditingWebsite(false); }} />
-                  <div className="md:col-span-2">
-                    <EditableField label="Public Page Content" value={companyContent} isEditing={isEditingContent} onEditToggle={setIsEditingContent} tempValue={tempCompanyContent} onTempChange={setTempCompanyContent} onSave={() => { setCompanyContent(tempCompanyContent); setIsEditingContent(false); }} />
-                  </div>
-                  <div className="flex items-center gap-4 py-2">
-                      <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Company Logo:</label>
-                      <div className="flex items-center gap-4">
-                          {companyLogo ? <img src={companyLogo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Logo</span></div>}
-                          <input id="logo-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} />
-                          <label htmlFor="logo-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
-                              <UploadIcon className="w-5 h-5"/>
-                              <span>{companyLogo ? 'Change' : 'Upload'}</span>
-                          </label>
+                <h2 className="text-2xl font-bold text-brand-light mb-4">Branding Settings</h2>
+                <div className="space-y-4">
+                  <div>
+                    <div className="grid grid-cols-1 gap-y-2">
+                      <EditableField label="Company Name" value={companyName} isEditing={isEditingName} onEditToggle={setIsEditingName} tempValue={tempCompanyName} onTempChange={setTempCompanyName} onSave={() => { setCompanyName(tempCompanyName); setIsEditingName(false); }} />
+                      <EditableField label="Company Email" value={companyEmail} isEditing={isEditingEmail} onEditToggle={setIsEditingEmail} tempValue={tempCompanyEmail} onTempChange={setTempCompanyEmail} onSave={() => { setCompanyEmail(tempCompanyEmail); setIsEditingEmail(false); }} />
+                      <EditableField label="Company Address" value={companyAddress} isEditing={isEditingAddress} onEditToggle={setIsEditingAddress} tempValue={tempCompanyAddress} onTempChange={setTempCompanyAddress} onSave={() => { setCompanyAddress(tempCompanyAddress); setIsEditingAddress(false); }} />
+                      <EditableField label="Company Website" value={companyWebsite} isEditing={isEditingWebsite} onEditToggle={setIsEditingWebsite} tempValue={tempCompanyWebsite} onTempChange={setTempCompanyWebsite} onSave={() => { setCompanyWebsite(tempCompanyWebsite); setIsEditingWebsite(false); }} />
+                      <EditableField label="Public Page Content" value={companyContent} isEditing={isEditingContent} onEditToggle={setIsEditingContent} tempValue={tempCompanyContent} onTempChange={setTempCompanyContent} onSave={() => { setCompanyContent(tempCompanyContent); setIsEditingContent(false); }} />
+                      
+                      <div className="flex items-center gap-4 py-2">
+                          <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Company Logo:</label>
+                          <div className="flex items-center gap-4">
+                              {companyLogo ? <img src={companyLogo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Logo</span></div>}
+                              <input id="logo-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} />
+                              <label htmlFor="logo-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
+                                  <UploadIcon className="w-5 h-5"/>
+                                  <span>{companyLogo ? 'Change' : 'Upload'}</span>
+                              </label>
+                          </div>
                       </div>
-                  </div>
-                  <div className="flex items-center gap-4 py-2">
-                      <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Provost Signature:</label>
-                      <div className="flex items-center gap-4">
-                          {provostSignature ? <img src={provostSignature} alt="Signature Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Signature</span></div>}
-                          <input id="signature-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleProvostSignatureUpload} />
-                          <label htmlFor="signature-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
-                              <UploadIcon className="w-5 h-5"/>
-                              <span>{provostSignature ? 'Change' : 'Upload'}</span>
-                          </label>
+                      <div className="flex items-center gap-4 py-2">
+                          <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Provost Signature:</label>
+                          <div className="flex items-center gap-4">
+                              {provostSignature ? <img src={provostSignature} alt="Signature Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Signature</span></div>}
+                              <input id="signature-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleProvostSignatureUpload} />
+                              <label htmlFor="signature-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
+                                  <UploadIcon className="w-5 h-5"/>
+                                  <span>{provostSignature ? 'Change' : 'Upload'}</span>
+                              </label>
+                          </div>
                       </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-brand-secondary/50 pt-4">
+              <div>
+                <h2 className="text-2xl font-bold text-brand-light mb-4">Security Settings</h2>
+                <form onSubmit={handleUpdateSecurity} className="space-y-4 bg-brand-primary/30 p-6 rounded-xl border border-brand-secondary/30">
+                  <p className="text-sm text-brand-muted mb-4">Update your login credentials here. Leave blank if you don't want to change.</p>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-brand-muted mb-1">New Username</label>
+                    <input 
+                      type="text" 
+                      value={newUsername}
+                      onChange={(e) => setNewUsername(e.target.value)}
+                      className="w-full px-3 py-2 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent text-brand-light"
+                      placeholder="Enter new username"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-brand-muted mb-1">New Password</label>
+                    <input 
+                      type="password" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent text-brand-light"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+
+                  {securityMessage && (
+                    <div className={`text-sm p-2 rounded ${securityMessage.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                      {securityMessage.text}
+                    </div>
+                  )}
+
+                  <button 
+                    type="submit"
+                    disabled={securityLoading || (!newUsername && !newPassword)}
+                    className="w-full py-2 bg-brand-accent hover:bg-opacity-80 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {securityLoading ? 'Updating...' : 'Update Credentials'}
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div className="mt-12 border-t border-brand-secondary/50 pt-8">
                 <h3 className="text-xl font-bold text-brand-light mb-4">ID Card Layout Customization</h3>
                 {settingsReady ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -741,7 +829,6 @@ const AdminDashboard: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
         </main>
 
         {isImportModalVisible && (
@@ -780,6 +867,7 @@ const AdminDashboard: React.FC = () => {
             message={`Are you sure you want to permanently delete this ${itemToDelete.type} record? This action cannot be undone.`}
           />
         )}
+        <PWAInstallPrompt />
       </div>
     </div>
   );

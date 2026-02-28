@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { DatabaseIcon, EyeIcon, EyeSlashIcon, SpinnerIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = '/api';
 
 interface AppUser {
   username: string;
@@ -29,7 +29,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         setError('');
 
         try {
-            const response = await fetch(`${API_URL}/users/login`, {
+            const response = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
