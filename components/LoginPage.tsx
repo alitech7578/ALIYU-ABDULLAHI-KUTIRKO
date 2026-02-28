@@ -47,7 +47,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             } else {
                 const text = await response.text();
                 console.error("Non-JSON response received:", text);
-                throw new Error("Server returned an unexpected response format. Please try again.");
+                const preview = text.substring(0, 100).replace(/<[^>]*>?/gm, '');
+                throw new Error(`Server returned an unexpected response format: ${preview || 'Empty response'}. Please try again.`);
             }
 
         } catch (err: any) {

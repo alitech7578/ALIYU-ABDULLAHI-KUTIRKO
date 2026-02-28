@@ -91,6 +91,7 @@ async function startServer() {
     secret: 'data-collector-secret-key-123',
     resave: false,
     saveUninitialized: false,
+    proxy: true, // Trust the reverse proxy to set secure cookies
     cookie: { 
       secure: true, // Required for sameSite: 'none' in iframe
       sameSite: 'none',
