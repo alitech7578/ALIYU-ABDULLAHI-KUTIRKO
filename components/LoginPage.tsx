@@ -36,13 +36,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 body: JSON.stringify({ username, password }),
             });
             
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Login failed. Please check your credentials.');
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Login failed. Please check your credentials.');
+                }
+                // Server returns { status: "ok", username }
+                onLoginSuccess({ username: data.username, role: 'admin' }, '');
+            } else {
+                const text = await response.text();
+                console.error("Non-JSON response received:", text);
+                throw new Error("Server returned an unexpected response format. Please try again.");
             }
-
-            onLoginSuccess({ username: data.username, role: data.role }, data.token);
 
         } catch (err: any) {
             setError(err.message);

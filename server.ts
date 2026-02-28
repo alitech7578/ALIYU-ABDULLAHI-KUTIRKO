@@ -75,11 +75,21 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  app.set('trust proxy', 1);
   app.use(express.json({ limit: '50mb' }));
   app.use(cookieParser());
+  
+  console.log(`Starting server in ${process.env.NODE_ENV || 'development'} mode`);
+
+  // Request logging
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+  });
+
   app.use(session({
     secret: 'data-collector-secret-key-123',
-    resave: true,
+    resave: false,
     saveUninitialized: false,
     cookie: { 
       secure: true, // Required for sameSite: 'none' in iframe
@@ -92,8 +102,10 @@ async function startServer() {
   // Auth middleware
   const isAuthenticated = (req: any, res: any, next: any) => {
     if (req.session.userId) {
+      console.log(`Authenticated request from ${req.session.userId}`);
       next();
     } else {
+      console.log(`Unauthorized request to ${req.url}`);
       res.status(401).json({ error: "Unauthorized" });
     }
   };

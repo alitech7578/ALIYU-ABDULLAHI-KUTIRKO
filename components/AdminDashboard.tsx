@@ -115,6 +115,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
   const [settingsReady, setSettingsReady] = useState(false);
   const [serverSyncStatus, setServerSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
 
   // Security Settings State
   const [newUsername, setNewUsername] = useState('');
@@ -125,6 +126,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   // Load from server on mount
   useEffect(() => {
     const loadData = async () => {
+      // Small delay to ensure session cookie is fully settled in browser
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       setServerSyncStatus('loading');
       try {
         const data = await fetchData();
@@ -142,9 +146,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           if (data.branding.layoutSettings) setLayoutSettings(data.branding.layoutSettings);
         }
         setServerSyncStatus('idle');
+        setIsInitialLoadComplete(true);
       } catch (error) {
         console.error('Failed to sync with server:', error);
         setServerSyncStatus('error');
+        // Still mark as complete so we can try to save later if needed, 
+        // but maybe we should wait for a successful load?
+        // Let's mark it complete so the user can at least try to save their local changes.
+        setIsInitialLoadComplete(true);
       }
     };
     loadData();
@@ -152,8 +161,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   // Save to server when data changes
   useEffect(() => {
-    // Skip initial save if we are still loading
-    if (serverSyncStatus === 'loading') return;
+    // Skip initial save if we are still loading or haven't finished the initial load attempt
+    if (serverSyncStatus === 'loading' || !isInitialLoadComplete) return;
 
     const timer = setTimeout(async () => {
       setServerSyncStatus('saving');

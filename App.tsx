@@ -26,9 +26,12 @@ const App: React.FC = () => {
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/status', { credentials: 'include' });
-      const data = await response.json();
-      if (data.authenticated) {
-        setUser({ username: data.username });
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const data = await response.json();
+        if (data.authenticated) {
+          setUser({ username: data.username });
+        }
       }
     } catch (err) {
       console.error('Auth check failed', err);
