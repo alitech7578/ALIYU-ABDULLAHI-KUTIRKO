@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { DataRecord, Student, IDCardLayoutSettings } from '../types';
 import IDCard from './IDCard';
 import StudentIDCard from './StudentIDCard';
-import { DatabaseIcon, UserCircleIcon } from './IconComponents';
+import { DatabaseIcon, UserCircleIcon, SpinnerIcon } from './IconComponents';
+import { fetchData } from '../services/api';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 // Helper to get initial layout settings to avoid mismatch
@@ -25,17 +26,17 @@ const ClientPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
-    // Fetch branding from local storage
-    const [companyName] = useLocalStorage('company-name', 'Data Collector Pro');
-    const [companyLogo] = useLocalStorage<string | null>('company-logo', null);
-    const [companyEmail] = useLocalStorage('company-email', 'contact@example.com');
-    const [companyAddress] = useLocalStorage('company-address', '123 Innovation Drive, Tech City');
-    const [companyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
-    const [companyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
-    const [layoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', getInitialLayoutSettings());
+    // Local states for branding (will be updated from server)
+    const [companyName, setCompanyName] = useState('Data Collector Pro');
+    const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+    const [companyEmail, setCompanyEmail] = useState('contact@example.com');
+    const [companyAddress, setCompanyAddress] = useState('123 Innovation Drive, Tech City');
+    const [companyWebsite, setCompanyWebsite] = useState('www.fcetbichi.edu.ng');
+    const [companyContent, setCompanyContent] = useState('Streamlining data management with intuitive solutions.');
+    const [layoutSettings, setLayoutSettings] = useState<IDCardLayoutSettings>(getInitialLayoutSettings());
 
     useEffect(() => {
-        const fetchRecordFromLocalStorage = () => {
+        const fetchRecordFromServer = async () => {
              try {
                 const hash = window.location.hash;
                 const recordId = hash.split('/id/')[1];
@@ -46,13 +47,26 @@ const ClientPage: React.FC = () => {
                     return;
                 }
 
+                const data = await fetchData();
+                
+                // Update branding from server
+                if (data.branding) {
+                    if (data.branding.companyName) setCompanyName(data.branding.companyName);
+                    if (data.branding.companyLogo) setCompanyLogo(data.branding.companyLogo);
+                    if (data.branding.companyEmail) setCompanyEmail(data.branding.companyEmail);
+                    if (data.branding.companyAddress) setCompanyAddress(data.branding.companyAddress);
+                    if (data.branding.companyWebsite) setCompanyWebsite(data.branding.companyWebsite);
+                    if (data.branding.companyContent) setCompanyContent(data.branding.companyContent);
+                    if (data.branding.layoutSettings) setLayoutSettings(data.branding.layoutSettings);
+                }
+
                 // Search for staff records first
-                const allStaffRecords: DataRecord[] = JSON.parse(window.localStorage.getItem('data-records') || '[]');
+                const allStaffRecords: DataRecord[] = data.records || [];
                 let foundPerson: DataRecord | Student | undefined = allStaffRecords.find(r => r.id === recordId);
 
                 // If not found in staff, search in students
                 if (!foundPerson) {
-                    const allStudentRecords: Student[] = JSON.parse(window.localStorage.getItem('student-records') || '[]');
+                    const allStudentRecords: Student[] = data.students || [];
                     foundPerson = allStudentRecords.find(s => s.id === recordId);
                 }
 
@@ -69,7 +83,7 @@ const ClientPage: React.FC = () => {
             }
         }
         
-        fetchRecordFromLocalStorage();
+        fetchRecordFromServer();
     }, []);
 
 
@@ -85,7 +99,12 @@ const ClientPage: React.FC = () => {
             </header>
             
             <main className="flex flex-col items-center justify-center">
-                {loading && <p>Loading Record...</p>}
+                {loading && (
+                    <div className="flex flex-col items-center gap-4">
+                        <SpinnerIcon className="w-12 h-12 text-brand-accent animate-spin" />
+                        <p className="text-brand-muted animate-pulse">Fetching Record...</p>
+                    </div>
+                )}
                 
                 {error && (
                     <div className="text-center text-red-400 bg-red-500/10 p-8 rounded-2xl">

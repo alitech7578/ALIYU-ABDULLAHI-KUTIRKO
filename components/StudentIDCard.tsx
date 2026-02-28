@@ -78,24 +78,29 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
 
         {/* Main Content Body */}
         <div className="relative z-10 flex-1 flex flex-row px-4 pt-0 pb-1">
-            {/* Left: Photo - Conditional Rendering */}
-            {student.photo && (
-                <div className="flex flex-col justify-start w-[80px] mr-2 pt-5 shrink-0">
-                     <div className="w-[75px] h-[85px] bg-gray-100 border-2 border-white shadow-md overflow-hidden rounded-sm">
-                        <img src={student.photo} alt="Student" className="w-full h-full object-cover" />
-                     </div>
+            {/* Left: Photo */}
+            <div className="w-20 flex flex-col items-center justify-center pt-2">
+                <div className="w-18 h-22 bg-gray-100 border-2 border-slate-200 rounded-sm overflow-hidden shadow-sm flex items-center justify-center">
+                    {student.photo ? (
+                        <img src={student.photo} alt="Student Passport" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-300">
+                             <div className="w-6 h-6 rounded-full bg-slate-200 mb-1"></div>
+                             <span className="text-[5px] font-bold uppercase">No Photo</span>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
-            {/* Right: Details - Will fill the space if no photo */}
-            <div className={`flex-1 flex flex-col pt-3 ${!student.photo ? 'items-center text-center' : ''}`}>
-                <div className={`transform -skew-x-12 bg-green-700 text-white px-5 py-0.5 mb-2 shadow-sm border-b-2 border-black/20 ${!student.photo ? 'w-fit' : 'self-center'}`}>
+            {/* Right: Details */}
+            <div className="flex-1 flex flex-col pt-3 items-center text-center">
+                <div className="transform -skew-x-12 bg-green-700 text-white px-5 py-0.5 mb-2 shadow-sm border-b-2 border-black/20 w-fit self-center">
                     <span className="block transform skew-x-12 text-[9px] font-black uppercase tracking-wider font-sans leading-none">Student I.D. Card</span>
                 </div>
 
-                <div className={`flex flex-col space-y-1.5 w-full ${!student.photo ? 'items-center' : 'pl-1'}`}>
+                <div className="flex flex-col space-y-1.5 w-full items-center">
                     {visibleFields.includes('fullName') && (
-                        <div className={`flex items-baseline ${!student.photo ? 'justify-center w-full' : ''}`}>
+                        <div className="flex items-baseline justify-center w-full">
                             <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0 text-left">Name:</span>
                             <span className="flex-1 text-[9px] font-black text-black uppercase leading-tight">
                                 {student.surname} {student.firstName} {student.middleName}
@@ -103,19 +108,19 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                         </div>
                     )}
                      {visibleFields.includes('registrationNumber') && (
-                        <div className={`flex items-baseline ${!student.photo ? 'justify-center w-full' : ''}`}>
+                        <div className="flex items-baseline justify-center w-full">
                              <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0 text-left">Reg. No.:</span>
                              <span className="flex-1 text-[9px] font-black text-black uppercase leading-tight">{student.registrationNumber}</span>
                         </div>
                     )}
                     {visibleFields.includes('department') && (
-                        <div className={`flex items-baseline ${!student.photo ? 'justify-center w-full' : ''}`}>
+                        <div className="flex items-baseline justify-center w-full">
                              <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0 text-left">Dept.:</span>
                              <span className="flex-1 text-[8px] font-black text-black uppercase leading-tight">{student.department}</span>
                         </div>
                     )}
                      {visibleFields.includes('school') && (
-                        <div className={`flex items-baseline ${!student.photo ? 'justify-center w-full' : ''}`}>
+                        <div className="flex items-baseline justify-center w-full">
                              <span className="w-12 text-[8px] text-red-700 font-bold leading-none shrink-0 text-left">School:</span>
                              <span className="flex-1 text-[8px] font-black text-black uppercase leading-tight">
                                 {student.school}

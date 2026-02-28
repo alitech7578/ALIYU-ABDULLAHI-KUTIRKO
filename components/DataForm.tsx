@@ -68,19 +68,14 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
         marriedStatus: recordToEdit.marriedStatus,
         bloodGroup: recordToEdit.bloodGroup,
         phoneNumber: recordToEdit.phoneNumber,
-        photo: recordToEdit.photo,
+        photo: recordToEdit.photo || '',
       };
     }
     return draft;
   });
   
-  const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
   const [lgaOptions, setLgaOptions] = useState<string[]>([]);
-
-  useEffect(() => {
-    setPhotoPreview(fields.photo);
-  }, [fields.photo]);
 
   // Update draft in local storage when fields change in 'add new' mode
   useEffect(() => {
@@ -112,25 +107,22 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-          setError('Image size should not exceed 2MB.');
-          return;
+      if (file.size > 1024 * 1024) { // 1MB limit
+        setError('Photo size must be less than 1MB.');
+        return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-          const base64String = reader.result as string;
-          setFields(prev => ({ ...prev, photo: base64String }));
-          setPhotoPreview(base64String);
+        setFields(prev => ({ ...prev, photo: reader.result as string }));
       };
       reader.readAsDataURL(file);
-      setError('');
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fields.name || !fields.surname || !fields.email || !fields.state || !fields.lg || !fields.phoneNumber || !fields.photo || !fields.marriedStatus || !fields.department || !fields.spNumber || !fields.rank || !fields.bloodGroup) {
-      setError('All fields, including photo, are required.');
+    if (!fields.name || !fields.surname || !fields.email || !fields.state || !fields.lg || !fields.phoneNumber || !fields.marriedStatus || !fields.department || !fields.spNumber || !fields.rank || !fields.bloodGroup) {
+      setError('All fields are required.');
       return;
     }
     setError('');
@@ -157,37 +149,32 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
     <form onSubmit={handleSubmit} className="space-y-6 mt-4 border-t border-brand-secondary/50 pt-6">
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
       
-      <div>
-        <label className="block text-sm font-medium text-brand-muted mb-2">
-            Passport Photo
-        </label>
-        <div className="mt-2 flex items-center gap-x-4">
-            {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="h-24 w-24 rounded-full object-cover" />
-            ) : (
-                <div className="h-24 w-24 rounded-full bg-brand-secondary flex items-center justify-center">
-                    <UploadIcon className="h-10 w-10 text-brand-muted" />
-                </div>
-            )}
-            <div className="flex-1">
-                 <input 
-                    id="photo-upload" 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/png, image/jpeg, image/webp"
-                    onChange={handlePhotoChange}
-                />
-                <label 
-                    htmlFor="photo-upload"
-                    className="cursor-pointer rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
-                >
-                    {photoPreview ? 'Change Photo' : 'Upload Photo'}
-                </label>
-                <p className="text-xs leading-5 text-brand-muted mt-2">PNG, JPG, WEBP up to 2MB.</p>
+      <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-brand-secondary rounded-xl bg-brand-primary/30">
+        <div className="relative w-32 h-32 mb-4 group">
+          {fields.photo ? (
+            <img src={fields.photo} alt="Preview" className="w-full h-full object-cover rounded-full border-4 border-brand-accent shadow-lg" />
+          ) : (
+            <div className="w-full h-full bg-brand-secondary rounded-full flex items-center justify-center border-4 border-brand-secondary shadow-inner">
+              <UploadIcon className="w-12 h-12 text-brand-muted" />
             </div>
+          )}
+          <input
+            type="file"
+            id="photo-upload"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            className="hidden"
+          />
+          <label
+            htmlFor="photo-upload"
+            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300"
+          >
+            <span className="text-white text-xs font-bold uppercase tracking-wider">Change Photo</span>
+          </label>
         </div>
+        <p className="text-sm text-brand-muted">Upload a professional passport photo (Max 1MB)</p>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <InputField id="name" label="First Name" type="text" value={fields.name} onChange={handleChange} placeholder="e.g., John" />
         <InputField id="middleName" label="Middle Name (Optional)" type="text" value={fields.middleName} onChange={handleChange} placeholder="e.g., Quincy" isRequired={false} />

@@ -59,19 +59,22 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
             <p className="text-[5.5px] text-slate-600 mt-0.9 font-bold">{companyAddress}</p>
        </div>
 
-       {/* Photo Section - Conditional Rendering */}
-       {record.photo ? (
-           <div className="relative z-10 mt-2 mb-1">
-                <div className="w-[90px] h-[100px] bg-gray-200 rounded-md shadow-sm overflow-hidden border border-gray-200">
-                    <img src={record.photo} alt={fullName} className="w-full h-full object-cover" />
-                </div>
-           </div>
-       ) : (
-           <div className="h-4"></div> // Small spacer if no photo
-       )}
+       {/* Photo Section */}
+       <div className="relative z-10 mt-2 flex justify-center">
+            <div className="w-20 h-24 bg-slate-100 border border-slate-200 rounded-sm overflow-hidden shadow-sm flex items-center justify-center">
+                {record.photo ? (
+                    <img src={record.photo} alt="Staff Passport" className="w-full h-full object-cover" />
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-slate-300">
+                         <div className="w-8 h-8 rounded-full bg-slate-200 mb-1"></div>
+                         <span className="text-[6px] font-bold uppercase">No Photo</span>
+                    </div>
+                )}
+            </div>
+       </div>
 
        {/* Details Section */}
-       <div className={`relative z-10 flex-1 w-full px-2 flex flex-col items-center text-center gap-1 ${!record.photo ? 'justify-center' : ''}`}>
+       <div className="relative z-10 flex-1 w-full px-2 flex flex-col items-center text-center gap-1 justify-center">
             {visibleFields.includes('fullName') && (
                 <h2 className="text-[10px] font-extrabold text-slate-900 uppercase tracking-tight leading-snug">
                     {fullName}

@@ -14,7 +14,7 @@ type ImportResult = {
     errors: string[];
 };
 
-const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','School','Department','RegistrationNumber','ExpirationDate','Photo'];
+const CSV_HEADERS = ['FirstName','MiddleName','Surname','Email','School','Department','RegistrationNumber','ExpirationDate'];
 const CSV_TEMPLATE = CSV_HEADERS.join(',');
 
 const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose, onImport }) => {
@@ -77,12 +77,12 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
 
             for (let i = 1; i < rows.length; i++) {
                 const rowData = rows[i].trim().split(',');
-                if (rowData.length < CSV_HEADERS.length - 1) { // Photo is optional
+                if (rowData.length < CSV_HEADERS.length) {
                     errors.push(`Row ${i + 1}: Incorrect number of columns.`);
                     continue;
                 }
                 
-                const [firstName, middleName, surname, email, school, department, registrationNumber, expirationDate, photo] = rowData.map(d => d?.trim() || '');
+                const [firstName, middleName, surname, email, school, department, registrationNumber, expirationDate] = rowData.map(d => d?.trim() || '');
                 
                 // Basic validation
                 if (!firstName || !surname || !email || !school || !department || !registrationNumber || !expirationDate) {
@@ -101,7 +101,6 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                     registrationNumber,
                     expirationDate,
                     createdAt: new Date().toISOString(),
-                    photo: photo || '', // Use photo if provided
                     createdBy: 'admin-import',
                 });
                 successfulImports++;
@@ -137,9 +136,6 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                         <p className="text-brand-muted mt-2 text-sm">
                             Upload a CSV file with the following columns in order: <br/>
                             <code className="text-xs bg-brand-primary p-1 rounded break-all">{CSV_HEADERS.join(', ')}</code>
-                        </p>
-                        <p className="text-brand-muted mt-2 text-sm">
-                           The 'Photo' column is optional at the end of the row.
                         </p>
                         <button onClick={downloadTemplate} className="mt-3 text-sm text-brand-accent hover:underline">Download Student CSV Template</button>
                     </div>

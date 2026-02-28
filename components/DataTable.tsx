@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DataRecord, IDCardLayoutSettings } from '../types';
-import { TrashIcon, TableIcon, IdCardIcon, PencilIcon } from './IconComponents';
+import { TrashIcon, TableIcon, IdCardIcon, PencilIcon, UserCircleIcon } from './IconComponents';
 import IDCardModal from './IDCardModal';
 import PaginationControls from './PaginationControls';
 
@@ -112,8 +112,14 @@ const DataTable: React.FC<DataTableProps> = ({ records, onDeleteRecord, onEditRe
                           />
                     </td>
                     )}
-                  <td className="p-4 sm:p-5">
-                    {record.photo && <img src={record.photo} alt={`${record.name} ${record.surname}`} className="h-10 w-10 rounded-full object-cover"/>}
+                  <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">
+                    {record.photo ? (
+                      <img src={record.photo} alt="Staff" className="w-10 h-10 rounded-full object-cover border border-brand-secondary" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-brand-secondary flex items-center justify-center">
+                        <UserCircleIcon className="w-6 h-6 text-brand-muted" />
+                      </div>
+                    )}
                   </td>
                   <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.name}</td>
                   <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.middleName}</td>

@@ -4,8 +4,9 @@ import Header from './Header';
 import DataForm from './DataForm';
 import DataTable from './DataTable';
 import BulkIDPrint from './BulkIDPrint';
-import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon, UserPlusIcon } from './IconComponents';
+import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon, UserPlusIcon, XMarkIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { fetchData, saveData } from '../services/api';
 import ImportModal from './ImportModal';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
@@ -108,6 +109,68 @@ const AdminDashboard: React.FC = () => {
   const [provostSignature, setProvostSignature] = useLocalStorage<string | null>('provost-signature', null);
   const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
   const [settingsReady, setSettingsReady] = useState(false);
+  const [serverSyncStatus, setServerSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
+
+  // Load from server on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setServerSyncStatus('loading');
+      try {
+        const data = await fetchData();
+        // Only update if data exists on server to avoid wiping local storage on first run
+        if (data.records && data.records.length > 0) setRecords(data.records);
+        if (data.students && data.students.length > 0) setStudents(data.students);
+        if (data.branding) {
+          if (data.branding.companyName) setCompanyName(data.branding.companyName);
+          if (data.branding.companyLogo) setCompanyLogo(data.branding.companyLogo);
+          if (data.branding.companyEmail) setCompanyEmail(data.branding.companyEmail);
+          if (data.branding.companyAddress) setCompanyAddress(data.branding.companyAddress);
+          if (data.branding.companyWebsite) setCompanyWebsite(data.branding.companyWebsite);
+          if (data.branding.companyContent) setCompanyContent(data.branding.companyContent);
+          if (data.branding.provostSignature) setProvostSignature(data.branding.provostSignature);
+          if (data.branding.layoutSettings) setLayoutSettings(data.branding.layoutSettings);
+        }
+        setServerSyncStatus('idle');
+      } catch (error) {
+        console.error('Failed to sync with server:', error);
+        setServerSyncStatus('error');
+      }
+    };
+    loadData();
+  }, []);
+
+  // Save to server when data changes
+  useEffect(() => {
+    // Skip initial save if we are still loading
+    if (serverSyncStatus === 'loading') return;
+
+    const timer = setTimeout(async () => {
+      setServerSyncStatus('saving');
+      try {
+        await saveData({
+          records,
+          students,
+          branding: {
+            companyName,
+            companyLogo,
+            companyEmail,
+            companyAddress,
+            companyWebsite,
+            companyContent,
+            provostSignature,
+            layoutSettings
+          }
+        });
+        setServerSyncStatus('saved');
+        setTimeout(() => setServerSyncStatus('idle'), 3000);
+      } catch (error) {
+        console.error('Failed to save to server:', error);
+        setServerSyncStatus('error');
+      }
+    }, 3000); // 3 second debounce to avoid excessive writes
+
+    return () => clearTimeout(timer);
+  }, [records, students, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, companyContent, provostSignature, layoutSettings]);
 
   useEffect(() => {
     // This effect ensures that if the stored settings are partial (from an older version),
@@ -419,9 +482,17 @@ const AdminDashboard: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Header companyName={companyName} companyLogo={companyLogo} />
 
-        <div className="absolute top-4 right-4 text-xs text-brand-muted flex items-center gap-2">
-          {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving...</span></>}
-          {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Local Storage</span></>}
+        <div className="absolute top-4 right-4 text-xs text-brand-muted flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2">
+            {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving to Browser...</span></>}
+            {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Browser</span></>}
+          </div>
+          <div className="flex items-center gap-2">
+            {serverSyncStatus === 'loading' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Syncing with Server...</span></>}
+            {serverSyncStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving to Server...</span></>}
+            {serverSyncStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-blue-400" /><span>Synced with Server</span></>}
+            {serverSyncStatus === 'error' && <><XMarkIcon className="w-4 h-4 text-red-400" /><span>Server Sync Error</span></>}
+          </div>
         </div>
 
         <main className="mt-12">

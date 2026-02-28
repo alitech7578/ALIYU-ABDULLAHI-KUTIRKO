@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Student } from '../types';
-import { TrashIcon, TableIcon, IdCardIcon, PencilIcon, ChevronUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './IconComponents';
+import { TrashIcon, TableIcon, IdCardIcon, PencilIcon, ChevronUpDownIcon, ChevronUpIcon, ChevronDownIcon, UserCircleIcon } from './IconComponents';
 import PaginationControls from './PaginationControls';
 
 type SortDirection = 'ascending' | 'descending';
@@ -121,8 +121,14 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
                         aria-label={`Select record for ${record.firstName} ${record.surname}`}
                     />
                 </td>
-                <td className="p-4 sm:p-5">
-                    {record.photo && <img src={record.photo} alt={`${record.firstName} ${record.surname}`} className="h-10 w-10 rounded-full object-cover"/>}
+                <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">
+                  {record.photo ? (
+                    <img src={record.photo} alt="Student" className="w-10 h-10 rounded-full object-cover border border-brand-secondary" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-brand-secondary flex items-center justify-center">
+                      <UserCircleIcon className="w-6 h-6 text-brand-muted" />
+                    </div>
+                  )}
                 </td>
                 <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.firstName}</td>
                 <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.middleName}</td>
