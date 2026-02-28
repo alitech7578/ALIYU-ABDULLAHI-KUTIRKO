@@ -74,10 +74,9 @@ const EditableField = ({ label, value, isEditing, onEditToggle, tempValue, onTem
   );
 
 interface AdminDashboardProps {
-  onLogout: () => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const [records, setRecords, recordsSaveStatus] = useLocalStorage<DataRecord[]>('data-records', []);
   const [students, setStudents, studentsSaveStatus] = useLocalStorage<Student[]>('student-records', []);
   
@@ -116,12 +115,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [settingsReady, setSettingsReady] = useState(false);
   const [serverSyncStatus, setServerSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
-
-  // Security Settings State
-  const [newUsername, setNewUsername] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [securityLoading, setSecurityLoading] = useState(false);
-  const [securityMessage, setSecurityMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Load from server on mount
   useEffect(() => {
@@ -489,31 +482,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     });
   };
 
-  const handleUpdateSecurity = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSecurityLoading(true);
-    setSecurityMessage(null);
-    try {
-      const response = await fetch('/api/auth/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ username: newUsername, password: newPassword })
-      });
-      if (response.ok) {
-        setSecurityMessage({ type: 'success', text: 'Credentials updated successfully!' });
-        setNewUsername('');
-        setNewPassword('');
-      } else {
-        setSecurityMessage({ type: 'error', text: 'Failed to update credentials.' });
-      }
-    } catch (err) {
-      setSecurityMessage({ type: 'error', text: 'An error occurred.' });
-    } finally {
-      setSecurityLoading(false);
-    }
-  };
-
   if (isPrintViewVisible) {
     return <BulkIDPrint records={recordsToPrint} onClose={() => setIsPrintViewVisible(false)} companyName={companyName} companyLogo={companyLogo} companyEmail={companyEmail} companyAddress={companyAddress} companyWebsite={companyWebsite} provostSignature={provostSignature} layoutSettings={layoutSettings} />;
   }
@@ -528,12 +496,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         <Header companyName={companyName} companyLogo={companyLogo} />
 
         <div className="absolute top-4 right-4 text-xs text-brand-muted flex flex-col items-end gap-1">
-          <button 
-            onClick={onLogout}
-            className="mb-2 px-3 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded border border-red-500/30 transition-colors text-xs font-bold"
-          >
-            LOGOUT
-          </button>
           <div className="flex items-center gap-2">
             {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving to Browser...</span></>}
             {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Browser</span></>}
@@ -749,49 +711,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-bold text-brand-light mb-4">Security Settings</h2>
-                <form onSubmit={handleUpdateSecurity} className="space-y-4 bg-brand-primary/30 p-6 rounded-xl border border-brand-secondary/30">
-                  <p className="text-sm text-brand-muted mb-4">Update your login credentials here. Leave blank if you don't want to change.</p>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-brand-muted mb-1">New Username</label>
-                    <input 
-                      type="text" 
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      className="w-full px-3 py-2 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent text-brand-light"
-                      placeholder="Enter new username"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-brand-muted mb-1">New Password</label>
-                    <input 
-                      type="password" 
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-3 py-2 bg-brand-primary border border-brand-secondary rounded-lg focus:ring-brand-accent focus:border-brand-accent text-brand-light"
-                      placeholder="Enter new password"
-                    />
-                  </div>
-
-                  {securityMessage && (
-                    <div className={`text-sm p-2 rounded ${securityMessage.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                      {securityMessage.text}
-                    </div>
-                  )}
-
-                  <button 
-                    type="submit"
-                    disabled={securityLoading || (!newUsername && !newPassword)}
-                    className="w-full py-2 bg-brand-accent hover:bg-opacity-80 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {securityLoading ? 'Updating...' : 'Update Credentials'}
-                  </button>
-                </form>
               </div>
             </div>
 
