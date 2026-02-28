@@ -32,6 +32,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             const response = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ username, password }),
             });
             

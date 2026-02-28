@@ -1,5 +1,5 @@
 export const fetchData = async () => {
-  const response = await fetch('/api/data');
+  const response = await fetch('/api/data', { credentials: 'include' });
   if (!response.ok) throw new Error('Failed to fetch data');
   return response.json();
 };
@@ -10,6 +10,7 @@ export const saveData = async (data: any) => {
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   if (!response.ok) throw new Error('Failed to save data');

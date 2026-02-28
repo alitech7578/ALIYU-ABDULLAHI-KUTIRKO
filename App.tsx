@@ -25,7 +25,7 @@ const App: React.FC = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/status');
+      const response = await fetch('/api/auth/status', { credentials: 'include' });
       const data = await response.json();
       if (data.authenticated) {
         setUser({ username: data.username });
@@ -43,7 +43,7 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', { method: 'POST' });
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
       setUser(null);
     } catch (err) {
       console.error('Logout failed', err);

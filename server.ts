@@ -79,10 +79,10 @@ async function startServer() {
   app.use(cookieParser());
   app.use(session({
     secret: 'data-collector-secret-key-123',
-    resave: false,
+    resave: true,
     saveUninitialized: false,
     cookie: { 
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // Required for sameSite: 'none' in iframe
       sameSite: 'none',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
@@ -105,7 +105,13 @@ async function startServer() {
     
     if (username === data.auth.username && bcrypt.compareSync(password, data.auth.password)) {
       req.session.userId = username;
-      res.json({ status: "ok", username });
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Session save failed" });
+        }
+        res.json({ status: "ok", username });
+      });
     } else {
       res.status(401).json({ error: "Invalid credentials" });
     }
