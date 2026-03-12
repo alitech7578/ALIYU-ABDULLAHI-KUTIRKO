@@ -26,32 +26,43 @@ export async function connectDB() {
 
   if (!MONGODB_URI) {
     console.warn('MONGODB_URI is missing from environment variables');
-    throw new Error('MONGODB_URI is not defined. Please add it to Vercel environment variables.');
+    throw new Error('MONGODB_URI is not defined. Please add it to your Vercel Environment Variables.');
   }
+
+  // Mask the URI for logging
+  const maskedURI = MONGODB_URI.replace(/\/\/.*@/, '//****:****@');
+  console.log(`Connecting to MongoDB (using ${maskedURI.length} chars string)...`);
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      connectTimeoutMS: 10000, // 10 seconds timeout for serverless
-      serverSelectionTimeoutMS: 5000, 
+      connectTimeoutMS: 20000, // Increased timeout for potentially slow serverless startup
+      serverSelectionTimeoutMS: 5000,
     };
 
+    console.log('Creating new Mongoose connection promise...');
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log('Connected to MongoDB');
+      console.log('Successfully connected to MongoDB Atlas');
       return mongoose;
+    }).catch(err => {
+      console.error('Mongoose connection promise rejected:', err.message);
+      cached.promise = null; // Reset promise so we can retry
+      throw err;
     });
   }
 
   try {
     cached.conn = await cached.promise;
+    console.log('Database connection finalized.');
   } catch (e: any) {
     cached.promise = null;
-    console.error('Database connection error:', e.message);
-    throw e;
+    console.error('CRITICAL: Database connection failed during await:', e.message);
+    throw new Error(`DB_CONNECTION_ERROR: ${e.message}`);
   }
 
   return cached.conn;
 }
+
 
 const AppDataSchema = new mongoose.Schema({
   records: { type: Array, default: [] },
