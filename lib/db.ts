@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 
 // Only load dotenv if not in production
 if (process.env.NODE_ENV !== 'production') {
