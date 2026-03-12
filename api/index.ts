@@ -5,29 +5,12 @@ import connectDB from '../lib/db';
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 
-// MongoDB Schema (Re-defined for the API function)
-const AppDataSchema = new mongoose.Schema({
-  records: { type: Array, default: [] },
-  students: { type: Array, default: [] },
-  branding: {
-    companyName: { type: String, default: 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI' },
-    companyLogo: { type: String, default: null },
-    companyEmail: { type: String, default: 'contact@fcetbichi.edu.ng' },
-    companyAddress: { type: String, default: 'P.M.B 3473 KANO, KANO STATE' },
-    companyWebsite: { type: String, default: 'www.fcetbichi.edu.ng' },
-    companyContent: { type: String, default: 'Streamlining data management with intuitive solutions.' },
-    provostSignature: { type: String, default: null },
-    layoutSettings: { type: mongoose.Schema.Types.Mixed, default: null }
-  }
-}, { timestamps: true });
-
-// Check if model already exists to prevent OverwriteModelError
-const AppData = mongoose.models.AppData || mongoose.model('AppData', AppDataSchema);
+import { AppData } from '../models/AppData';
 
 // API routes
 app.get('/api/data', async (req, res) => {
-  await connectDB();
   try {
+    await connectDB();
     let data = await AppData.findOne();
     if (!data) {
       data = await AppData.create({
@@ -43,15 +26,19 @@ app.get('/api/data', async (req, res) => {
       });
     }
     res.json(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching data:', error);
-    res.status(500).json({ error: 'Failed to fetch data' });
+    res.status(500).json({ 
+      error: 'Failed to fetch data', 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+    });
   }
 });
 
 app.post('/api/data', async (req, res) => {
-  await connectDB();
   try {
+    await connectDB();
     const data = req.body;
     let existingData = await AppData.findOne();
     
@@ -62,15 +49,27 @@ app.post('/api/data', async (req, res) => {
     }
     
     res.json({ status: 'ok' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving data:', error);
-    res.status(500).json({ error: 'Failed to save data' });
+    res.status(500).json({ 
+      error: 'Failed to save data', 
+      message: error.message 
+    });
   }
 });
 
 app.get('/api/health', async (req, res) => {
-  await connectDB();
-  res.json({ status: 'ok', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
+  try {
+    await connectDB();
+    res.json({ 
+      status: 'ok', 
+      database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+      env: process.env.MONGODB_URI ? 'present' : 'missing'
+    });
+  } catch (error: any) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
 });
 
 export default app;
+
