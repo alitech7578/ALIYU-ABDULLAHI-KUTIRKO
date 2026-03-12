@@ -1,11 +1,8 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import connectDB from '../lib/db';
+import { connectDB, AppData } from '../lib/db';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
-
-import { AppData } from '../models/AppData';
 
 // API routes
 app.get('/api/data', async (req, res) => {
@@ -60,7 +57,7 @@ app.post('/api/data', async (req, res) => {
 
 app.get('/api/health', async (req, res) => {
   try {
-    await connectDB();
+    const mongoose = await connectDB();
     res.json({ 
       status: 'ok', 
       database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
@@ -72,4 +69,3 @@ app.get('/api/health', async (req, res) => {
 });
 
 export default app;
-

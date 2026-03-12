@@ -2,21 +2,15 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import fs from "fs";
 import path from "path";
-import mongoose from "mongoose";
 import * as dotenv from "dotenv";
+import { connectDB, AppData } from "./lib/db";
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/data-collector";
 const PORT = Number(process.env.PORT) || 3000;
-
-import connectDB from "./lib/db";
-
-import { AppData } from "./models/AppData";
 
 async function startServer() {
   await connectDB();
-
   
   const app = express();
 
@@ -36,7 +30,6 @@ async function startServer() {
     try {
       let data = await AppData.findOne();
       if (!data) {
-        // Initialize with default data if none exists
         data = await AppData.create({
           records: [],
           students: [],
@@ -74,8 +67,13 @@ async function startServer() {
     }
   });
 
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
+  app.get("/api/health", async (req, res) => {
+    try {
+      const mongoose = await connectDB();
+      res.json({ status: "ok", database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
+    } catch (error) {
+      res.status(500).json({ status: "error" });
+    }
   });
 
   // Vite middleware for development
@@ -99,4 +97,3 @@ async function startServer() {
 }
 
 startServer();
-
