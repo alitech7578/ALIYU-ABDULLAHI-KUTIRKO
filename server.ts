@@ -10,7 +10,9 @@ dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/data-collector";
 const PORT = Number(process.env.PORT) || 3000;
 
-// MongoDB Schema
+import connectDB from "./lib/db";
+
+// MongoDB Schema (Re-defined for consistency)
 const AppDataSchema = new mongoose.Schema({
   records: { type: Array, default: [] },
   students: { type: Array, default: [] },
@@ -26,20 +28,11 @@ const AppDataSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-const AppData = mongoose.model("AppData", AppDataSchema);
-
-async function connectDB() {
-  try {
-    await mongoose.connect(MONGODB_URI);
-    console.log("Connected to MongoDB Atlas");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
-  }
-}
+const AppData = mongoose.models.AppData || mongoose.model("AppData", AppDataSchema);
 
 async function startServer() {
   await connectDB();
+
   
   const app = express();
 
