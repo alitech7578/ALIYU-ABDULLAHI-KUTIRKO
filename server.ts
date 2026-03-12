@@ -2,47 +2,46 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import fs from "fs";
 import path from "path";
+import mongoose from "mongoose";
+import * as dotenv from "dotenv";
 
-const DATA_FILE = path.resolve("data.json");
+dotenv.config();
 
-// Initialize data file if it doesn't exist
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({
-    records: [],
-    students: [],
-    branding: {
-      companyName: 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI',
-      companyLogo: null,
-      companyEmail: 'contact@fcetbichi.edu.ng',
-      companyAddress: 'P.M.B 3473 KANO, KANO STATE',
-      companyWebsite: 'www.fcetbichi.edu.ng',
-      companyContent: 'Streamlining data management with intuitive solutions.',
-      provostSignature: null,
-      layoutSettings: null
-    }
-  }, null, 2));
-}
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/data-collector";
+const PORT = Number(process.env.PORT) || 3000;
 
-function readData() {
+// MongoDB Schema
+const AppDataSchema = new mongoose.Schema({
+  records: { type: Array, default: [] },
+  students: { type: Array, default: [] },
+  branding: {
+    companyName: { type: String, default: 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI' },
+    companyLogo: { type: String, default: null },
+    companyEmail: { type: String, default: 'contact@fcetbichi.edu.ng' },
+    companyAddress: { type: String, default: 'P.M.B 3473 KANO, KANO STATE' },
+    companyWebsite: { type: String, default: 'www.fcetbichi.edu.ng' },
+    companyContent: { type: String, default: 'Streamlining data management with intuitive solutions.' },
+    provostSignature: { type: String, default: null },
+    layoutSettings: { type: mongoose.Schema.Types.Mixed, default: null }
+  }
+}, { timestamps: true });
+
+const AppData = mongoose.model("AppData", AppDataSchema);
+
+async function connectDB() {
   try {
-    const content = fs.readFileSync(DATA_FILE, "utf-8");
-    return JSON.parse(content);
-  } catch (e) {
-    return { 
-      records: [], 
-      students: [], 
-      branding: {} 
-    };
+    await mongoose.connect(MONGODB_URI);
+    console.log("Connected to MongoDB Atlas");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
   }
 }
 
-function writeData(data: any) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
 async function startServer() {
+  await connectDB();
+  
   const app = express();
-  const PORT = 3000;
 
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '50mb' }));
@@ -56,19 +55,50 @@ async function startServer() {
   });
 
   // API routes
-  app.get("/api/data", (req, res) => {
-    const data = readData();
-    res.json(data);
+  app.get("/api/data", async (req, res) => {
+    try {
+      let data = await AppData.findOne();
+      if (!data) {
+        // Initialize with default data if none exists
+        data = await AppData.create({
+          records: [],
+          students: [],
+          branding: {
+            companyName: 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI',
+            companyEmail: 'contact@fcetbichi.edu.ng',
+            companyAddress: 'P.M.B 3473 KANO, KANO STATE',
+            companyWebsite: 'www.fcetbichi.edu.ng',
+            companyContent: 'Streamlining data management with intuitive solutions.'
+          }
+        });
+      }
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      res.status(500).json({ error: "Failed to fetch data" });
+    }
   });
 
-  app.post("/api/data", (req, res) => {
-    const data = req.body;
-    writeData(data);
-    res.json({ status: "ok" });
+  app.post("/api/data", async (req, res) => {
+    try {
+      const data = req.body;
+      let existingData = await AppData.findOne();
+      
+      if (existingData) {
+        await AppData.updateOne({}, data);
+      } else {
+        await AppData.create(data);
+      }
+      
+      res.json({ status: "ok" });
+    } catch (error) {
+      console.error("Error saving data:", error);
+      res.status(500).json({ error: "Failed to save data" });
+    }
   });
 
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", database: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
   });
 
   // Vite middleware for development
@@ -92,3 +122,4 @@ async function startServer() {
 }
 
 startServer();
+
