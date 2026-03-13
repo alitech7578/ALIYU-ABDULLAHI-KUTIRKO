@@ -4,6 +4,13 @@ import { connectDB, AppData } from '../lib/db';
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 
+// Diagnostic middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Deployment-Time', new Date().toISOString());
+  res.setHeader('X-Debug-Runtime', 'Vercel-Serverless');
+  next();
+});
+
 // API routes
 app.get('/api/data', async (req, res) => {
   try {

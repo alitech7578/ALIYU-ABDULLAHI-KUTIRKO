@@ -36,7 +36,7 @@ export async function connectDB() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      connectTimeoutMS: 20000, // Increased timeout for potentially slow serverless startup
+      connectTimeoutMS: 8000, // Reduced to fit within Vercel's 10s timeout
       serverSelectionTimeoutMS: 5000,
     };
 
