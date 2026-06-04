@@ -97,12 +97,12 @@ const IDCardBack: React.FC<IDCardBackProps> = ({ record, companyName, companyLog
       </main>
 
       {/* Bottom decorative element */}
-      <div className="w-full">
-         <div className="h-8 bg-gray-700 mx-[-1rem] relative flex items-center justify-between px-4 mt-4">
-            <div className="h-1 w-16 bg-yellow-400"></div>
-            <div className="h-1 w-16 bg-yellow-400"></div>
+      <div className="w-full mt-auto flex-shrink-0">
+        <div className="h-8 bg-gray-700 mx-[-1rem] relative flex items-center justify-between px-4">
+          <div className="h-0.5 w-12 bg-yellow-400"></div>
+          <p className="text-white text-[11px] font-semibold tracking-wider">{companyWebsite}</p>
+          <div className="h-0.5 w-12 bg-yellow-400"></div>
         </div>
-        <p className="text-center text-black text-sm font-semibold mt-2" style={{ color: '#000000' }}>{companyWebsite}</p>
       </div>
     </div>
   );

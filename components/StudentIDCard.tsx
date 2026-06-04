@@ -62,10 +62,10 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain" />
           )}
           <div className="text-left">
-            <h1 className="text-lg font-bold text-gray-600 uppercase tracking-wide">
+            <h1 className="text-lg font-bold text-black uppercase tracking-wide" style={{ color: '#000000' }}>
               {renderCompanyName(companyName)}
             </h1>
-            <p className="text-xs text-gray-500">{companyAddress}</p>
+            <p className="text-xs text-black font-medium" style={{ color: '#000000' }}>{companyAddress}</p>
           </div>
         </header>
 

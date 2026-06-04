@@ -63,10 +63,10 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
           {companyLogo && (
             <img src={companyLogo} alt="Company Logo" className="h-12 w-12 object-contain" />
           )}
-          <h1 className="text-sm font-bold text-gray-600 uppercase tracking-wide leading-tight px-2 mt-2">
+          <h1 className="text-sm font-bold text-black uppercase tracking-wide leading-tight px-2 mt-2" style={{ color: '#000000' }}>
             {renderCompanyName(companyName)}
           </h1>
-          <p className="text-[10px] text-gray-500 leading-tight">{companyAddress}</p>
+          <p className="text-[11px] text-black font-medium leading-tight mt-1" style={{ color: '#000000' }}>{companyAddress}</p>
         </header>
 
         {/* Main Content - Using justify-evenly for robust vertical spacing */}
@@ -113,7 +113,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                 </div>
             )}
              <div className="bg-white py-1">
-                <p className="text-center text-sm text-gray-600 font-medium">{companyWebsite}</p>
+                <p className="text-center text-sm text-black font-semibold" style={{ color: '#000000' }}>{companyWebsite}</p>
             </div>
         </footer>
     </div>

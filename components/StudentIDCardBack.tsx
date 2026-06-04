@@ -95,9 +95,10 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
       </main>
 
       {/* Bottom decorative element */}
-      <div className="w-full h-8 bg-gray-700 relative flex items-center justify-between px-4">
-            <div className="h-1 w-24 bg-yellow-400"></div>
-            <div className="h-1 w-24 bg-yellow-400"></div>
+      <div className="w-full h-8 bg-gray-700 relative flex items-center justify-between px-4 flex-shrink-0">
+            <div className="h-0.5 w-16 bg-yellow-400"></div>
+            <p className="text-white text-[11px] font-semibold tracking-wider">{companyWebsite}</p>
+            <div className="h-0.5 w-16 bg-yellow-400"></div>
       </div>
     </div>
   );
