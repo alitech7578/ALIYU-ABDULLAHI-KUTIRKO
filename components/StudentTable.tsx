@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Student } from '../types';
-import { TrashIcon, TableIcon, IdCardIcon, PencilIcon, ChevronUpDownIcon, ChevronUpIcon, ChevronDownIcon, UserCircleIcon } from './IconComponents';
+import { TrashIcon, TableIcon, IdCardIcon, PencilIcon, ChevronUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './IconComponents';
 import PaginationControls from './PaginationControls';
 
 type SortDirection = 'ascending' | 'descending';
@@ -101,10 +101,8 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Middle Name</th>
               <SortableHeader label="Surname" columnKey="surname" sortConfig={sortConfig} onSort={onSort} />
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Email</th>
-              <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">School</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Department</th>
               <SortableHeader label="Registration No." columnKey="registrationNumber" sortConfig={sortConfig} onSort={onSort} />
-              <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Exp. Date</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Created At</th>
               <th scope="col" className="p-4 sm:p-5 text-sm font-semibold text-brand-muted">Actions</th>
             </tr>
@@ -121,23 +119,15 @@ const StudentTable: React.FC<StudentTableProps> = ({ records, onDeleteRecord, on
                         aria-label={`Select record for ${record.firstName} ${record.surname}`}
                     />
                 </td>
-                <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">
-                  {record.photo ? (
-                    <img src={record.photo} alt="Student" className="w-10 h-10 rounded-full object-cover border border-brand-secondary" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-brand-secondary flex items-center justify-center">
-                      <UserCircleIcon className="w-6 h-6 text-brand-muted" />
-                    </div>
-                  )}
+                <td className="p-4 sm:p-5">
+                    {record.photo && <img src={record.photo} alt={`${record.firstName} ${record.surname}`} className="h-10 w-10 rounded-full object-cover"/>}
                 </td>
                 <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.firstName}</td>
                 <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.middleName}</td>
                 <td className="p-4 sm:p-5 text-sm font-medium text-brand-light whitespace-nowrap">{record.surname}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-muted whitespace-nowrap">{record.email}</td>
-                <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.school}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.department}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.registrationNumber}</td>
-                <td className="p-4 sm:p-5 text-sm text-brand-light whitespace-nowrap">{record.expirationDate}</td>
                 <td className="p-4 sm:p-5 text-sm text-brand-muted whitespace-nowrap">{new Date(record.createdAt).toLocaleDateString()}</td>
                 <td className="p-4 sm:p-5 text-sm">
                   <div className="flex items-center gap-3">

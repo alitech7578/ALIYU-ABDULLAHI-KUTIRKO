@@ -24,50 +24,42 @@ const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClo
   const handleDownloadPdf = async () => {
     setIsGenerating(true);
 
-    // Use Portrait A4 for Landscape ID Cards (wide pairs fit best in a single column)
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pdf = new jsPDF('l', 'mm', 'a4');
     const pageHeight = pdf.internal.pageSize.getHeight();
+    const pageWidth = pdf.internal.pageSize.getWidth();
     const margin = 10;
-    const itemGap = 5;
+    let y = margin;
 
-    let currentX = margin;
-    let currentY = margin;
-
-    // Standard CR80 Height in mm (Landscape card)
-    const targetHeight = 54;
+    const availWidth = pageWidth - margin * 2;
+    const availHeight = pageHeight - margin * 2;
 
     for (const student of students) {
         const element = document.getElementById(`student-card-pair-${student.id}`);
         if (!element) continue;
 
         try {
-            const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 4 });
+            const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 2 });
             
             const elWidth = element.offsetWidth;
             const elHeight = element.offsetHeight;
             const aspectRatio = elWidth / elHeight;
             
-            const pdfItemHeight = targetHeight;
-            const pdfItemWidth = pdfItemHeight * aspectRatio;
+            let pdfImageWidth = availWidth;
+            let pdfImageHeight = pdfImageWidth / aspectRatio;
 
-            // Check if we need to wrap to next row (mostly for robustness, as these usually only fit 1 per row)
-            if (currentX + pdfItemWidth > pageWidth - margin) {
-                currentX = margin;
-                currentY += pdfItemHeight + itemGap;
+            if (pdfImageHeight > availHeight) {
+                pdfImageHeight = availHeight;
+                pdfImageWidth = pdfImageHeight * aspectRatio;
             }
 
-            // Check if we need a new page
-            if (currentY + pdfItemHeight > pageHeight - margin) {
+            if (y + pdfImageHeight > pageHeight - margin) {
                 pdf.addPage();
-                currentX = margin;
-                currentY = margin;
+                y = margin;
             }
             
-            pdf.addImage(dataUrl, 'PNG', currentX, currentY, pdfItemWidth, pdfItemHeight);
-            
-            // Move X cursor (though usually we wrap immediately for wide items)
-            currentX += pdfItemWidth + itemGap;
+            const x = margin + (availWidth - pdfImageWidth) / 2;
+            pdf.addImage(dataUrl, 'PNG', x, y, pdfImageWidth, pdfImageHeight);
+            y += pdfImageHeight + 5;
 
         } catch (error) {
             console.error(`Failed to process card for ${student.firstName}`, error);
@@ -111,7 +103,7 @@ const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClo
             </div>
         </header>
 
-        <main className="p-4 sm:p-8 bg-gray-300 min-h-screen">
+        <main className="p-4 sm:p-8 bg-gray-300">
             <div className="flex flex-wrap justify-center gap-8">
                 {students.map(student => (
                    <div key={student.id}>
@@ -120,7 +112,7 @@ const BulkStudentIDPrint: React.FC<BulkStudentIDPrintProps> = ({ students, onClo
                                <StudentIDCard student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} layoutSettings={layoutSettings.student} />
                            </div>
                            <div className="transform scale-90">
-                               <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} companyAddress={companyAddress} provostSignature={provostSignature} />
+                               <StudentIDCardBack student={student} companyName={companyName} companyLogo={companyLogo} companyWebsite={companyWebsite} provostSignature={provostSignature} />
                            </div>
                        </div>
                    </div>

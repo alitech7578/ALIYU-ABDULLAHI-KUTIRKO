@@ -32,10 +32,8 @@ const initialFormState = {
   middleName: '',
   surname: '',
   email: '',
-  school: 'BUSINESS',
   department: '',
   registrationNumber: '',
-  expirationDate: '',
   photo: '',
 };
 
@@ -52,18 +50,21 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
               middleName: studentToEdit.middleName,
               surname: studentToEdit.surname,
               email: studentToEdit.email,
-              school: studentToEdit.school || 'BUSINESS',
               department: studentToEdit.department,
               registrationNumber: studentToEdit.registrationNumber,
-              expirationDate: studentToEdit.expirationDate || '',
-              photo: studentToEdit.photo || '',
+              photo: studentToEdit.photo,
           };
       }
       return draft;
   });
 
+  const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
-      
+  
+  useEffect(() => {
+    setPhotoPreview(fields.photo);
+  }, [fields.photo]);
+
   // Update draft in local storage when fields change in 'add new' mode
   useEffect(() => {
     if (!isEditing) {
@@ -80,13 +81,24 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit
-        setError('Photo size must be less than 1MB.');
+      setError(''); // Clear previous error
+
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Invalid file format. Please upload a PNG, JPG, or WEBP image.');
         return;
       }
+
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        setError('Image size should not exceed 2MB.');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFields(prev => ({ ...prev, photo: reader.result as string }));
+          const base64String = reader.result as string;
+          setFields(prev => ({ ...prev, photo: base64String }));
+          setPhotoPreview(base64String);
       };
       reader.readAsDataURL(file);
     }
@@ -94,8 +106,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fields.firstName || !fields.surname || !fields.email || !fields.school || !fields.department || !fields.registrationNumber || !fields.expirationDate) {
-      setError('All fields, including expiration date, are required.');
+    if (!fields.firstName || !fields.surname || !fields.email || !fields.department || !fields.registrationNumber || !fields.photo) {
+      setError('All fields, including photo, are required.');
       return;
     }
     setError('');
@@ -122,32 +134,37 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
     <form onSubmit={handleSubmit} className="space-y-6 mt-4 border-t border-brand-secondary/50 pt-6">
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
       
-      <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-brand-secondary rounded-xl bg-brand-primary/30">
-        <div className="relative w-32 h-32 mb-4 group">
-          {fields.photo ? (
-            <img src={fields.photo} alt="Preview" className="w-full h-full object-cover rounded-full border-4 border-brand-accent shadow-lg" />
-          ) : (
-            <div className="w-full h-full bg-brand-secondary rounded-full flex items-center justify-center border-4 border-brand-secondary shadow-inner">
-              <UploadIcon className="w-12 h-12 text-brand-muted" />
+      <div>
+        <label className="block text-sm font-medium text-brand-muted mb-2">
+            Passport Photo
+        </label>
+        <div className="mt-2 flex items-center gap-x-4">
+            {photoPreview ? (
+                <img src={photoPreview} alt="Preview" className="h-24 w-24 rounded-full object-cover" />
+            ) : (
+                <div className="h-24 w-24 rounded-full bg-brand-secondary flex items-center justify-center">
+                    <UploadIcon className="h-10 w-10 text-brand-muted" />
+                </div>
+            )}
+            <div className="flex-1">
+                 <input 
+                    id="student-photo-upload" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/png, image/jpeg, image/webp"
+                    onChange={handlePhotoChange}
+                />
+                <label 
+                    htmlFor="student-photo-upload"
+                    className="cursor-pointer rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
+                >
+                    {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                </label>
+                <p className="text-xs leading-5 text-brand-muted mt-2">PNG, JPG, WEBP up to 2MB.</p>
             </div>
-          )}
-          <input
-            type="file"
-            id="student-photo-upload"
-            accept="image/*"
-            onChange={handlePhotoChange}
-            className="hidden"
-          />
-          <label
-            htmlFor="student-photo-upload"
-            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-300"
-          >
-            <span className="text-white text-xs font-bold uppercase tracking-wider">Change Photo</span>
-          </label>
         </div>
-        <p className="text-sm text-brand-muted">Upload a student passport photo (Max 1MB)</p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <InputField id="firstName" label="First Name" type="text" value={fields.firstName} onChange={handleChange} placeholder="e.g., Jane" />
         <InputField id="middleName" label="Middle Name (Optional)" type="text" value={fields.middleName} onChange={handleChange} placeholder="e.g., Marie" isRequired={false} />
@@ -157,10 +174,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
         <InputField id="email" label="Student Email" type="email" value={fields.email} onChange={handleChange} placeholder="student.email@example.com" />
         <InputField id="registrationNumber" label="Registration Number" type="text" value={fields.registrationNumber} onChange={handleChange} placeholder="e.g., 2024/CS/001" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <InputField id="school" label="School" type="text" value={fields.school} onChange={handleChange} placeholder="e.g., School of Sciences" />
+      <div className="grid grid-cols-1">
         <InputField id="department" label="Department" type="text" value={fields.department} onChange={handleChange} placeholder="e.g., Computer Science" />
-        <InputField id="expirationDate" label="Expiration Date" type="date" value={fields.expirationDate} onChange={handleChange} placeholder="" />
       </div>
       
       <div className="flex justify-end">

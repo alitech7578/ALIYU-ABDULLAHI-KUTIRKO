@@ -4,9 +4,8 @@ import Header from './Header';
 import DataForm from './DataForm';
 import DataTable from './DataTable';
 import BulkIDPrint from './BulkIDPrint';
-import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon, UserPlusIcon, XMarkIcon } from './IconComponents';
+import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon, UserPlusIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { fetchData, saveData } from '../services/api';
 import ImportModal from './ImportModal';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
@@ -14,7 +13,6 @@ import StudentIDCardModal from './StudentIDCardModal';
 import BulkStudentIDPrint from './BulkStudentIDPrint';
 import StudentImportModal from './StudentImportModal';
 import ConfirmationModal from './ConfirmationModal';
-import PWAInstallPrompt from './PWAInstallPrompt';
 
 type SortDirection = 'ascending' | 'descending';
 interface SortConfig<T> {
@@ -32,10 +30,8 @@ const allStaffFields: FieldConfig[] = [
 
 const allStudentFields: FieldConfig[] = [
     { id: 'fullName', label: 'Full Name' },
-    { id: 'school', label: 'School' },
     { id: 'department', label: 'Department' },
     { id: 'registrationNumber', label: 'Registration No.' },
-    { id: 'expirationDate', label: 'Exp. Date' },
 ];
 
 const initialLayoutSettings: IDCardLayoutSettings = {
@@ -47,7 +43,20 @@ const initialLayoutSettings: IDCardLayoutSettings = {
     },
 };
 
-const EditableField = ({ label, value, isEditing, onEditToggle, tempValue, onTempChange, onSave }: { label: string, value: string, isEditing: boolean, onEditToggle: (isEditing: boolean) => void, tempValue: string, onTempChange: (value: string) => void, onSave: () => void }) => (
+const EditableField = ({ label, value, onSave }: { label: string, value: string, onSave: (newValue: string) => void }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(value);
+
+  useEffect(() => {
+    setTempValue(value);
+  }, [value]);
+
+  const handleSave = () => {
+    onSave(tempValue);
+    setIsEditing(false);
+  };
+
+  return (
     <div className="flex items-center gap-4 py-2">
       <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">{label}:</label>
       <div className="flex-grow">
@@ -55,28 +64,26 @@ const EditableField = ({ label, value, isEditing, onEditToggle, tempValue, onTem
           <input
             type="text"
             value={tempValue}
-            onChange={(e) => onTempChange(e.target.value)}
-            onBlur={onSave}
-            onKeyDown={(e) => e.key === 'Enter' && onSave()}
-            className="w-full px-2 py-1 bg-brand-primary border border-brand-accent rounded-md"
+            onChange={(e) => setTempValue(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+            className="w-full px-2 py-1 bg-brand-primary border border-brand-accent rounded text-brand-light font-sans"
             autoFocus
           />
         ) : (
-          <span className="text-brand-light cursor-pointer" onClick={() => onEditToggle(true)}>
+          <span className="text-brand-light cursor-pointer" onClick={() => setIsEditing(true)}>
             {value}
           </span>
         )}
       </div>
-      <button onClick={isEditing ? onSave : () => onEditToggle(true)} className="p-1 text-yellow-400 hover:text-yellow-300">
+      <button onClick={isEditing ? handleSave : () => setIsEditing(true)} className="p-1 text-yellow-400 hover:text-yellow-300" aria-label={`Edit ${label}`}>
         <PencilIcon className="w-4 h-4" />
       </button>
     </div>
   );
+};
 
-interface AdminDashboardProps {
-}
-
-const AdminDashboard: React.FC<AdminDashboardProps> = () => {
+const AdminDashboard: React.FC = () => {
   const [records, setRecords, recordsSaveStatus] = useLocalStorage<DataRecord[]>('data-records', []);
   const [students, setStudents, studentsSaveStatus] = useLocalStorage<Student[]>('student-records', []);
   
@@ -107,129 +114,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   const [companyName, setCompanyName] = useLocalStorage('company-name', 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI');
   const [companyLogo, setCompanyLogo] = useLocalStorage<string | null>('company-logo', null);
   const [companyEmail, setCompanyEmail] = useLocalStorage('company-email', 'contact@fcetbichi.edu.ng');
-  const [companyAddress, setCompanyAddress] = useLocalStorage('company-address', 'P.M.B 3473 KANO, KANO STATE');
+  const [companyAddress, setCompanyAddress] = useLocalStorage('company-address', 'P.M.B. 3473, Kano');
   const [companyWebsite, setCompanyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
   const [companyContent, setCompanyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
   const [provostSignature, setProvostSignature] = useLocalStorage<string | null>('provost-signature', null);
   const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
   const [settingsReady, setSettingsReady] = useState(false);
-  const [serverSyncStatus, setServerSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
-  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
-
-  // Load from server on mount
-  useEffect(() => {
-    const loadData = async () => {
-      // Small delay to ensure session cookie is fully settled in browser
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setServerSyncStatus('loading');
-      try {
-        const data = await fetchData();
-        // Only update if data exists on server to avoid wiping local storage on first run
-        if (data.records && data.records.length > 0) setRecords(data.records);
-        if (data.students && data.students.length > 0) setStudents(data.students);
-        if (data.branding) {
-          if (data.branding.companyName) setCompanyName(data.branding.companyName);
-          if (data.branding.companyLogo) setCompanyLogo(data.branding.companyLogo);
-          if (data.branding.companyEmail) setCompanyEmail(data.branding.companyEmail);
-          if (data.branding.companyAddress) setCompanyAddress(data.branding.companyAddress);
-          if (data.branding.companyWebsite) setCompanyWebsite(data.branding.companyWebsite);
-          if (data.branding.companyContent) setCompanyContent(data.branding.companyContent);
-          if (data.branding.provostSignature) setProvostSignature(data.branding.provostSignature);
-          if (data.branding.layoutSettings) setLayoutSettings(data.branding.layoutSettings);
-        }
-        setServerSyncStatus('idle');
-        setIsInitialLoadComplete(true);
-      } catch (error) {
-        console.error('Failed to sync with server:', error);
-        setServerSyncStatus('error');
-        // Still mark as complete so we can try to save later if needed, 
-        // but maybe we should wait for a successful load?
-        // Let's mark it complete so the user can at least try to save their local changes.
-        setIsInitialLoadComplete(true);
-      }
-    };
-    loadData();
-  }, []);
-
-  // Save to server when data changes
-  useEffect(() => {
-    // Skip initial save if we are still loading or haven't finished the initial load attempt
-    if (serverSyncStatus === 'loading' || !isInitialLoadComplete) return;
-
-    const timer = setTimeout(async () => {
-      setServerSyncStatus('saving');
-      try {
-        await saveData({
-          records,
-          students,
-          branding: {
-            companyName,
-            companyLogo,
-            companyEmail,
-            companyAddress,
-            companyWebsite,
-            companyContent,
-            provostSignature,
-            layoutSettings
-          }
-        });
-        setServerSyncStatus('saved');
-        setTimeout(() => setServerSyncStatus('idle'), 3000);
-      } catch (error) {
-        console.error('Failed to save to server:', error);
-        setServerSyncStatus('error');
-      }
-    }, 3000); // 3 second debounce to avoid excessive writes
-
-    return () => clearTimeout(timer);
-  }, [records, students, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, companyContent, provostSignature, layoutSettings]);
 
   useEffect(() => {
     // This effect ensures that if the stored settings are partial (from an older version),
     // they get merged with the latest default structure to prevent crashes.
-    setLayoutSettings(prev => {
-        // Use initialLayoutSettings.student/staff as fallback if stored value is missing or empty
-        const prevStudent = prev?.student || initialLayoutSettings.student;
-        const prevStaff = prev?.staff || initialLayoutSettings.staff;
-
-        // Force 'school' into visibleFields if it's missing (migration for existing users)
-        let studentVisibleFields = prevStudent.visibleFields || initialLayoutSettings.student.visibleFields;
-        if (!studentVisibleFields.includes('school')) {
-            studentVisibleFields = [...studentVisibleFields, 'school'];
-            // Re-sort to match default order by filtering allStudentFields
-            studentVisibleFields = allStudentFields
-                .map(f => f.id)
-                .filter(id => studentVisibleFields.includes(id));
+    setLayoutSettings(prev => ({
+        staff: {
+            ...initialLayoutSettings.staff,
+            ...(prev?.staff || {}),
+        },
+        student: {
+            ...initialLayoutSettings.student,
+            ...(prev?.student || {}),
         }
-
-        return {
-            staff: {
-                ...initialLayoutSettings.staff,
-                ...prevStaff,
-            },
-            student: {
-                ...initialLayoutSettings.student,
-                ...prevStudent,
-                visibleFields: studentVisibleFields
-            }
-        };
-    });
+    }));
     setSettingsReady(true);
-  }, []); 
+  }, []); // Run only once on mount to hydrate settings safely
   
 
 
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [tempCompanyName, setTempCompanyName] = useState(companyName);
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [tempCompanyEmail, setTempCompanyEmail] = useState(companyEmail);
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [tempCompanyAddress, setTempCompanyAddress] = useState(companyAddress);
-  const [isEditingWebsite, setIsEditingWebsite] = useState(false);
-  const [tempCompanyWebsite, setTempCompanyWebsite] = useState(companyWebsite);
-  const [isEditingContent, setIsEditingContent] = useState(false);
-  const [tempCompanyContent, setTempCompanyContent] = useState(companyContent);
+  // Note: Parent-level editing state variables removed. EditableField now manages its own state self-contained.
 
   const combinedSaveStatus = useMemo(() => {
     if (recordsSaveStatus === 'saving' || studentsSaveStatus === 'saving') {
@@ -430,9 +340,65 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
   };
 
   const handleExportStudents = (studentsToExport: Student[]) => {
-      const studentHeaders = ['FirstName','MiddleName','Surname','Email','School','Department','RegistrationNumber','ExpirationDate','Photo'];
-      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'school', 'department', 'registrationNumber', 'expirationDate', 'photo'];
+      const studentHeaders = ['FirstName','MiddleName','Surname','Email','Department','RegistrationNumber','Photo'];
+      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'department', 'registrationNumber', 'photo'];
       handleExport(studentsToExport, studentKeys, studentHeaders, 'student-records-export');
+  };
+
+  const handleExportSystemBackup = () => {
+    const backupData = {
+      version: '1.0',
+      timestamp: new Date().toISOString(),
+      records,
+      students,
+      companyName,
+      companyLogo,
+      companyEmail,
+      companyAddress,
+      companyWebsite,
+      companyContent,
+      provostSignature,
+      layoutSettings
+    };
+    
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    const date = new Date().toISOString().split('T')[0];
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `data-collector-pro-backup-${date}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportSystemBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const backupData = JSON.parse(event.target?.result as string);
+        
+        if (backupData.records) setRecords(backupData.records);
+        if (backupData.students) setStudents(backupData.students);
+        if (backupData.companyName) setCompanyName(backupData.companyName);
+        if (backupData.companyLogo !== undefined) setCompanyLogo(backupData.companyLogo);
+        if (backupData.companyEmail) setCompanyEmail(backupData.companyEmail);
+        if (backupData.companyAddress) setCompanyAddress(backupData.companyAddress);
+        if (backupData.companyWebsite) setCompanyWebsite(backupData.companyWebsite);
+        if (backupData.companyContent) setCompanyContent(backupData.companyContent);
+        if (backupData.provostSignature !== undefined) setProvostSignature(backupData.provostSignature);
+        if (backupData.layoutSettings) setLayoutSettings(backupData.layoutSettings);
+
+        alert('System backup restored successfully!');
+      } catch (err) {
+        console.error(err);
+        alert('Invalid backup file format. Please upload a valid Data Collector Pro backup JSON.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
   };
 
   useEffect(() => {
@@ -495,17 +461,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Header companyName={companyName} companyLogo={companyLogo} />
 
-        <div className="absolute top-4 right-4 text-xs text-brand-muted flex flex-col items-end gap-1">
-          <div className="flex items-center gap-2">
-            {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving to Browser...</span></>}
-            {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Browser</span></>}
-          </div>
-          <div className="flex items-center gap-2">
-            {serverSyncStatus === 'loading' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Syncing with Server...</span></>}
-            {serverSyncStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving to Server...</span></>}
-            {serverSyncStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-blue-400" /><span>Synced with Server</span></>}
-            {serverSyncStatus === 'error' && <><XMarkIcon className="w-4 h-4 text-red-400" /><span>Server Sync Error</span></>}
-          </div>
+        <div className="absolute top-4 right-4 text-xs text-brand-muted flex items-center gap-2">
+          {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving...</span></>}
+          {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Local Storage</span></>}
         </div>
 
         <main className="mt-12">
@@ -673,48 +631,77 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             )}
           </div>
 
-          <div className="mt-12 bg-brand-secondary/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Backup & Restore Data section */}
+          <div className="mt-12 bg-brand-secondary/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 border border-white/5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-brand-light mb-4">Branding Settings</h2>
-                <div className="space-y-4">
-                  <div>
-                    <div className="grid grid-cols-1 gap-y-2">
-                      <EditableField label="Company Name" value={companyName} isEditing={isEditingName} onEditToggle={setIsEditingName} tempValue={tempCompanyName} onTempChange={setTempCompanyName} onSave={() => { setCompanyName(tempCompanyName); setIsEditingName(false); }} />
-                      <EditableField label="Company Email" value={companyEmail} isEditing={isEditingEmail} onEditToggle={setIsEditingEmail} tempValue={tempCompanyEmail} onTempChange={setTempCompanyEmail} onSave={() => { setCompanyEmail(tempCompanyEmail); setIsEditingEmail(false); }} />
-                      <EditableField label="Company Address" value={companyAddress} isEditing={isEditingAddress} onEditToggle={setIsEditingAddress} tempValue={tempCompanyAddress} onTempChange={setTempCompanyAddress} onSave={() => { setCompanyAddress(tempCompanyAddress); setIsEditingAddress(false); }} />
-                      <EditableField label="Company Website" value={companyWebsite} isEditing={isEditingWebsite} onEditToggle={setIsEditingWebsite} tempValue={tempCompanyWebsite} onTempChange={setTempCompanyWebsite} onSave={() => { setCompanyWebsite(tempCompanyWebsite); setIsEditingWebsite(false); }} />
-                      <EditableField label="Public Page Content" value={companyContent} isEditing={isEditingContent} onEditToggle={setIsEditingContent} tempValue={tempCompanyContent} onTempChange={setTempCompanyContent} onSave={() => { setCompanyContent(tempCompanyContent); setIsEditingContent(false); }} />
-                      
-                      <div className="flex items-center gap-4 py-2">
-                          <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Company Logo:</label>
-                          <div className="flex items-center gap-4">
-                              {companyLogo ? <img src={companyLogo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Logo</span></div>}
-                              <input id="logo-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} />
-                              <label htmlFor="logo-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
-                                  <UploadIcon className="w-5 h-5"/>
-                                  <span>{companyLogo ? 'Change' : 'Upload'}</span>
-                              </label>
-                          </div>
+                <h2 className="text-2xl font-bold text-brand-light">System Backup & Persistence</h2>
+                <p className="text-brand-muted text-sm mt-1">Export all staff records, student records, branding, and layout settings to a backup file, or restore them instantly.</p>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  onClick={handleExportSystemBackup}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-brand-accent hover:bg-opacity-90 rounded-lg text-white font-semibold transition-all shadow-md hover:scale-[1.01]"
+                >
+                  <DownloadIcon className="w-5 h-5" />
+                  <span>Save Backup File (JSON)</span>
+                </button>
+                <input
+                  id="system-backup-upload"
+                  type="file"
+                  className="hidden"
+                  accept=".json,application/json"
+                  onChange={handleImportSystemBackup}
+                />
+                <label
+                  htmlFor="system-backup-upload"
+                  className="cursor-pointer flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white font-semibold transition-all shadow-md hover:scale-[1.01]"
+                >
+                  <UploadIcon className="w-5 h-5" />
+                  <span>Restore Backup File</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 bg-brand-secondary/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8">
+            <h2 className="text-2xl font-bold text-brand-light mb-4">Branding Settings</h2>
+            <div className="space-y-4">
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                  <EditableField label="Company Name" value={companyName} onSave={setCompanyName} />
+                  <EditableField label="Company Email" value={companyEmail} onSave={setCompanyEmail} />
+                  <EditableField label="Company Address" value={companyAddress} onSave={setCompanyAddress} />
+                  <EditableField label="Company Website" value={companyWebsite} onSave={setCompanyWebsite} />
+                  <div className="md:col-span-2">
+                    <EditableField label="Public Page Content" value={companyContent} onSave={setCompanyContent} />
+                  </div>
+                  <div className="flex items-center gap-4 py-2">
+                      <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Company Logo:</label>
+                      <div className="flex items-center gap-4">
+                          {companyLogo ? <img src={companyLogo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Logo</span></div>}
+                          <input id="logo-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} />
+                          <label htmlFor="logo-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
+                              <UploadIcon className="w-5 h-5"/>
+                              <span>{companyLogo ? 'Change' : 'Upload'}</span>
+                          </label>
                       </div>
-                      <div className="flex items-center gap-4 py-2">
-                          <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Provost Signature:</label>
-                          <div className="flex items-center gap-4">
-                              {provostSignature ? <img src={provostSignature} alt="Signature Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Signature</span></div>}
-                              <input id="signature-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleProvostSignatureUpload} />
-                              <label htmlFor="signature-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
-                                  <UploadIcon className="w-5 h-5"/>
-                                  <span>{provostSignature ? 'Change' : 'Upload'}</span>
-                              </label>
-                          </div>
+                  </div>
+                  <div className="flex items-center gap-4 py-2">
+                      <label className="w-40 text-sm font-semibold text-brand-muted flex-shrink-0">Provost Signature:</label>
+                      <div className="flex items-center gap-4">
+                          {provostSignature ? <img src={provostSignature} alt="Signature Preview" className="h-10 w-auto bg-white/10 p-1 rounded-lg" /> : <div className="h-10 w-24 rounded-lg bg-brand-secondary flex items-center justify-center"><span className="text-xs text-brand-muted">No Signature</span></div>}
+                          <input id="signature-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/svg+xml" onChange={handleProvostSignatureUpload} />
+                          <label htmlFor="signature-upload" className="cursor-pointer flex items-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20">
+                              <UploadIcon className="w-5 h-5"/>
+                              <span>{provostSignature ? 'Change' : 'Upload'}</span>
+                          </label>
                       </div>
-                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-12 border-t border-brand-secondary/50 pt-8">
+              <div className="border-t border-brand-secondary/50 pt-4">
                 <h3 className="text-xl font-bold text-brand-light mb-4">ID Card Layout Customization</h3>
                 {settingsReady ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -758,6 +745,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                 )}
               </div>
             </div>
+          </div>
         </main>
 
         {isImportModalVisible && (
@@ -796,7 +784,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             message={`Are you sure you want to permanently delete this ${itemToDelete.type} record? This action cannot be undone.`}
           />
         )}
-        <PWAInstallPrompt />
       </div>
     </div>
   );

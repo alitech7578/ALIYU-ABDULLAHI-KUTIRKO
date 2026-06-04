@@ -21,7 +21,8 @@ const App: React.FC = () => {
       return <ClientPage />;
     }
     
-    return <AdminDashboard onLogout={() => {}} />;
+    // Default to Admin Dashboard, bypassing any login
+    return <AdminDashboard />;
   };
 
   return <>{renderContent()}</>;

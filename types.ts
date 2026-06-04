@@ -15,7 +15,7 @@ export interface DataRecord {
   bloodGroup: string;
   phoneNumber: string;
   createdAt: string;
-  photo?: string; // Stored as a base64 Data URL
+  photo: string; // Stored as a base64 Data URL
   createdBy: string;
 }
 
@@ -25,13 +25,11 @@ export interface Student {
   middleName: string;
   surname: string;
   email: string;
-  school: string;
   department: string;
   registrationNumber: string;
-  expirationDate: string;
   createdAt: string;
   createdBy: string;
-  photo?: string; // Stored as a base64 Data URL
+  photo: string; // Stored as a base64 Data URL
 }
 
 export interface FieldConfig {
