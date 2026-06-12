@@ -334,14 +334,14 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleExportStaff = (recordsToExport: DataRecord[]) => {
-      const staffHeaders = ['FirstName','MiddleName','Surname','Email','Department','SPNumber','Rank','State','LGA','MaritalStatus','BloodGroup','PhoneNumber', 'Photo'];
-      const staffKeys: (keyof DataRecord)[] = ['name', 'middleName', 'surname', 'email', 'department', 'spNumber', 'rank', 'state', 'lg', 'marriedStatus', 'bloodGroup', 'phoneNumber', 'photo'];
+      const staffHeaders = ['FirstName','MiddleName','Surname','Email','Department','SPNumber','Rank','State','LGA','MaritalStatus','BloodGroup','PhoneNumber'];
+      const staffKeys: (keyof DataRecord)[] = ['name', 'middleName', 'surname', 'email', 'department', 'spNumber', 'rank', 'state', 'lg', 'marriedStatus', 'bloodGroup', 'phoneNumber'];
       handleExport(recordsToExport, staffKeys, staffHeaders, 'staff-records-export');
   };
 
   const handleExportStudents = (studentsToExport: Student[]) => {
-      const studentHeaders = ['FirstName','MiddleName','Surname','Email','Department','RegistrationNumber','Photo'];
-      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'department', 'registrationNumber', 'photo'];
+      const studentHeaders = ['FirstName','MiddleName','Surname','Email','Department','RegistrationNumber'];
+      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'department', 'registrationNumber'];
       handleExport(studentsToExport, studentKeys, studentHeaders, 'student-records-export');
   };
 
