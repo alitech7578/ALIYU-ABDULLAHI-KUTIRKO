@@ -108,7 +108,6 @@ const AdminDashboard: React.FC = () => {
   // Offline / PWA application installation states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [showOfflineInstructions, setShowOfflineInstructions] = useState(true); // Default to expanded for immediate ease of use
   const [isIframe, setIsIframe] = useState(false);
 
   useEffect(() => {
@@ -834,7 +833,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   
                   {/* Action Row */}
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 pt-2 border-t border-blue-500/10">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3.5 pt-2 border-t border-blue-500/10">
                     <div className="flex flex-wrap gap-2.5 items-center">
                       {/* Standalone new tab link (Crucial for bypass inside iframe!) */}
                       {isIframe ? (
@@ -873,57 +872,8 @@ const AdminDashboard: React.FC = () => {
                         <span>Download Offline Backup File (.json)</span>
                       </button>
                     </div>
-
-                    <button
-                      onClick={() => setShowOfflineInstructions(!showOfflineInstructions)}
-                      className="text-center px-4 py-2 bg-brand-secondary/60 hover:bg-brand-secondary text-brand-muted hover:text-brand-light font-black text-xs rounded-xl transition-all border border-brand-secondary/80 focus:outline-none"
-                    >
-                      {showOfflineInstructions ? 'Hide Setup Help' : 'Show Setup Guide'}
-                    </button>
                   </div>
                 </div>
-
-                {showOfflineInstructions && (
-                  <div className="mt-3 p-5 rounded-2xl bg-brand-secondary/35 border border-brand-secondary/60 text-xs text-brand-light leading-relaxed animate-fadeIn space-y-4">
-                    <h4 className="font-extrabold text-sm text-brand-accent flex items-center gap-2">
-                      <span>🚀 Two Easy Steps to Install & Setup Your Standalone Offline Application:</span>
-                    </h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
-                      <div className="space-y-2.5">
-                        <p className="font-extrabold text-emerald-400 border-b border-brand-secondary/40 pb-1.5 flex items-center gap-2">
-                          <span className="bg-emerald-500/20 text-emerald-400 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black">1</span>
-                          <span>Open Standalone App</span>
-                        </p>
-                        <p className="text-brand-muted leading-relaxed">
-                          Inside the AI Studio editor frame, web security blocks native downloads. Click the <span className="text-emerald-400 font-bold">"1. Click to Open Standalone"</span> button above to launch the application full-screen in a top-level tab.
-                        </p>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        <p className="font-extrabold text-teal-400 border-b border-brand-secondary/40 pb-1.5 flex items-center gap-2">
-                          <span className="bg-teal-500/20 text-teal-400 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black">2</span>
-                          <span>Install Web App Outright</span>
-                        </p>
-                        <div className="space-y-2 text-brand-muted leading-relaxed">
-                          <p>
-                            Once open in the new tab, you can install the application to your Desktop, Phone, or Tablet:
-                          </p>
-                          <ul className="list-disc list-inside space-y-1.5 pl-1">
-                            <li><strong className="text-brand-light">Windows & Macs</strong>: Click the small <strong className="text-brand-accent">Install / Download Button (🖥️ or ⊕)</strong> in your browser's top URL address bar, or click Chrome's top menu (⫶) and choose <strong className="text-brand-accent">"Install App"</strong>.</li>
-                            <li><strong className="text-brand-light">iPhone & iPads (iOS)</strong>: Open in Safari, press the menu's <strong className="text-brand-accent">Share Button (⎋)</strong>, scroll down and click <strong className="text-brand-accent">"Add to Home Screen"</strong>.</li>
-                            <li><strong className="text-brand-light">Android Devices</strong>: Open in Chrome, click the top menu (⫶) and select <strong className="text-brand-accent">"Install App"</strong>.</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="pt-3 border-t border-brand-secondary/30 text-[11px] text-brand-muted flex items-start sm:items-center gap-2">
-                      <span className="text-amber-400 font-bold">⚠️ Data Portability Notice:</span>
-                      <span>Because data saves locally in browser cache folders, you can use the <strong className="text-brand-light">Download Offline Backup File</strong> button anytime to export/backup records, meaning you never lose your printed cards!</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

@@ -36,18 +36,21 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
     );
   };
   
+  const otherNames = [student.firstName, student.middleName].filter(Boolean).join(' ');
   const fullName = [student.firstName, student.middleName, student.surname].filter(Boolean).join(' ');
   
-  const vCardData = [
-    'BEGIN:VCARD',
-    'VERSION:3.0',
-    `N:${student.surname};${student.firstName};${student.middleName};;`,
-    `FN:${fullName}`,
-    `ORG:${companyName.replace(/,/g, '\\,')}`,
-    `TITLE:Student`,
-    `EMAIL;TYPE=INTERNET:${student.email}`,
-    `NOTE:Registration No: ${student.registrationNumber}\\nDepartment: ${student.department}`,
-    'END:VCARD'
+  const qrCodeText = [
+    'FEDERAL COLLEGE OF EDUCATION',
+    '(TECHNICAL)',
+    'BICHI',
+    ' Surname',
+    student.surname || '—',
+    'Other Names',
+    otherNames || '—',
+    'Department',
+    student.department || '—',
+    'REGISTRATION NO.',
+    student.registrationNumber || '—'
   ].join('\n');
 
   return (
@@ -62,22 +65,36 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
 
       <div className="flex flex-col h-full justify-between">
         {/* Header */}
-        <header className="flex items-center gap-3 p-3 bg-white relative">
+        <header className="flex items-center justify-between gap-3 px-3 py-1.5 bg-white relative">
           {companyLogo && (
             <div className="flex-shrink-0 bg-white p-0.5 rounded-md shadow-sm border border-gray-100 flex items-center justify-center">
-              <img src={companyLogo} alt="Company Logo" className="h-[46px] w-[46px] object-contain" />
+              <img
+                src={companyLogo}
+                alt="Company Logo"
+                className="h-[48px] w-[48px] object-contain"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
             </div>
           )}
-          <div className="text-left flex-grow">
-            <h1 className="text-[13px] font-extrabold text-blue-900 uppercase tracking-tight leading-tight" style={{ color: '#1e3a8a' }}>
+          <div className="text-center flex-grow flex flex-col items-center justify-center">
+            <h1 className="text-[12px] font-extrabold text-blue-900 uppercase tracking-tight leading-none" style={{ color: '#1e3a8a' }}>
               FEDERAL COLLEGE OF EDUCATION
             </h1>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[12px] font-black text-red-600 uppercase tracking-wide leading-none">{renderCompanyName('(TECHNICAL)')}</span>
-              <span className="text-[12px] font-black text-blue-900 uppercase tracking-wide leading-none" style={{ color: '#1e3a8a' }}>BICHI</span>
+            <div className="flex items-center justify-center gap-1.5 mt-[3px]">
+              <span className="text-[11px] font-black text-red-600 uppercase tracking-wide leading-none">
+                (TECHNICAL)
+              </span>
+              <span className="text-[11px] font-black text-blue-900 uppercase tracking-wide leading-none" style={{ color: '#1e3a8a' }}>
+                BICHI
+              </span>
             </div>
-            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mt-1">{companyAddress || 'P.M.B. 3473, Kano'}</p>
+            <p className="text-[8.5px] text-gray-500 font-bold uppercase tracking-wider mt-1">
+              P.M.B. 3473, Kano
+            </p>
           </div>
+          {companyLogo && (
+            <div className="w-[49px] h-[49px] flex-shrink-0 invisible"></div>
+          )}
         </header>
 
         {/* Dual Accent Colored Bar separating Header & Body */}
@@ -107,7 +124,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           </div>
           
           {/* Middle: Professional labeled fields */}
-          <div className="flex-grow flex flex-col justify-center gap-2 min-w-0 pr-4">
+          <div className="flex-grow flex flex-col justify-center gap-2 min-w-0 pr-2">
             {visibleFields.includes('fullName') && (
               <div className="flex flex-col gap-0.5">
                 <div className="flex flex-col">
@@ -143,13 +160,20 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
               </div>
             )}
           </div>
+
+          {/* Right: Verification QR Code */}
+          <div title="Scan to verify student details" className="flex-shrink-0 flex flex-col items-center justify-center p-2 bg-slate-50/80 border border-slate-200/50 rounded-xl shadow-xs mr-1">
+            <div className="p-0.5 bg-white border border-gray-100 rounded shadow-inner flex items-center justify-center">
+              <QRCodeCanvas value={qrCodeText} size={82} includeMargin={false} level="L" />
+            </div>
+            <span className="text-[7px] mt-1.5 text-blue-900 font-black tracking-widest uppercase text-center leading-none">Scan to Verify</span>
+          </div>
         </main>
 
         {/* Footer */}
         <footer className="w-full mt-auto">
-          <div className="h-7 bg-blue-900 flex items-center justify-between px-4 text-white text-[10px] font-bold tracking-wider uppercase">
-            <span>FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI</span>
-            <span className="text-orange-400 font-bold font-mono lowercase">{companyWebsite}</span>
+          <div className="h-7 bg-blue-900 flex items-center justify-center px-4 text-white uppercase">
+            <span className="text-orange-400 font-black font-mono lowercase text-[12px] tracking-widest">{companyWebsite}</span>
           </div>
         </footer>
       </div>

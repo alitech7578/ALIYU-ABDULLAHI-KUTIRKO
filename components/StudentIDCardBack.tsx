@@ -55,68 +55,66 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
     >
       {/* Top bar matching front's footer */}
       <div className="w-full flex flex-col">
-        <div className="h-4 bg-blue-900 flex items-center justify-between px-4">
-          <span className="text-[7.5px] text-white/80 font-black tracking-widest uppercase">OFFICIAL STUDENT RECORDS</span>
-          <span className="text-[7.5px] text-orange-400 font-bold font-mono lowercase">{companyWebsite}</span>
+        <div className="h-5 bg-blue-900 flex items-center justify-center px-4">
+          <span className="text-orange-400 font-black font-mono lowercase text-[11px] tracking-widest">{companyWebsite}</span>
         </div>
         <div className="h-[2px] bg-orange-500"></div>
       </div>
 
-      <main className="flex-grow flex flex-row items-center text-center px-4 py-2 w-full justify-around gap-1">
-        {/* Left Side: Property and Institution Details */}
-        <div className="flex-1 flex flex-col justify-center items-center">
-            {companyLogo && (
-              <img src={companyLogo} alt="Company Logo" className="h-[38px] w-[38px] object-contain mb-1.5 mx-auto" />
-            )}
-            <p className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest leading-none">This card is the property of</p>
-            
-            {isBichi ? (
-              <div className="mt-1">
-                <h2 className="text-[12px] font-black text-blue-900 uppercase tracking-tight leading-tight" style={{ color: '#1e3a8a' }}>
-                  FEDERAL COLLEGE OF EDUCATION
-                </h2>
-                <div className="flex items-center justify-center gap-1 mt-0.5">
-                  <span className="text-[11px] font-black text-red-600 uppercase tracking-wide leading-none">(TECHNICAL)</span>
-                  <span className="text-[11px] font-black text-blue-900 uppercase tracking-wide leading-none" style={{ color: '#1e3a8a' }}>BICHI</span>
-                </div>
-              </div>
-            ) : (
-              <h2 className="text-[12px] font-extrabold mt-1 text-blue-900 uppercase tracking-tight leading-tight" style={{ color: '#1e3a8a' }}>
-                {renderCompanyName(companyName)}
-              </h2>
-            )}
+      <main className="flex-grow flex flex-col items-center justify-between px-6 py-2 w-full gap-2.5">
+        {/* Top: Company Logo & College Header details */}
+        <div className="flex flex-col items-center text-center">
+          {companyLogo && (
+            <img
+              src={companyLogo}
+              alt="Company Logo"
+              className="h-[48px] w-[48px] object-contain mb-1"
+              style={{ imageRendering: '-webkit-optimize-contrast' }}
+            />
+          )}
+          
+          <h2 className="text-[12px] font-black text-blue-900 uppercase tracking-tight leading-none" style={{ color: '#1e3a8a' }}>
+            FEDERAL COLLEGE OF EDUCATION
+          </h2>
+          <p className="text-[10px] font-black text-red-600 uppercase tracking-wider leading-none mt-1">
+            (TECHNICAL) BICHI
+          </p>
+        </div>
 
-            <p className="text-[9px] mt-3.5 text-gray-500 font-medium leading-relaxed max-w-[190px]">
-              If found, please return immediately to the <span className="font-extrabold text-gray-800">Provost or Security Unit</span>
-            </p>
+        {/* Middle: Card Instructions */}
+        <div className="w-full max-w-[450px] bg-slate-50/60 p-3 rounded-xl border border-slate-200/40 text-left">
+          <ul className="space-y-1.5 text-[10px] text-black font-black leading-normal">
+            <li className="flex items-start gap-1">
+              <span className="text-orange-500 font-black">•</span>
+              <span>This card is the official property of the College and must be worn at all times on campus.</span>
+            </li>
+            <li className="flex items-start gap-1">
+              <span className="text-orange-500 font-black">•</span>
+              <span>It is non-transferable and must be surrendered upon graduation or suspension/withdrawal.</span>
+            </li>
+            <li className="flex items-start gap-1">
+              <span className="text-orange-500 font-black">•</span>
+              <span>If found, please return immediately to the <strong className="text-black font-black">Provost or Security Unit</strong>.</span>
+            </li>
+          </ul>
         </div>
         
-        {/* Middle: Signature space */}
-        <div className="flex flex-col items-center w-36 flex-shrink-0 bg-gray-50/50 p-2.5 rounded-lg border border-gray-100">
-            <div className="w-full h-10 flex items-center justify-center">
-                {provostSignature ? (
-                    <img src={provostSignature} alt="Provost's Signature" className="max-h-10 object-contain mix-blend-multiply" />
-                ) : (
-                    <div className="w-full h-10"></div> // empty space for signature
-                )}
-            </div>
-            <div className="w-full border-t border-gray-300 mt-1"></div>
-            <p className="text-[8px] mt-1 text-gray-500 font-black uppercase tracking-widest leading-none">Provost Signature</p>
-        </div>
-
-        {/* Right Side: QR Code */}
-        <div title="Scan to verify student details" className="cursor-help flex-shrink-0">
-          <div className="p-1 bg-white border border-gray-200 rounded-lg shadow-sm inline-block">
-            <QRCodeCanvas value={vCardData} size={90} includeMargin={false} level="M" />
+        {/* Bottom: Proposer Signature */}
+        <div className="flex flex-col items-center text-center mt-1">
+          <div className="w-36 h-7 flex items-center justify-center">
+            {provostSignature ? (
+              <img src={provostSignature} alt="Provost's Signature" className="max-h-7 object-contain mix-blend-multiply" />
+            ) : (
+              <div className="w-full h-7"></div>
+            )}
           </div>
-          <p className="text-[7.5px] mt-1 text-gray-400 font-bold uppercase tracking-widest leading-none text-center">Scan To Verify</p>
+          <div className="w-36 border-t border-gray-300 mt-0.5"></div>
+          <p className="text-[7px] mt-1 text-gray-500 font-black uppercase tracking-widest leading-none">Provost Signature</p>
         </div>
-
       </main>
 
       {/* Bottom bar with color stripes and portal url */}
-      <div className="w-full h-5 bg-blue-900 flex items-center justify-center px-4 flex-shrink-0 border-t border-blue-950">
-            <p className="text-white text-[9px] font-extrabold tracking-widest uppercase">BICHI, KANO STATE • P.M.B. 3473</p>
+      <div className="w-full h-3 bg-blue-900 flex items-center justify-center px-4 flex-shrink-0 border-t border-blue-950">
       </div>
     </div>
   );
