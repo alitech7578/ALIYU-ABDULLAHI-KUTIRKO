@@ -128,14 +128,14 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             {visibleFields.includes('fullName') && (
               <div className="flex flex-col gap-0.5">
                 <div className="flex flex-col">
-                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">Surname</span>
-                  <span className="text-[16px] font-black text-gray-950 uppercase tracking-tight truncate leading-tight">
+                  <span className="text-[8px] text-black font-black uppercase tracking-widest leading-none" style={{ color: '#000000' }}>Surname</span>
+                  <span className="text-[16px] font-black text-black uppercase tracking-tight truncate leading-tight" style={{ color: '#000000' }}>
                     {student.surname || '—'}
                   </span>
                 </div>
                 <div className="flex flex-col mt-0.5">
-                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">Other Names</span>
-                  <span className="text-[14px] font-extrabold text-gray-800 uppercase tracking-tight truncate leading-tight">
+                  <span className="text-[8px] text-black font-black uppercase tracking-widest leading-none" style={{ color: '#000000' }}>Other Names</span>
+                  <span className="text-[14px] font-extrabold text-black uppercase tracking-tight truncate leading-tight" style={{ color: '#000000' }}>
                     {[student.firstName, student.middleName].filter(Boolean).join(' ') || '—'}
                   </span>
                 </div>
@@ -144,8 +144,8 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             
             {visibleFields.includes('department') && (
               <div className="flex flex-col mt-0.5">
-                <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest leading-none">Department</span>
-                <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wide truncate mt-0.5">
+                <span className="text-[8px] text-black font-black uppercase tracking-widest leading-none" style={{ color: '#000000' }}>Department</span>
+                <span className="text-[11px] font-black text-black uppercase tracking-wide truncate mt-0.5" style={{ color: '#000000' }}>
                   {student.department || '—'}
                 </span>
               </div>

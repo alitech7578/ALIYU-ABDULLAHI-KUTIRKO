@@ -109,7 +109,7 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
             )}
           </div>
           <div className="w-36 border-t border-gray-300 mt-0.5"></div>
-          <p className="text-[7px] mt-1 text-gray-500 font-black uppercase tracking-widest leading-none">Provost Signature</p>
+          <p className="text-[7px] mt-1 text-black font-black uppercase tracking-widest leading-none" style={{ color: '#000000' }}>Provost Signature</p>
         </div>
       </main>
 
