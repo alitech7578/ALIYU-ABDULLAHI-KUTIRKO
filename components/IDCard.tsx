@@ -72,11 +72,20 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
         {/* Main Content - Using justify-evenly for robust vertical spacing */}
         <main className="flex-1 flex flex-col items-center text-center px-4 justify-evenly">
           {/* Photo */}
-          <img
-            src={record.photo}
-            alt={fullName}
-            className="w-[120px] h-[140px] rounded-md object-cover border-2 border-gray-200"
-          />
+          {record.photo ? (
+            <img
+              src={record.photo}
+              alt={fullName}
+              className="w-[120px] h-[140px] rounded-md object-cover border-2 border-gray-200"
+            />
+          ) : (
+            <div className="w-[120px] h-[140px] rounded-md border-2 border-gray-200 bg-gray-50 flex flex-col items-center justify-center text-gray-400">
+              <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+              <span className="text-[9px] mt-1 uppercase tracking-wider font-semibold text-gray-500">No Photo</span>
+            </div>
+          )}
           
           {/* Details Section */}
           <div className="">

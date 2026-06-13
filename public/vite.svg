@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="128" fill="#0d0d2b"/>
+  <!-- ID Badge representation -->
+  <rect x="112" y="112" width="288" height="288" rx="20" fill="#3d52d5" stroke="#ffffff" stroke-width="8"/>
+  <rect x="112" y="112" width="288" height="80" fill="#1e1e48" rx="20"/>
+  <!-- Avatar representation on badge -->
+  <circle cx="256" cy="240" r="40" fill="#ffffff"/>
+  <!-- Text line representations -->
+  <rect x="176" y="300" width="160" height="10" rx="5" fill="#ffd700"/>
+  <rect x="192" y="324" width="128" height="8" rx="4" fill="#a9a9a9"/>
+  <rect x="216" y="344" width="80" height="6" rx="3" fill="#ffffff"/>
+  <!-- Badge strap clip representation -->
+  <rect x="224" y="70" width="64" height="16" rx="8" fill="#a9a9a9"/>
+</svg>

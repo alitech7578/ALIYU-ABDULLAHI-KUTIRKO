@@ -105,6 +105,69 @@ const AdminDashboard: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'staff' | 'student' } | null>(null);
   const [studentSortConfig, setStudentSortConfig] = useState<SortConfig<Student> | null>(null);
 
+  // Offline / PWA application installation states
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [showOfflineInstructions, setShowOfflineInstructions] = useState(true); // Default to expanded for immediate ease of use
+  const [isIframe, setIsIframe] = useState(false);
+
+  useEffect(() => {
+    setIsIframe(window.self !== window.top);
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // If already running standalone (already installed)
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+      setIsInstallable(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
+
+  const handleExportBackup = () => {
+    const backupData = {
+      records,
+      students,
+      companyName,
+      companyLogo,
+      companyEmail,
+      companyAddress,
+      companyWebsite,
+      provostSignature,
+      layoutSettings,
+      version: '1.0.0',
+      exportedAt: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `data-collector-offline-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
 
   // Pagination State
   const [staffCurrentPage, setStaffCurrentPage] = useState(1);
@@ -466,7 +529,123 @@ const AdminDashboard: React.FC = () => {
           {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Local Storage</span></>}
         </div>
 
-        <main className="mt-12">
+        {/* Offline & Autosave Quick Info Desk / Install App Banner */}
+        <div className="mt-6 p-5 rounded-2xl bg-gradient-to-r from-blue-900/40 via-indigo-950/20 to-blue-900/40 border border-blue-500/30 flex flex-col gap-5 shadow-xl shadow-blue-950/10 backdrop-blur-sm">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-blue-600/25 text-blue-400 rounded-xl mt-0.5 flex-shrink-0 border border-blue-500/30 shadow-inner">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-extrabold text-base text-white flex items-center gap-2 flex-wrap tracking-tight">
+                <span>Download and Run Application Offline</span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest animate-pulse">
+                  ● Ready
+                </span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-widest">
+                  🔄 Autosaving Active
+                </span>
+              </h3>
+              <p className="text-xs text-brand-muted leading-relaxed max-w-4xl">
+                This app runs fully offline. Your records, pictures, school/college details, and custom configurations auto-save instantly to your device's persistent offline storage. You can edit, search, and export gorgeous student/staff ID cards without any internet connection!
+              </p>
+            </div>
+          </div>
+          
+          {/* Action Row */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 pt-2 border-t border-blue-500/10">
+            <div className="flex flex-wrap gap-2.5 items-center">
+              {/* Standalone new tab link (Crucial for bypass inside iframe!) */}
+              {isIframe ? (
+                <a
+                  href={window.location.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/20 text-white font-black text-xs rounded-xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2 border border-emerald-500"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  <span>1. Click to Open Standalone (Required to Install)</span>
+                </a>
+              ) : (
+                isInstallable && (
+                  <button
+                    onClick={handleInstallApp}
+                    className="px-4.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-indigo-600/30 text-white font-black text-xs rounded-xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-2 border border-indigo-500"
+                  >
+                    <DownloadIcon className="w-4 h-4" />
+                    <span>Install Application Offline</span>
+                  </button>
+                )
+              )}
+
+              {/* Physical Backup Exporter */}
+              <button
+                onClick={handleExportBackup}
+                title="Download data.json backup file to save hard copies of custom biometrics offline"
+                className="px-4 py-2 bg-brand-secondary border border-brand-accent/30 hover:border-brand-accent text-brand-light font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
+              >
+                <svg className="w-4 h-4 text-brand-accent" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75v6.75m0 0-3-3m3 3 3-3m-8.25 6a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                </svg>
+                <span>Download Offline Backup File (.json)</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowOfflineInstructions(!showOfflineInstructions)}
+              className="text-center px-4 py-2 bg-brand-secondary/60 hover:bg-brand-secondary text-brand-muted hover:text-brand-light font-black text-xs rounded-xl transition-all border border-brand-secondary/80 focus:outline-none"
+            >
+              {showOfflineInstructions ? 'Hide Setup Help' : 'Show Setup Guide'}
+            </button>
+          </div>
+        </div>
+
+        {showOfflineInstructions && (
+          <div className="mt-3 p-5 rounded-2xl bg-brand-secondary/35 border border-brand-secondary/60 text-xs text-brand-light leading-relaxed animate-fadeIn space-y-4">
+            <h4 className="font-extrabold text-sm text-brand-accent flex items-center gap-2">
+              <span>🚀 Two Easy Steps to Install & Setup Your Standalone Offline Application:</span>
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
+              <div className="space-y-2.5">
+                <p className="font-extrabold text-emerald-400 border-b border-brand-secondary/40 pb-1.5 flex items-center gap-2">
+                  <span className="bg-emerald-500/20 text-emerald-400 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black">1</span>
+                  <span>Open Standalone App</span>
+                </p>
+                <p className="text-brand-muted leading-relaxed">
+                  Inside the AI Studio editor frame, web security blocks native downloads. Click the <span className="text-emerald-400 font-bold">"1. Click to Open Standalone"</span> button above to launch the application full-screen in a top-level tab.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                <p className="font-extrabold text-teal-400 border-b border-brand-secondary/40 pb-1.5 flex items-center gap-2">
+                  <span className="bg-teal-500/20 text-teal-400 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black">2</span>
+                  <span>Install Web App Outright</span>
+                </p>
+                <div className="space-y-2 text-brand-muted leading-relaxed">
+                  <p>
+                    Once open in the new tab, you can install the application to your Desktop, Phone, or Tablet:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1.5 pl-1">
+                    <li><strong className="text-brand-light">Windows & Macs</strong>: Click the small <strong className="text-brand-accent">Install / Download Button (🖥️ or ⊕)</strong> in your browser's top URL address bar, or click Chrome's top menu (⫶) and choose <strong className="text-brand-accent">"Install App"</strong>.</li>
+                    <li><strong className="text-brand-light">iPhone & iPads (iOS)</strong>: Open in Safari, press the menu's <strong className="text-brand-accent">Share Button (⎋)</strong>, scroll down and click <strong className="text-brand-accent">"Add to Home Screen"</strong>.</li>
+                    <li><strong className="text-brand-light">Android Devices</strong>: Open in Chrome, click the top menu (⫶) and select <strong className="text-brand-accent">"Install App"</strong>.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-3 border-t border-brand-secondary/30 text-[11px] text-brand-muted flex items-start sm:items-center gap-2">
+              <span className="text-amber-400 font-bold">⚠️ Data Portability Notice:</span>
+              <span>Because data saves locally in browser cache folders, you can use the <strong className="text-brand-light">Download Offline Backup File</strong> button anytime to export/backup records, meaning you never lose your printed cards!</span>
+            </div>
+          </div>
+        )}
+
+        <main className="mt-8">
           {/* Tabs */}
           <div className="flex border-b border-brand-secondary/50 mb-6">
             <button

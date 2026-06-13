@@ -129,8 +129,8 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fields.name || !fields.surname || !fields.email || !fields.state || !fields.lg || !fields.phoneNumber || !fields.photo || !fields.marriedStatus || !fields.department || !fields.spNumber || !fields.rank || !fields.bloodGroup) {
-      setError('All fields, including photo, are required.');
+    if (!fields.name || !fields.surname || !fields.email || !fields.state || !fields.lg || !fields.phoneNumber || !fields.marriedStatus || !fields.department || !fields.spNumber || !fields.rank || !fields.bloodGroup) {
+      setError('All required fields must be filled.');
       return;
     }
     setError('');
@@ -159,7 +159,7 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
       
       <div>
         <label className="block text-sm font-medium text-brand-muted mb-2">
-            Passport Photo
+            Passport Photo (Optional)
         </label>
         <div className="mt-2 flex items-center gap-x-4">
             {photoPreview ? (

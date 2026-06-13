@@ -106,8 +106,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fields.firstName || !fields.surname || !fields.email || !fields.department || !fields.registrationNumber || !fields.photo) {
-      setError('All fields, including photo, are required.');
+    if (!fields.firstName || !fields.surname || !fields.email || !fields.department || !fields.registrationNumber) {
+      setError('All required fields must be filled.');
       return;
     }
     setError('');
@@ -136,7 +136,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
       
       <div>
         <label className="block text-sm font-medium text-brand-muted mb-2">
-            Passport Photo
+            Passport Photo (Optional)
         </label>
         <div className="mt-2 flex items-center gap-x-4">
             {photoPreview ? (
