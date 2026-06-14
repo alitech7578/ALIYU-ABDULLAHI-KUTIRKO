@@ -15,6 +15,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLogo }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('theme') as 'light' | 'dark') || 'dark');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -25,6 +26,19 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLog
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
@@ -52,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLog
         <div className="w-48 hidden sm:block flex-shrink-0"></div>
 
         <div className="flex flex-col items-center flex-grow">
-          <div className="flex justify-center items-center gap-4">
+          <div className="flex justify-center items-center gap-4 animate-fade-in">
             {companyLogo ? (
               <img src={companyLogo} alt={`${companyName} Logo`} className="w-12 h-12 object-contain"/>
             ) : (
@@ -62,6 +76,17 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, companyName, companyLog
               {companyName}
             </h1>
           </div>
+          {isOnline ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 mt-2.5 text-xs font-bold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full select-none justify-center">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
+              Offline Ready & Active
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 mt-2.5 text-xs font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full select-none justify-center">
+              <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse"></span>
+              Working Offline (No Data Needed)
+            </span>
+          )}
         </div>
 
         {user ? (

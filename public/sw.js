@@ -1,11 +1,19 @@
 const CACHE_NAME = 'data-collector-offline-cache-v1';
 
 // Initial assets to precache immediately.
-// Vite dev server dynamically compiles files like index.tsx, but having these in precache establishes instant boot.
+// Includes core local files and all external ESM dependencies for absolute offline capability.
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  'https://cdn.tailwindcss.com'
+  '/index.css',
+  '/index.tsx',
+  '/vite.svg',
+  'https://cdn.tailwindcss.com',
+  'https://esm.sh/react@^18.2.0',
+  'https://esm.sh/react-dom@^18.2.0/',
+  'https://esm.sh/qrcode.react@^3.1.0',
+  'https://esm.sh/html-to-image@^1.11.11',
+  'https://esm.sh/jspdf@^2.5.1'
 ];
 
 self.addEventListener('install', (event) => {
@@ -13,7 +21,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('Pre-cache warning during SW install:', err);
+        console.warn('Pre-cache warning during SW install (some assets might be fetched dynamic):', err);
       });
     })
   );
@@ -55,27 +63,31 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
+      // Background revalidation fetch helper
+      const updateCache = () => {
+        return fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+            return networkResponse;
+          })
+          .catch((err) => console.log('Background cache update failed (fully offline mode):', err));
+      };
+
       if (cachedResponse) {
-        // Return cached object immediately, then update cache in the background (Stale-While-Revalidate)
-        if (navigator.onLine) {
-          fetch(event.request)
-            .then((networkResponse) => {
-              if (networkResponse && networkResponse.status === 200) {
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                  cache.put(event.request, responseToCache);
-                });
-              }
-            })
-            .catch((err) => console.log('Background fetch failed: ', err));
-        }
+        // Return from cache immediately, then refresh the cache in the background
+        updateCache();
         return cachedResponse;
       }
 
       // If not in cache, fetch from network and store it
       return fetch(event.request)
         .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200) {
+          if (!networkResponse || (networkResponse.status !== 200 && networkResponse.status !== 0)) {
             return networkResponse;
           }
           
@@ -87,7 +99,7 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch((error) => {
-          console.log('Network request failed, check offline state:', error);
+          console.log('Network request failed, using offline fallback:', error);
           // If offline and navigating, fall back to cached index.html / root
           if (event.request.mode === 'navigate') {
             return caches.match('/');
