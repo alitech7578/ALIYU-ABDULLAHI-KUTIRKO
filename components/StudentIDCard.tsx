@@ -173,7 +173,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
         {/* Footer */}
         <footer className="w-full mt-auto">
           <div className="h-7 bg-blue-900 flex items-center justify-center px-4 text-white uppercase">
-            <span className="text-orange-400 font-black font-mono lowercase text-[12px] tracking-widest">{companyWebsite}</span>
+            <span className="text-orange-400 font-black font-mono lowercase text-[12px] tracking-widest" style={{ fontWeight: 900 }}>{companyWebsite}</span>
           </div>
         </footer>
       </div>

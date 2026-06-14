@@ -56,7 +56,7 @@ const StudentIDCardBack: React.FC<StudentIDCardBackProps> = ({ student, companyN
       {/* Top bar matching front's footer */}
       <div className="w-full flex flex-col">
         <div className="h-5 bg-blue-900 flex items-center justify-center px-4">
-          <span className="text-orange-400 font-black font-mono lowercase text-[11px] tracking-widest">{companyWebsite}</span>
+          <span className="text-orange-400 font-black font-mono lowercase text-[11px] tracking-widest" style={{ fontWeight: 900 }}>{companyWebsite}</span>
         </div>
         <div className="h-[2px] bg-orange-500"></div>
       </div>

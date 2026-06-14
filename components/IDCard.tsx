@@ -122,7 +122,7 @@ const IDCard: React.FC<IDCardProps> = ({ record, companyName, companyLogo, compa
                 </div>
             )}
              <div className="bg-white py-1">
-                <p className="text-center text-sm text-black font-semibold" style={{ color: '#000000' }}>{companyWebsite}</p>
+                <p className="text-center text-sm text-black font-black" style={{ color: '#000000', fontWeight: 900 }}>{companyWebsite}</p>
             </div>
         </footer>
     </div>
