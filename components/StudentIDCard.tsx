@@ -88,7 +88,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
                 BICHI
               </span>
             </div>
-            <p className="text-[8.5px] text-gray-500 font-bold uppercase tracking-wider mt-1">
+            <p className="text-[8.5px] text-black font-black uppercase tracking-wider mt-1" style={{ color: '#000000' }}>
               P.M.B. 3473, Kano
             </p>
           </div>
@@ -173,7 +173,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
         {/* Footer */}
         <footer className="w-full mt-auto">
           <div className="h-7 bg-blue-900 flex items-center justify-center px-4 text-white uppercase">
-            <span className="text-orange-400 font-black font-mono lowercase text-[12px] tracking-widest" style={{ fontWeight: 900 }}>{companyWebsite}</span>
+            <span className="text-white font-black font-mono lowercase text-[12px] tracking-widest" style={{ color: '#ffffff', fontWeight: 900 }}>{companyWebsite}</span>
           </div>
         </footer>
       </div>
