@@ -290,6 +290,10 @@ const AdminDashboard: React.FC = () => {
     if (editingRecord) {
       setRecords(records.map(r => r.id === record.id ? record : r));
     } else {
+      if (records.length >= 2000) {
+        alert("Cannot add staff record. The maximum local database limit of 2,000 staff records has been reached.");
+        return;
+      }
       setRecords([record, ...records]);
     }
   };
@@ -325,7 +329,17 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleImportRecords = (newRecords: DataRecord[]) => {
-    setRecords(prev => [...newRecords, ...prev]);
+    if (records.length + newRecords.length > 2000) {
+      const allowedCount = 2000 - records.length;
+      if (allowedCount <= 0) {
+        alert("Cannot import staff records. The maximum local database storage limit of 2,000 staff records is already reached.");
+        return;
+      }
+      alert(`Storage limit of 2,000 reached. Only the first ${allowedCount} records were imported.`);
+      setRecords(prev => [...newRecords.slice(0, allowedCount), ...prev]);
+    } else {
+      setRecords(prev => [...newRecords, ...prev]);
+    }
     setIsImportModalVisible(false);
   };
 
@@ -333,6 +347,10 @@ const AdminDashboard: React.FC = () => {
     if (editingStudent) {
       setStudents(students.map(s => s.id === student.id ? student : s));
     } else {
+      if (students.length >= 5000) {
+        alert("Cannot add student record. The maximum local database limit of 5,000 student records has been reached.");
+        return;
+      }
       setStudents([student, ...students]);
     }
   };
@@ -349,7 +367,17 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleImportStudents = (newStudents: Student[]) => {
-    setStudents(prev => [...newStudents, ...prev]);
+    if (students.length + newStudents.length > 5000) {
+      const allowedCount = 5000 - students.length;
+      if (allowedCount <= 0) {
+        alert("Cannot import student records. The maximum local database storage limit of 5,000 student records is already reached.");
+        return;
+      }
+      alert(`Storage limit of 5,000 reached. Only the first ${allowedCount} records were imported.`);
+      setStudents(prev => [...newStudents.slice(0, allowedCount), ...prev]);
+    } else {
+      setStudents(prev => [...newStudents, ...prev]);
+    }
     setIsStudentImportModalVisible(false);
   };
   
@@ -698,6 +726,83 @@ const AdminDashboard: React.FC = () => {
                 />
               </>
             )}
+          </div>
+
+          {/* Local Database Storage & Allocation Meters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 mb-8 animate-fade-in">
+            {/* Staff Storage Capacity Card */}
+            <div className="p-5 rounded-2xl bg-brand-secondary/40 border border-brand-accent/20 backdrop-blur-xs flex flex-col justify-between shadow-lg">
+              <div className="flex justify-between items-start mb-2">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-brand-muted tracking-wide uppercase">Staff Storage Allocation</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-black text-white">{records.length.toLocaleString()}</span>
+                    <span className="text-xs text-brand-muted font-mono">/ 2,000 slots</span>
+                  </div>
+                </div>
+                <div className="p-2 bg-brand-accent/15 text-brand-accent rounded-lg border border-brand-accent/20">
+                  <UserCircleIcon className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="space-y-1.5 mt-3">
+                <div className="w-full bg-brand-primary/60 rounded-full h-2 overflow-hidden border border-brand-secondary">
+                  <div 
+                    className="bg-brand-accent h-full rounded-full transition-all duration-500 ease-out" 
+                    style={{ width: `${Math.min(100, (records.length / 2000) * 100)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] font-mono font-bold text-brand-muted">
+                  <span>{((records.length / 2000) * 100).toFixed(1)}% Used</span>
+                  <span>{Math.max(0, 2000 - records.length).toLocaleString()} Free Slots</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Students Storage Capacity Card */}
+            <div className="p-5 rounded-2xl bg-brand-secondary/40 border border-brand-accent/20 backdrop-blur-xs flex flex-col justify-between shadow-lg">
+              <div className="flex justify-between items-start mb-2">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-brand-muted tracking-wide uppercase">Student Storage Allocation</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-black text-white">{students.length.toLocaleString()}</span>
+                    <span className="text-xs text-brand-muted font-mono">/ 5,000 slots</span>
+                  </div>
+                </div>
+                <div className="p-2 bg-emerald-500/15 text-emerald-400 rounded-lg border border-emerald-500/20">
+                  <UsersIcon className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="space-y-1.5 mt-3">
+                <div className="w-full bg-brand-primary/60 rounded-full h-2 overflow-hidden border border-brand-secondary">
+                  <div 
+                    className="bg-emerald-500 h-full rounded-full transition-all duration-500 ease-out" 
+                    style={{ width: `${Math.min(100, (students.length / 5000) * 100)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] font-mono font-bold text-brand-muted">
+                  <span>{((students.length / 5000) * 100).toFixed(1)}% Used</span>
+                  <span>{Math.max(0, 5000 - students.length).toLocaleString()} Free Slots</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Offline Database Engine Status card */}
+            <div className="p-5 rounded-2xl bg-brand-secondary/40 border border-brand-accent/20 backdrop-blur-xs flex flex-col justify-between shadow-lg">
+              <div className="space-y-1 mb-2">
+                <span className="text-xs font-bold text-brand-muted tracking-wide uppercase">Local DB Engine Status</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-sm font-black text-white uppercase tracking-tight">Active & Optimized</span>
+                </div>
+                <p className="text-[11px] text-brand-muted leading-tight mt-1.5">
+                  Secure local client-side storage engine. Multi-index query capability enabled.
+                </p>
+              </div>
+              <div className="flex justify-between text-[10px] font-mono font-bold text-brand-muted border-t border-brand-secondary/50 pt-2.5">
+                <span>Row Capacity Used</span>
+                <span className="text-brand-accent">{(records.length + students.length).toLocaleString()} / 7,000 total</span>
+              </div>
+            </div>
           </div>
 
           {/* Backup & Restore Data section */}
