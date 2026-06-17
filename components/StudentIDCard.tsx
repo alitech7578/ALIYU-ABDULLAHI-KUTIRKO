@@ -109,7 +109,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
         </div>
 
         {/* Main Content */}
-        <main className="flex-grow flex items-center p-3 gap-5 relative bg-white/40">
+        <main className="flex-grow flex items-start p-3 pt-[18px] gap-5 relative bg-white/40">
           {/* Left: Photo Frame */}
           <div className="flex-shrink-0 p-1 bg-white border border-gray-200 shadow-md rounded-lg">
             {student.photo ? (
@@ -129,7 +129,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           </div>
           
           {/* Middle: Professional labeled fields */}
-          <div className="flex-grow flex flex-col justify-center gap-1 min-w-0 pr-2">
+          <div className="flex-grow flex flex-col justify-start gap-1 min-w-0 pr-2 pt-[5px]">
             {visibleFields.includes('fullName') && (
               <div className="flex flex-col">
                 <div className="flex flex-col">
@@ -176,7 +176,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           </div>
 
           {/* Right: Verification QR Code */}
-          <div title="Scan to verify student details" className="flex-shrink-0 flex flex-col items-center justify-center p-2 bg-slate-50/80 border border-slate-200/50 rounded-xl shadow-xs mr-1">
+          <div title="Scan to verify student details" className="flex-shrink-0 flex flex-col items-center justify-center p-2 bg-slate-50/80 border border-slate-200/50 rounded-xl shadow-xs mr-1 self-center">
             <div className="p-0.5 bg-white border border-gray-100 rounded shadow-inner flex items-center justify-center">
               <QRCodeCanvas value={qrCodeText} size={82} includeMargin={false} level="L" />
             </div>
