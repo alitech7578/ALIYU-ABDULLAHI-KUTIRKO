@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
 import { PlusIcon, UploadIcon, SpinnerIcon, CheckCircleIcon } from './IconComponents';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useIndexedDB } from '../hooks/useIndexedDB';
 
 interface StudentFormProps {
   onSubmitStudent: (student: Student) => void;
@@ -47,10 +47,10 @@ type FormState = typeof initialFormState;
 
 const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdit, saveStatus }) => {
   const isEditing = !!studentToEdit;
-  const [draft, setDraft] = useLocalStorage<FormState>('student-form-draft', initialFormState);
+  const [draft, setDraft] = useIndexedDB<FormState>('student-form-draft', initialFormState);
 
   const [fields, setFields] = useState<FormState>(() => {
-      if (isEditing) {
+      if (isEditing && studentToEdit) {
           return {
               firstName: studentToEdit.firstName,
               middleName: studentToEdit.middleName,
@@ -62,19 +62,26 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
               photo: studentToEdit.photo,
           };
       }
-      return draft;
+      return initialFormState;
   });
 
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
   
+  // Hydrate fields with the asynchronous draft once loaded
+  useEffect(() => {
+    if (!isEditing && draft && draft !== initialFormState) {
+      setFields(draft);
+    }
+  }, [draft, isEditing]);
+
   useEffect(() => {
     setPhotoPreview(fields.photo);
   }, [fields.photo]);
 
   // Update draft in local storage when fields change in 'add new' mode
   useEffect(() => {
-    if (!isEditing) {
+    if (!isEditing && fields !== initialFormState) {
       setDraft(fields);
     }
   }, [fields, isEditing, setDraft]);

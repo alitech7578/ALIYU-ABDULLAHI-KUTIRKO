@@ -4,6 +4,7 @@ import IDCard from './IDCard';
 import StudentIDCard from './StudentIDCard';
 import { DatabaseIcon, UserCircleIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { dbGet } from '../hooks/useIndexedDB';
 
 // Helper to get initial layout settings to avoid mismatch
 const getInitialLayoutSettings = (): IDCardLayoutSettings => ({
@@ -35,7 +36,7 @@ const ClientPage: React.FC = () => {
     const [layoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', getInitialLayoutSettings());
 
     useEffect(() => {
-        const fetchRecordFromLocalStorage = () => {
+        const fetchRecord = async () => {
              try {
                 const hash = window.location.hash;
                 const recordId = hash.split('/id/')[1];
@@ -46,13 +47,23 @@ const ClientPage: React.FC = () => {
                     return;
                 }
 
-                // Search for staff records first
-                const allStaffRecords: DataRecord[] = JSON.parse(window.localStorage.getItem('data-records') || '[]');
+                // Search for staff records first in IndexedDB
+                let allStaffRecords: DataRecord[] = await dbGet('data-records') || [];
+                if (allStaffRecords.length === 0) {
+                    try {
+                        allStaffRecords = JSON.parse(window.localStorage.getItem('data-records') || '[]');
+                    } catch (e) {}
+                }
                 let foundPerson: DataRecord | Student | undefined = allStaffRecords.find(r => r.id === recordId);
 
                 // If not found in staff, search in students
                 if (!foundPerson) {
-                    const allStudentRecords: Student[] = JSON.parse(window.localStorage.getItem('student-records') || '[]');
+                    let allStudentRecords: Student[] = await dbGet('student-records') || [];
+                    if (allStudentRecords.length === 0) {
+                        try {
+                            allStudentRecords = JSON.parse(window.localStorage.getItem('student-records') || '[]');
+                        } catch (e) {}
+                    }
                     foundPerson = allStudentRecords.find(s => s.id === recordId);
                 }
 
@@ -69,7 +80,7 @@ const ClientPage: React.FC = () => {
             }
         }
         
-        fetchRecordFromLocalStorage();
+        fetchRecord();
     }, []);
 
 

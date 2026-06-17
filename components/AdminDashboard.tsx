@@ -6,6 +6,7 @@ import DataTable from './DataTable';
 import BulkIDPrint from './BulkIDPrint';
 import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon, UserPlusIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useIndexedDB } from '../hooks/useIndexedDB';
 import ImportModal from './ImportModal';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
@@ -85,8 +86,8 @@ const EditableField = ({ label, value, onSave }: { label: string, value: string,
 };
 
 const AdminDashboard: React.FC = () => {
-  const [records, setRecords, recordsSaveStatus] = useLocalStorage<DataRecord[]>('data-records', []);
-  const [students, setStudents, studentsSaveStatus] = useLocalStorage<Student[]>('student-records', []);
+  const [records, setRecords, recordsSaveStatus] = useIndexedDB<DataRecord[]>('data-records', []);
+  const [students, setStudents, studentsSaveStatus] = useIndexedDB<Student[]>('student-records', []);
   
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

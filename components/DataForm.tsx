@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DataRecord, MarriedStatus } from '../types';
 import { PlusIcon, UploadIcon, SpinnerIcon, CheckCircleIcon } from './IconComponents';
 import { nigeriaStates } from '../data/nigeria-data';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useIndexedDB } from '../hooks/useIndexedDB';
 
 interface DataFormProps {
   onSubmitRecord: (record: DataRecord) => void;
@@ -51,10 +51,10 @@ type FormState = typeof initialFormState;
 
 const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveStatus }) => {
   const isEditing = !!recordToEdit;
-  const [draft, setDraft] = useLocalStorage<FormState>('staff-form-draft', initialFormState);
+  const [draft, setDraft] = useIndexedDB<FormState>('staff-form-draft', initialFormState);
 
   const [fields, setFields] = useState<FormState>(() => {
-    if (isEditing) {
+    if (isEditing && recordToEdit) {
       return {
         name: recordToEdit.name,
         middleName: recordToEdit.middleName,
@@ -71,12 +71,19 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
         photo: recordToEdit.photo,
       };
     }
-    return draft;
+    return initialFormState;
   });
   
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
   const [lgaOptions, setLgaOptions] = useState<string[]>([]);
+
+  // Hydrate fields with the asynchronous draft once loaded
+  useEffect(() => {
+    if (!isEditing && draft && draft !== initialFormState) {
+      setFields(draft);
+    }
+  }, [draft, isEditing]);
 
   useEffect(() => {
     setPhotoPreview(fields.photo);
@@ -84,7 +91,7 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
 
   // Update draft in local storage when fields change in 'add new' mode
   useEffect(() => {
-    if (!isEditing) {
+    if (!isEditing && fields !== initialFormState) {
       setDraft(fields);
     }
   }, [fields, isEditing, setDraft]);
