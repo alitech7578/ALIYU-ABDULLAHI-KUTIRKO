@@ -65,26 +65,31 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
       return initialFormState;
   });
 
+  const [hasHydrated, setHasHydrated] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
   
   // Hydrate fields with the asynchronous draft once loaded
   useEffect(() => {
-    if (!isEditing && draft && draft !== initialFormState) {
-      setFields(draft);
+    if (!isEditing && draft && !hasHydrated) {
+      const hasContent = Object.values(draft).some(val => val !== '');
+      if (hasContent) {
+        setFields(draft);
+      }
+      setHasHydrated(true);
     }
-  }, [draft, isEditing]);
+  }, [draft, isEditing, hasHydrated]);
 
   useEffect(() => {
     setPhotoPreview(fields.photo);
   }, [fields.photo]);
 
-  // Update draft in local storage when fields change in 'add new' mode
+  // Update draft in local storage when fields change in 'add new' mode (only after we've hydrated)
   useEffect(() => {
-    if (!isEditing && fields !== initialFormState) {
+    if (!isEditing && hasHydrated && fields !== initialFormState) {
       setDraft(fields);
     }
-  }, [fields, isEditing, setDraft]);
+  }, [fields, isEditing, setDraft, hasHydrated]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

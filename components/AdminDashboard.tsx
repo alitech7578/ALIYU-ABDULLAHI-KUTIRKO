@@ -89,7 +89,7 @@ const AdminDashboard: React.FC = () => {
   const [records, setRecords, recordsSaveStatus] = useIndexedDB<DataRecord[]>('data-records', []);
   const [students, setStudents, studentsSaveStatus] = useIndexedDB<Student[]>('student-records', []);
   
-  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [isFormVisible, setIsFormVisible] = useLocalStorage<boolean>('admin-is-form-visible-v2', false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isPrintViewVisible, setIsPrintViewVisible] = useState(false);
@@ -98,12 +98,32 @@ const AdminDashboard: React.FC = () => {
   const [studentsToPrint, setStudentsToPrint] = useState<Student[]>([]);
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isStudentImportModalVisible, setIsStudentImportModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<'staff' | 'students'>('staff');
+  const [activeTab, setActiveTab] = useLocalStorage<'staff' | 'students'>('admin-active-tab-v2', 'staff');
   const [selectedStudentForId, setSelectedStudentForId] = useState<Student | null>(null);
-  const [editingRecord, setEditingRecord] = useState<DataRecord | null>(null);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [staffSearchQuery, setStaffSearchQuery] = useState('');
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  
+  const [editingRecordId, setEditingRecordId] = useLocalStorage<string | null>('admin-editing-record-id-v2', null);
+  const [editingStudentId, setEditingStudentId] = useLocalStorage<string | null>('admin-editing-student-id-v2', null);
+
+  const editingRecord = useMemo(() => {
+    if (!editingRecordId) return null;
+    return records.find(r => r.id === editingRecordId) || null;
+  }, [records, editingRecordId]);
+
+  const editingStudent = useMemo(() => {
+    if (!editingStudentId) return null;
+    return students.find(s => s.id === editingStudentId) || null;
+  }, [students, editingStudentId]);
+
+  const setEditingRecord = (record: DataRecord | null) => {
+    setEditingRecordId(record ? record.id : null);
+  };
+
+  const setEditingStudent = (student: Student | null) => {
+    setEditingStudentId(student ? student.id : null);
+  };
+
+  const [staffSearchQuery, setStaffSearchQuery] = useLocalStorage<string>('admin-staff-search-v2', '');
+  const [studentSearchQuery, setStudentSearchQuery] = useLocalStorage<string>('admin-student-search-v2', '');
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'staff' | 'student' } | null>(null);
   const [studentSortConfig, setStudentSortConfig] = useState<SortConfig<Student> | null>(null);
 
@@ -171,8 +191,8 @@ const AdminDashboard: React.FC = () => {
 
 
   // Pagination State
-  const [staffCurrentPage, setStaffCurrentPage] = useState(1);
-  const [studentCurrentPage, setStudentCurrentPage] = useState(1);
+  const [staffCurrentPage, setStaffCurrentPage] = useLocalStorage<number>('admin-staff-page-v2', 1);
+  const [studentCurrentPage, setStudentCurrentPage] = useLocalStorage<number>('admin-student-page-v2', 1);
   const recordsPerPage = 10;
 
   const [companyName, setCompanyName] = useLocalStorage('company-name', 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI');
