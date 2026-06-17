@@ -32,6 +32,7 @@ const allStudentFields: FieldConfig[] = [
     { id: 'fullName', label: 'Full Name' },
     { id: 'department', label: 'Department' },
     { id: 'registrationNumber', label: 'Registration No.' },
+    { id: 'expiryDate', label: 'Expiration Date' },
 ];
 
 const initialLayoutSettings: IDCardLayoutSettings = {
@@ -186,16 +187,22 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     // This effect ensures that if the stored settings are partial (from an older version),
     // they get merged with the latest default structure to prevent crashes.
-    setLayoutSettings(prev => ({
-        staff: {
-            ...initialLayoutSettings.staff,
-            ...(prev?.staff || {}),
-        },
-        student: {
-            ...initialLayoutSettings.student,
-            ...(prev?.student || {}),
-        }
-    }));
+    setLayoutSettings(prev => {
+        const prevStaff = prev?.staff || {};
+        const prevStudent = prev?.student || {};
+        const studentFields = prevStudent.visibleFields || initialLayoutSettings.student.visibleFields;
+        return {
+            staff: {
+                ...initialLayoutSettings.staff,
+                ...prevStaff,
+            },
+            student: {
+                ...initialLayoutSettings.student,
+                ...prevStudent,
+                visibleFields: studentFields.includes('expiryDate') ? studentFields : [...studentFields, 'expiryDate']
+            }
+        };
+    });
     setSettingsReady(true);
   }, []); // Run only once on mount to hydrate settings safely
   
@@ -402,8 +409,8 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleExportStudents = (studentsToExport: Student[]) => {
-      const studentHeaders = ['FirstName','MiddleName','Surname','Email','Department','RegistrationNumber'];
-      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'department', 'registrationNumber'];
+      const studentHeaders = ['FirstName','MiddleName','Surname','Email','Department','RegistrationNumber','ExpirationDate'];
+      const studentKeys: (keyof Student)[] = ['firstName', 'middleName', 'surname', 'email', 'department', 'registrationNumber', 'expiryDate'];
       handleExport(studentsToExport, studentKeys, studentHeaders, 'student-records-export');
   };
 

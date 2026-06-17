@@ -75,14 +75,19 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
             const errors: string[] = [];
             let successfulImports = 0;
 
+            const getThreeYearsFromNow = () => {
+                const d = new Date();
+                return `${d.getFullYear() + 3}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            };
+
             for (let i = 1; i < rows.length; i++) {
                 const rowData = rows[i].trim().split(',');
-                if (rowData.length !== CSV_HEADERS.length) {
+                if (rowData.length < CSV_HEADERS.length) {
                     errors.push(`Row ${i + 1}: Incorrect number of columns.`);
                     continue;
                 }
                 
-                const [firstName, middleName, surname, email, department, registrationNumber] = rowData.map(d => d.trim());
+                const [firstName, middleName, surname, email, department, registrationNumber, expiryDate] = rowData.map(d => d ? d.trim() : '');
                 
                 // Basic validation
                 if (!firstName || !surname || !email || !department || !registrationNumber) {
@@ -98,6 +103,7 @@ const StudentImportModal: React.FC<StudentImportModalProps> = ({ isOpen, onClose
                     email,
                     department,
                     registrationNumber,
+                    expiryDate: expiryDate || getThreeYearsFromNow(),
                     createdAt: new Date().toISOString(),
                     photo: '', // No photo from CSV as it is removed from the template
                     createdBy: 'admin-import',

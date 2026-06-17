@@ -17,7 +17,10 @@ const backgroundPatternStyle = {
 };
 
 const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, companyLogo, companyWebsite, companyAddress, layoutSettings }) => {
-  const { visibleFields } = layoutSettings;
+  const rawVisibleFields = layoutSettings?.visibleFields || [];
+  const visibleFields = rawVisibleFields.includes('expiryDate') || !rawVisibleFields.includes('registrationNumber')
+    ? rawVisibleFields
+    : [...rawVisibleFields, 'expiryDate'];
 
   const renderCompanyName = (name: string) => {
     const parts = name.split(/(\(TECHNICAL\))/i);
@@ -50,7 +53,9 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
     'Department',
     student.department || '—',
     'REGISTRATION NO.',
-    student.registrationNumber || '—'
+    student.registrationNumber || '—',
+    'EXPIRY DATE',
+    student.expiryDate || '—'
   ].join('\n');
 
   return (
@@ -124,9 +129,9 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
           </div>
           
           {/* Middle: Professional labeled fields */}
-          <div className="flex-grow flex flex-col justify-center gap-2 min-w-0 pr-2">
+          <div className="flex-grow flex flex-col justify-center gap-1 min-w-0 pr-2">
             {visibleFields.includes('fullName') && (
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col">
                 <div className="flex flex-col">
                   <span className="text-[8px] text-black font-black uppercase tracking-widest leading-none" style={{ color: '#000000' }}>Surname</span>
                   <span className="text-[16px] font-black text-black uppercase tracking-tight truncate leading-tight" style={{ color: '#000000' }}>
@@ -143,7 +148,7 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             )}
             
             {visibleFields.includes('department') && (
-              <div className="flex flex-col mt-0.5">
+              <div className="flex flex-col">
                 <span className="text-[8px] text-black font-black uppercase tracking-widest leading-none" style={{ color: '#000000' }}>Department</span>
                 <span className="text-[11px] font-black text-black uppercase tracking-wide truncate mt-0.5" style={{ color: '#000000' }}>
                   {student.department || '—'}
@@ -152,11 +157,20 @@ const StudentIDCard: React.FC<StudentIDCardProps> = ({ student, companyName, com
             )}
 
             {visibleFields.includes('registrationNumber') && (
-              <div className="flex flex-col mt-1">
-                <span className="text-[8px] text-orange-600 font-black uppercase tracking-widest leading-none mb-1">REGISTRATION NO.</span>
-                <div className="bg-blue-900 border border-blue-950 text-white rounded px-2.5 py-1 inline-block self-start font-mono text-xs font-bold tracking-widest shadow-sm">
+              <div className="flex flex-col mt-0.5">
+                <span className="text-[8px] text-orange-600 font-black uppercase tracking-widest leading-none mb-0.5">REGISTRATION NO.</span>
+                <div className="bg-blue-900 border border-blue-950 text-white rounded px-2.5 py-0.5 inline-block self-start font-mono text-xs font-bold tracking-widest shadow-sm">
                   {student.registrationNumber || '—'}
                 </div>
+              </div>
+            )}
+            
+            {visibleFields.includes('expiryDate') && (
+              <div className="flex flex-col items-center justify-center mt-5">
+                <span className="text-[7.5px] text-black font-black uppercase tracking-widest leading-none" style={{ color: '#000000' }}>Expires</span>
+                <span className="text-[9.5px] font-black text-red-600 uppercase tracking-widest mt-0.5 leading-none">
+                  {student.expiryDate || '—'}
+                </span>
               </div>
             )}
           </div>

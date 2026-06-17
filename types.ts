@@ -30,6 +30,7 @@ export interface Student {
   createdAt: string;
   createdBy: string;
   photo: string; // Stored as a base64 Data URL
+  expiryDate?: string;
 }
 
 export interface FieldConfig {

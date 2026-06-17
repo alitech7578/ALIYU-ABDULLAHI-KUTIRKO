@@ -27,6 +27,11 @@ const InputField = ({ id, label, type, value, onChange, placeholder, isRequired 
   </div>
 );
 
+const getThreeYearsFromNow = () => {
+  const d = new Date();
+  return `${d.getFullYear() + 3}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const initialFormState = {
   firstName: '',
   middleName: '',
@@ -34,6 +39,7 @@ const initialFormState = {
   email: '',
   department: '',
   registrationNumber: '',
+  expiryDate: getThreeYearsFromNow(),
   photo: '',
 };
 
@@ -52,6 +58,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
               email: studentToEdit.email,
               department: studentToEdit.department,
               registrationNumber: studentToEdit.registrationNumber,
+              expiryDate: studentToEdit.expiryDate || getThreeYearsFromNow(),
               photo: studentToEdit.photo,
           };
       }
@@ -174,8 +181,9 @@ const StudentForm: React.FC<StudentFormProps> = ({ onSubmitStudent, studentToEdi
         <InputField id="email" label="Student Email" type="email" value={fields.email} onChange={handleChange} placeholder="student.email@example.com" />
         <InputField id="registrationNumber" label="Registration Number" type="text" value={fields.registrationNumber} onChange={handleChange} placeholder="e.g., 2024/CS/001" />
       </div>
-      <div className="grid grid-cols-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <InputField id="department" label="Department" type="text" value={fields.department} onChange={handleChange} placeholder="e.g., Computer Science" />
+        <InputField id="expiryDate" label="Expiration Date" type="text" value={fields.expiryDate} onChange={handleChange} placeholder="e.g., 2030-06-17" />
       </div>
       
       <div className="flex justify-end">
