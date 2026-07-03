@@ -7,6 +7,7 @@ import BulkIDPrint from './BulkIDPrint';
 import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, TrashIcon, DocumentArrowUpIcon, UserCircleIcon, UsersIcon, SearchIcon, SpinnerIcon, CheckCircleIcon, PrinterIcon, UserPlusIcon } from './IconComponents';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useIndexedDB } from '../hooks/useIndexedDB';
+import { db, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from '../hooks/useFirebase';
 import ImportModal from './ImportModal';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
@@ -86,6 +87,15 @@ const EditableField = ({ label, value, onSave }: { label: string, value: string,
 };
 
 const AdminDashboard: React.FC = () => {
+  const [companyName, setCompanyName] = useLocalStorage('company-name', 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI');
+  const [companyLogo, setCompanyLogo] = useLocalStorage<string | null>('company-logo', null);
+  const [companyEmail, setCompanyEmail] = useLocalStorage('company-email', 'contact@fcetbichi.edu.ng');
+  const [companyAddress, setCompanyAddress] = useLocalStorage('company-address', 'P.M.B. 3473, Kano');
+  const [companyWebsite, setCompanyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
+  const [companyContent, setCompanyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
+  const [provostSignature, setProvostSignature] = useLocalStorage<string | null>('provost-signature', null);
+  const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
+
   const [records, setRecords, recordsSaveStatus] = useIndexedDB<DataRecord[]>('data-records', []);
   const [students, setStudents, studentsSaveStatus] = useIndexedDB<Student[]>('student-records', []);
   
@@ -126,6 +136,143 @@ const AdminDashboard: React.FC = () => {
   const [studentSearchQuery, setStudentSearchQuery] = useLocalStorage<string>('admin-student-search-v2', '');
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'staff' | 'student' } | null>(null);
   const [studentSortConfig, setStudentSortConfig] = useState<SortConfig<Student> | null>(null);
+
+  // Real-time synchronization states
+  const [syncStatus, setSyncStatus] = useState<'connecting' | 'synced' | 'error'>('connecting');
+  const [isDataMerged, setIsDataMerged] = useState(false);
+  const [isSettingsMerged, setIsSettingsMerged] = useState(false);
+
+  // Real-time synchronization for staff-records and student-records with bidirectional offline merging
+  useEffect(() => {
+    setSyncStatus('connecting');
+
+    // Subscribe to Staff records
+    const unsubscribeStaff = onSnapshot(collection(db, 'staff-records'), (snapshot) => {
+      const cloudRecords: DataRecord[] = [];
+      snapshot.forEach((docSnap) => {
+        cloudRecords.push(docSnap.data() as DataRecord);
+      });
+
+      // Sort by createdAt desc
+      cloudRecords.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      setRecords(prevLocal => {
+        if (!isDataMerged && prevLocal && prevLocal.length > 0) {
+          const missingInCloud = prevLocal.filter(local => !cloudRecords.some(cloud => cloud.id === local.id));
+          if (missingInCloud.length > 0) {
+            console.log(`Syncing ${missingInCloud.length} offline staff records to cloud...`);
+            const batch = writeBatch(db);
+            missingInCloud.forEach(rec => {
+              batch.set(doc(db, 'staff-records', rec.id), rec);
+            });
+            batch.commit().catch(err => console.error("Failed to commit merged staff records:", err));
+          }
+        }
+        return cloudRecords;
+      });
+      setSyncStatus('synced');
+    }, (error) => {
+      console.error("Firestore staff-records subscription error:", error);
+      setSyncStatus('error');
+    });
+
+    // Subscribe to Student records
+    const unsubscribeStudents = onSnapshot(collection(db, 'student-records'), (snapshot) => {
+      const cloudStudents: Student[] = [];
+      snapshot.forEach((docSnap) => {
+        cloudStudents.push(docSnap.data() as Student);
+      });
+
+      cloudStudents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      setStudents(prevLocal => {
+        if (!isDataMerged && prevLocal && prevLocal.length > 0) {
+          const missingInCloud = prevLocal.filter(local => !cloudStudents.some(cloud => cloud.id === local.id));
+          if (missingInCloud.length > 0) {
+            console.log(`Syncing ${missingInCloud.length} offline student records to cloud...`);
+            const batch = writeBatch(db);
+            missingInCloud.forEach(stu => {
+              batch.set(doc(db, 'student-records', stu.id), stu);
+            });
+            batch.commit().catch(err => console.error("Failed to commit merged student records:", err));
+          }
+        }
+        return cloudStudents;
+      });
+      setIsDataMerged(true);
+    }, (error) => {
+      console.error("Firestore student-records subscription error:", error);
+    });
+
+    return () => {
+      unsubscribeStaff();
+      unsubscribeStudents();
+    };
+  }, [isDataMerged]);
+
+  // Real-time synchronization for system branding configurations
+  useEffect(() => {
+    const unsubscribeSettings = onSnapshot(doc(db, 'system-settings', 'general'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.companyName !== undefined && data.companyName !== companyName) setCompanyName(data.companyName);
+        if (data.companyLogo !== undefined && data.companyLogo !== companyLogo) setCompanyLogo(data.companyLogo);
+        if (data.companyEmail !== undefined && data.companyEmail !== companyEmail) setCompanyEmail(data.companyEmail);
+        if (data.companyAddress !== undefined && data.companyAddress !== companyAddress) setCompanyAddress(data.companyAddress);
+        if (data.companyWebsite !== undefined && data.companyWebsite !== companyWebsite) setCompanyWebsite(data.companyWebsite);
+        if (data.companyContent !== undefined && data.companyContent !== companyContent) setCompanyContent(data.companyContent);
+        if (data.provostSignature !== undefined && data.provostSignature !== provostSignature) setProvostSignature(data.provostSignature);
+        if (data.layoutSettings !== undefined && JSON.stringify(data.layoutSettings) !== JSON.stringify(layoutSettings)) {
+          setLayoutSettings(data.layoutSettings);
+        }
+      } else {
+        // Create initial settings if document doesn't exist
+        setDoc(doc(db, 'system-settings', 'general'), {
+          companyName,
+          companyLogo,
+          companyEmail,
+          companyAddress,
+          companyWebsite,
+          companyContent,
+          provostSignature,
+          layoutSettings
+        }).catch(err => console.error("Error creating initial system-settings:", err));
+      }
+      setIsSettingsMerged(true);
+    }, (error) => {
+      console.error("Error listening to system settings:", error);
+    });
+
+    return () => unsubscribeSettings();
+  }, [isSettingsMerged, companyName, companyLogo, companyEmail, companyAddress, companyWebsite, companyContent, provostSignature, layoutSettings]);
+
+  // Synchronize settings changes from this device back to the cloud
+  useEffect(() => {
+    if (!isSettingsMerged) return;
+
+    const saveSettings = async () => {
+      try {
+        await setDoc(doc(db, 'system-settings', 'general'), {
+          companyName,
+          companyLogo,
+          companyEmail,
+          companyAddress,
+          companyWebsite,
+          companyContent,
+          provostSignature,
+          layoutSettings
+        }, { merge: true });
+      } catch (err) {
+        console.error("Failed to sync settings to Firestore:", err);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      saveSettings();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [companyName, companyLogo, companyEmail, companyAddress, companyWebsite, companyContent, provostSignature, layoutSettings, isSettingsMerged]);
 
   // Offline / PWA application installation states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -195,14 +342,6 @@ const AdminDashboard: React.FC = () => {
   const [studentCurrentPage, setStudentCurrentPage] = useLocalStorage<number>('admin-student-page-v2', 1);
   const recordsPerPage = 10;
 
-  const [companyName, setCompanyName] = useLocalStorage('company-name', 'FEDERAL COLLEGE OF EDUCATION (TECHNICAL) BICHI');
-  const [companyLogo, setCompanyLogo] = useLocalStorage<string | null>('company-logo', null);
-  const [companyEmail, setCompanyEmail] = useLocalStorage('company-email', 'contact@fcetbichi.edu.ng');
-  const [companyAddress, setCompanyAddress] = useLocalStorage('company-address', 'P.M.B. 3473, Kano');
-  const [companyWebsite, setCompanyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
-  const [companyContent, setCompanyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
-  const [provostSignature, setProvostSignature] = useLocalStorage<string | null>('provost-signature', null);
-  const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', initialLayoutSettings);
   const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
@@ -307,15 +446,16 @@ const AdminDashboard: React.FC = () => {
       return filteredStudents.slice(indexOfFirstRecord, indexOfLastRecord);
   }, [filteredStudents, studentCurrentPage, recordsPerPage]);
   
-  const handleAddOrUpdateRecord = (record: DataRecord) => {
-    if (editingRecord) {
-      setRecords(records.map(r => r.id === record.id ? record : r));
-    } else {
-      if (records.length >= 2000) {
-        alert("Cannot add staff record. The maximum local database limit of 2,000 staff records has been reached.");
-        return;
+  const handleAddOrUpdateRecord = async (record: DataRecord) => {
+    try {
+      await setDoc(doc(db, 'staff-records', record.id), record);
+    } catch (err) {
+      console.error("Error syncing staff record to Firestore:", err);
+      if (editingRecord) {
+        setRecords(records.map(r => r.id === record.id ? record : r));
+      } else {
+        setRecords([record, ...records]);
       }
-      setRecords([record, ...records]);
     }
   };
 
@@ -344,35 +484,48 @@ const AdminDashboard: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDeleteRecords = (ids: string[]) => {
-    setRecords(records.filter(r => !ids.includes(r.id)));
+  const handleDeleteRecords = async (ids: string[]) => {
+    try {
+      const batch = writeBatch(db);
+      ids.forEach(id => {
+        batch.delete(doc(db, 'staff-records', id));
+      });
+      await batch.commit();
+    } catch (err) {
+      console.error("Error deleting staff records from Firestore:", err);
+      setRecords(records.filter(r => !ids.includes(r.id)));
+    }
     setSelectedIds([]);
   };
 
-  const handleImportRecords = (newRecords: DataRecord[]) => {
-    if (records.length + newRecords.length > 2000) {
-      const allowedCount = 2000 - records.length;
-      if (allowedCount <= 0) {
-        alert("Cannot import staff records. The maximum local database storage limit of 2,000 staff records is already reached.");
-        return;
+  const handleImportRecords = async (newRecords: DataRecord[]) => {
+    try {
+      const chunkSize = 500;
+      for (let i = 0; i < newRecords.length; i += chunkSize) {
+        const chunk = newRecords.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+        chunk.forEach(record => {
+          batch.set(doc(db, 'staff-records', record.id), record);
+        });
+        await batch.commit();
       }
-      alert(`Storage limit of 2,000 reached. Only the first ${allowedCount} records were imported.`);
-      setRecords(prev => [...newRecords.slice(0, allowedCount), ...prev]);
-    } else {
+    } catch (err) {
+      console.error("Error importing staff records to Firestore:", err);
       setRecords(prev => [...newRecords, ...prev]);
     }
     setIsImportModalVisible(false);
   };
 
-  const handleAddOrUpdateStudent = (student: Student) => {
-    if (editingStudent) {
-      setStudents(students.map(s => s.id === student.id ? student : s));
-    } else {
-      if (students.length >= 5000) {
-        alert("Cannot add student record. The maximum local database limit of 5,000 student records has been reached.");
-        return;
+  const handleAddOrUpdateStudent = async (student: Student) => {
+    try {
+      await setDoc(doc(db, 'student-records', student.id), student);
+    } catch (err) {
+      console.error("Error syncing student record to Firestore:", err);
+      if (editingStudent) {
+        setStudents(students.map(s => s.id === student.id ? student : s));
+      } else {
+        setStudents([student, ...students]);
       }
-      setStudents([student, ...students]);
     }
   };
 
@@ -382,21 +535,33 @@ const AdminDashboard: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
-  const handleDeleteStudents = (ids: string[]) => {
-    setStudents(students.filter(s => !ids.includes(s.id)));
+  const handleDeleteStudents = async (ids: string[]) => {
+    try {
+      const batch = writeBatch(db);
+      ids.forEach(id => {
+        batch.delete(doc(db, 'student-records', id));
+      });
+      await batch.commit();
+    } catch (err) {
+      console.error("Error deleting student records from Firestore:", err);
+      setStudents(students.filter(s => !ids.includes(s.id)));
+    }
     setSelectedStudentIds([]);
   };
 
-  const handleImportStudents = (newStudents: Student[]) => {
-    if (students.length + newStudents.length > 5000) {
-      const allowedCount = 5000 - students.length;
-      if (allowedCount <= 0) {
-        alert("Cannot import student records. The maximum local database storage limit of 5,000 student records is already reached.");
-        return;
+  const handleImportStudents = async (newStudents: Student[]) => {
+    try {
+      const chunkSize = 500;
+      for (let i = 0; i < newStudents.length; i += chunkSize) {
+        const chunk = newStudents.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+        chunk.forEach(student => {
+          batch.set(doc(db, 'student-records', student.id), student);
+        });
+        await batch.commit();
       }
-      alert(`Storage limit of 5,000 reached. Only the first ${allowedCount} records were imported.`);
-      setStudents(prev => [...newStudents.slice(0, allowedCount), ...prev]);
-    } else {
+    } catch (err) {
+      console.error("Error importing student records to Firestore:", err);
       setStudents(prev => [...newStudents, ...prev]);
     }
     setIsStudentImportModalVisible(false);
@@ -579,9 +744,42 @@ const AdminDashboard: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Header companyName={companyName} companyLogo={companyLogo} />
 
-        <div className="absolute top-4 right-4 text-xs text-brand-muted flex items-center gap-2">
-          {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-4 h-4 animate-spin" /><span>Saving...</span></>}
-          {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-4 h-4 text-green-400" /><span>Saved to Local Storage</span></>}
+        <div className="absolute top-4 right-4 text-[11px] text-brand-muted flex flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-3 z-10 bg-brand-primary/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/5 shadow-lg">
+          {/* Cloud Sync Status Indicator */}
+          <div className="flex items-center gap-1.5 font-medium">
+            {syncStatus === 'connecting' && (
+              <>
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                </span>
+                <span className="text-amber-400 font-semibold font-mono tracking-tight">Connecting Cloud Sync...</span>
+              </>
+            )}
+            {syncStatus === 'synced' && (
+              <>
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-emerald-400 font-semibold font-mono tracking-tight">Cloud Synced (Multi-Device Active)</span>
+              </>
+            )}
+            {syncStatus === 'error' && (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                <span className="text-red-400 font-semibold font-mono tracking-tight">Cloud Sync Offline</span>
+              </>
+            )}
+          </div>
+
+          <span className="hidden sm:inline text-brand-muted/30">|</span>
+
+          {/* Local Persistence Status Indicator */}
+          <div className="flex items-center gap-1.5">
+            {combinedSaveStatus === 'saving' && <><SpinnerIcon className="w-3.5 h-3.5 animate-spin text-brand-accent" /><span className="font-mono text-brand-muted/70">Local Cache Saving...</span></>}
+            {combinedSaveStatus === 'saved' && <><CheckCircleIcon className="w-3.5 h-3.5 text-emerald-400" /><span className="text-brand-muted font-mono">Local Cache Saved</span></>}
+          </div>
         </div>
 
         <main className="mt-8">

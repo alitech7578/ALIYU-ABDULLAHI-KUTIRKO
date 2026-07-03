@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "DataRecord": {
+      "title": "DataRecord",
+      "description": "Staff record document stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "middleName": { "type": "string" },
+        "surname": { "type": "string" },
+        "spNumber": { "type": "string" },
+        "gender": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "rank": { "type": "string" },
+        "department": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "marriedStatus": { "type": "string" },
+        "state": { "type": "string" },
+        "lga": { "type": "string" },
+        "photo": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "name", "surname", "photo"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student record document stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "firstName": { "type": "string" },
+        "middleName": { "type": "string" },
+        "surname": { "type": "string" },
+        "registrationNumber": { "type": "string" },
+        "gender": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "department": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "state": { "type": "string" },
+        "lga": { "type": "string" },
+        "photo": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "firstName", "surname", "photo"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "System level configurations shared among devices",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "companyLogo": { "type": "string" },
+        "companyEmail": { "type": "string" },
+        "companyAddress": { "type": "string" },
+        "companyWebsite": { "type": "string" },
+        "companyContent": { "type": "string" },
+        "provostSignature": { "type": "string" },
+        "layoutSettings": { "type": "object" }
+      }
+    }
+  },
+  "firestore": {
+    "staff-records": {
+      "schema": "#/entities/DataRecord",
+      "description": "Collection of staff records"
+    },
+    "student-records": {
+      "schema": "#/entities/Student",
+      "description": "Collection of student records"
+    },
+    "system-settings": {
+      "schema": "#/entities/SystemSettings",
+      "description": "Configuration settings"
+    }
+  }
+}

@@ -26,14 +26,37 @@ const ClientPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
-    // Fetch branding from local storage
-    const [companyName] = useLocalStorage('company-name', 'Data Collector Pro');
-    const [companyLogo] = useLocalStorage<string | null>('company-logo', null);
-    const [companyEmail] = useLocalStorage('company-email', 'contact@example.com');
-    const [companyAddress] = useLocalStorage('company-address', '123 Innovation Drive, Tech City');
-    const [companyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
-    const [companyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
-    const [layoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', getInitialLayoutSettings());
+    // Fetch branding from local storage with setters to allow cloud sync hydration
+    const [companyName, setCompanyName] = useLocalStorage('company-name', 'Data Collector Pro');
+    const [companyLogo, setCompanyLogo] = useLocalStorage<string | null>('company-logo', null);
+    const [companyEmail, setCompanyEmail] = useLocalStorage('company-email', 'contact@example.com');
+    const [companyAddress, setCompanyAddress] = useLocalStorage('company-address', '123 Innovation Drive, Tech City');
+    const [companyWebsite, setCompanyWebsite] = useLocalStorage('company-website', 'www.fcetbichi.edu.ng');
+    const [companyContent, setCompanyContent] = useLocalStorage('company-content', 'Streamlining data management with intuitive solutions.');
+    const [layoutSettings, setLayoutSettings] = useLocalStorage<IDCardLayoutSettings>('id-card-layout', getInitialLayoutSettings());
+
+    useEffect(() => {
+        // Hydrate branding configurations from Firestore in case we are verifying from a separate scanning device
+        const fetchSystemSettings = async () => {
+            try {
+                const { db, doc, getDoc } = await import('../hooks/useFirebase');
+                const docSnap = await getDoc(doc(db, "system-settings", "general"));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.companyName) setCompanyName(data.companyName);
+                    if (data.companyLogo) setCompanyLogo(data.companyLogo);
+                    if (data.companyEmail) setCompanyEmail(data.companyEmail);
+                    if (data.companyAddress) setCompanyAddress(data.companyAddress);
+                    if (data.companyWebsite) setCompanyWebsite(data.companyWebsite);
+                    if (data.companyContent) setCompanyContent(data.companyContent);
+                    if (data.layoutSettings) setLayoutSettings(data.layoutSettings);
+                }
+            } catch (err) {
+                console.error("Failed to fetch system settings from Firestore:", err);
+            }
+        };
+        fetchSystemSettings();
+    }, []);
 
     useEffect(() => {
         const fetchRecord = async () => {
@@ -65,6 +88,28 @@ const ClientPage: React.FC = () => {
                         } catch (e) {}
                     }
                     foundPerson = allStudentRecords.find(s => s.id === recordId);
+                }
+
+                // If still not found locally (common when scanned on another device like a phone), fetch directly from Firestore cloud!
+                if (!foundPerson) {
+                    try {
+                        const { db, doc, getDoc } = await import('../hooks/useFirebase');
+                        // Try fetching from staff-records
+                        const staffDocRef = doc(db, 'staff-records', recordId);
+                        const staffDocSnap = await getDoc(staffDocRef);
+                        if (staffDocSnap.exists()) {
+                            foundPerson = staffDocSnap.data() as DataRecord;
+                        } else {
+                            // Try fetching from student-records
+                            const studentDocRef = doc(db, 'student-records', recordId);
+                            const studentDocSnap = await getDoc(studentDocRef);
+                            if (studentDocSnap.exists()) {
+                                foundPerson = studentDocSnap.data() as Student;
+                            }
+                        }
+                    } catch (fbErr) {
+                        console.error("Failed to query from Firebase Firestore:", fbErr);
+                    }
                 }
 
                 if (foundPerson) {
