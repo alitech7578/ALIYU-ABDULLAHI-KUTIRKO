@@ -89,11 +89,33 @@ export const useIndexedDB = <T,>(key: string, initialValue: T): [T, Dispatch<Set
               const parsed = JSON.parse(localValue);
               setStoredValue(parsed);
               // Migrate it to IndexedDB
-              dbSet(key, parsed).catch(err => console.error(`Migration failed for ${key}:`, err));
+              dbSet(key, parsed)
+                .then(() => {
+                  // Free up localStorage quota immediately for large records keys
+                  if (key.includes('records')) {
+                    try {
+                      window.localStorage.removeItem(key);
+                    } catch (e) {
+                      // ignore
+                    }
+                  }
+                })
+                .catch(err => console.error(`Migration failed for ${key}:`, err));
             }
           } catch (localErr) {
             console.error(`Error parsing LocalStorage fallback for ${key}:`, localErr);
           }
+        }
+        // Also proactively clean up any leftover large keys in localStorage to prevent QuotaExceededError
+        try {
+          if (window.localStorage.getItem('data-records') && key === 'data-records') {
+            window.localStorage.removeItem('data-records');
+          }
+          if (window.localStorage.getItem('student-records') && key === 'student-records') {
+            window.localStorage.removeItem('student-records');
+          }
+        } catch (e) {
+          // ignore
         }
         setIsLoaded(true);
       })

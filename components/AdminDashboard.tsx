@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { DataRecord, Student, IDCardLayoutSettings, FieldConfig } from '../types';
 import Header from './Header';
 import DataForm from './DataForm';
@@ -8,6 +8,7 @@ import { PlusCircleIcon, IdCardIcon, DownloadIcon, PencilIcon, UploadIcon, Trash
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useIndexedDB } from '../hooks/useIndexedDB';
 import { db, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from '../hooks/useFirebase';
+import { compressImage } from '../utils/imageCompressor';
 import ImportModal from './ImportModal';
 import StudentForm from './StudentForm';
 import StudentTable from './StudentTable';
@@ -137,12 +138,16 @@ const AdminDashboard: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<{ id: string; type: 'staff' | 'student' } | null>(null);
   const [studentSortConfig, setStudentSortConfig] = useState<SortConfig<Student> | null>(null);
 
+  // Track locally deleted IDs so incoming snapshots do not resurrect them
+  const deletedStaffIdsRef = useRef<Set<string>>(new Set());
+  const deletedStudentIdsRef = useRef<Set<string>>(new Set());
+
   // Real-time synchronization states
   const [syncStatus, setSyncStatus] = useState<'connecting' | 'synced' | 'error'>('connecting');
   const [isDataMerged, setIsDataMerged] = useState(false);
   const [isSettingsMerged, setIsSettingsMerged] = useState(false);
 
-  // Real-time synchronization for staff-records and student-records with bidirectional offline merging
+  // Real-time synchronization for staff-records and student-records with robust offline merging
   useEffect(() => {
     setSyncStatus('connecting');
 
@@ -150,25 +155,31 @@ const AdminDashboard: React.FC = () => {
     const unsubscribeStaff = onSnapshot(collection(db, 'staff-records'), (snapshot) => {
       const cloudRecords: DataRecord[] = [];
       snapshot.forEach((docSnap) => {
-        cloudRecords.push(docSnap.data() as DataRecord);
+        const data = docSnap.data() as DataRecord;
+        if (!deletedStaffIdsRef.current.has(data.id)) {
+          cloudRecords.push(data);
+        }
       });
 
       // Sort by createdAt desc
       cloudRecords.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
       setRecords(prevLocal => {
-        if (!isDataMerged && prevLocal && prevLocal.length > 0) {
-          const missingInCloud = prevLocal.filter(local => !cloudRecords.some(cloud => cloud.id === local.id));
-          if (missingInCloud.length > 0) {
-            console.log(`Syncing ${missingInCloud.length} offline staff records to cloud...`);
-            const batch = writeBatch(db);
-            missingInCloud.forEach(rec => {
-              batch.set(doc(db, 'staff-records', rec.id), rec);
-            });
-            batch.commit().catch(err => console.error("Failed to commit merged staff records:", err));
-          }
+        // Keep any local records that aren't yet in the cloud and haven't been deleted locally
+        const localOnly = (prevLocal || []).filter(
+          loc => !cloudRecords.some(c => c.id === loc.id) && !deletedStaffIdsRef.current.has(loc.id)
+        );
+
+        if (localOnly.length > 0) {
+          // Push any offline-created records to the cloud in background
+          const batch = writeBatch(db);
+          localOnly.forEach(rec => batch.set(doc(db, 'staff-records', rec.id), rec));
+          batch.commit().catch(err => console.error("Error auto-syncing offline staff records to cloud:", err));
         }
-        return cloudRecords;
+
+        const merged = [...cloudRecords, ...localOnly];
+        merged.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        return merged;
       });
       setSyncStatus('synced');
     }, (error) => {
@@ -180,24 +191,28 @@ const AdminDashboard: React.FC = () => {
     const unsubscribeStudents = onSnapshot(collection(db, 'student-records'), (snapshot) => {
       const cloudStudents: Student[] = [];
       snapshot.forEach((docSnap) => {
-        cloudStudents.push(docSnap.data() as Student);
+        const data = docSnap.data() as Student;
+        if (!deletedStudentIdsRef.current.has(data.id)) {
+          cloudStudents.push(data);
+        }
       });
 
       cloudStudents.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
       setStudents(prevLocal => {
-        if (!isDataMerged && prevLocal && prevLocal.length > 0) {
-          const missingInCloud = prevLocal.filter(local => !cloudStudents.some(cloud => cloud.id === local.id));
-          if (missingInCloud.length > 0) {
-            console.log(`Syncing ${missingInCloud.length} offline student records to cloud...`);
-            const batch = writeBatch(db);
-            missingInCloud.forEach(stu => {
-              batch.set(doc(db, 'student-records', stu.id), stu);
-            });
-            batch.commit().catch(err => console.error("Failed to commit merged student records:", err));
-          }
+        const localOnly = (prevLocal || []).filter(
+          loc => !cloudStudents.some(c => c.id === loc.id) && !deletedStudentIdsRef.current.has(loc.id)
+        );
+
+        if (localOnly.length > 0) {
+          const batch = writeBatch(db);
+          localOnly.forEach(stu => batch.set(doc(db, 'student-records', stu.id), stu));
+          batch.commit().catch(err => console.error("Error auto-syncing offline student records to cloud:", err));
         }
-        return cloudStudents;
+
+        const merged = [...cloudStudents, ...localOnly];
+        merged.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        return merged;
       });
       setIsDataMerged(true);
     }, (error) => {
@@ -208,7 +223,7 @@ const AdminDashboard: React.FC = () => {
       unsubscribeStaff();
       unsubscribeStudents();
     };
-  }, [isDataMerged]);
+  }, []);
 
   // Real-time synchronization for system branding configurations
   useEffect(() => {
@@ -340,7 +355,32 @@ const AdminDashboard: React.FC = () => {
   // Pagination State
   const [staffCurrentPage, setStaffCurrentPage] = useLocalStorage<number>('admin-staff-page-v2', 1);
   const [studentCurrentPage, setStudentCurrentPage] = useLocalStorage<number>('admin-student-page-v2', 1);
-  const recordsPerPage = 10;
+  const [recordsPerPage, setRecordsPerPage] = useLocalStorage<number>('admin-records-per-page-v2', 25);
+
+  // Proactive background optimizer: Compresses any existing large records to free up cloud and device space
+  const isCompressingRef = useRef(false);
+  useEffect(() => {
+    if (isCompressingRef.current || records.length === 0) return;
+    
+    const largeRecords = records.filter(r => r.photo && r.photo.length > 120000);
+    if (largeRecords.length === 0) return;
+
+    isCompressingRef.current = true;
+    (async () => {
+      for (const rec of largeRecords) {
+        try {
+          const optimizedPhoto = await compressImage(rec.photo, 400, 500, 0.8);
+          if (optimizedPhoto.length < rec.photo.length) {
+            const updated = { ...rec, photo: optimizedPhoto };
+            await setDoc(doc(db, 'staff-records', rec.id), updated);
+            setRecords(prev => prev.map(r => r.id === rec.id ? updated : r));
+          }
+        } catch (err) {
+          console.warn(`Could not optimize record ${rec.id}:`, err);
+        }
+      }
+    })();
+  }, [records]);
 
   const [settingsReady, setSettingsReady] = useState(false);
 
@@ -447,36 +487,31 @@ const AdminDashboard: React.FC = () => {
   }, [filteredStudents, studentCurrentPage, recordsPerPage]);
   
   const handleAddOrUpdateRecord = async (record: DataRecord) => {
+    // 1. Instantly update local state so table updates immediately
+    setRecords(prev => {
+      const exists = prev.some(r => r.id === record.id);
+      return exists ? prev.map(r => r.id === record.id ? record : r) : [record, ...prev];
+    });
+
+    // 2. Remove from deleted tracking
+    deletedStaffIdsRef.current.delete(record.id);
+
+    // 3. Jump to first page to see newly added record immediately
+    setStaffCurrentPage(1);
+
+    // 4. Save to Firestore in background / online
     try {
       await setDoc(doc(db, 'staff-records', record.id), record);
     } catch (err) {
       console.error("Error syncing staff record to Firestore:", err);
-      if (editingRecord) {
-        setRecords(records.map(r => r.id === record.id ? record : r));
-      } else {
-        setRecords([record, ...records]);
-      }
     }
+
+    // 5. Close form modal after short delay
+    setTimeout(() => {
+      setIsFormVisible(false);
+      setEditingRecord(null);
+    }, 1200);
   };
-
-  // This effect handles closing the form after a successful save.
-  useEffect(() => {
-    if (isFormVisible) {
-      const isStaffSaveDone = activeTab === 'staff' && recordsSaveStatus === 'saved';
-      const isStudentSaveDone = activeTab === 'students' && studentsSaveStatus === 'saved';
-
-      if (isStaffSaveDone || isStudentSaveDone) {
-        // Wait a bit so the user can see the "Saved" message on the button
-        const timer = setTimeout(() => {
-          setIsFormVisible(false);
-          setEditingRecord(null);
-          setEditingStudent(null);
-        }, 1500);
-
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isFormVisible, activeTab, recordsSaveStatus, studentsSaveStatus]);
 
   const handleEditRecord = (record: DataRecord) => {
     setEditingRecord(record);
@@ -485,6 +520,10 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleDeleteRecords = async (ids: string[]) => {
+    // Mark as deleted so Firestore snapshots won't restore them
+    ids.forEach(id => deletedStaffIdsRef.current.add(id));
+    setRecords(records.filter(r => !ids.includes(r.id)));
+
     try {
       const batch = writeBatch(db);
       ids.forEach(id => {
@@ -493,12 +532,12 @@ const AdminDashboard: React.FC = () => {
       await batch.commit();
     } catch (err) {
       console.error("Error deleting staff records from Firestore:", err);
-      setRecords(records.filter(r => !ids.includes(r.id)));
     }
     setSelectedIds([]);
   };
 
   const handleImportRecords = async (newRecords: DataRecord[]) => {
+    setRecords(prev => [...newRecords, ...prev]);
     try {
       const chunkSize = 500;
       for (let i = 0; i < newRecords.length; i += chunkSize) {
@@ -511,22 +550,29 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (err) {
       console.error("Error importing staff records to Firestore:", err);
-      setRecords(prev => [...newRecords, ...prev]);
     }
     setIsImportModalVisible(false);
   };
 
   const handleAddOrUpdateStudent = async (student: Student) => {
+    setStudents(prev => {
+      const exists = prev.some(s => s.id === student.id);
+      return exists ? prev.map(s => s.id === student.id ? student : s) : [student, ...prev];
+    });
+
+    deletedStudentIdsRef.current.delete(student.id);
+    setStudentCurrentPage(1);
+
     try {
       await setDoc(doc(db, 'student-records', student.id), student);
     } catch (err) {
       console.error("Error syncing student record to Firestore:", err);
-      if (editingStudent) {
-        setStudents(students.map(s => s.id === student.id ? student : s));
-      } else {
-        setStudents([student, ...students]);
-      }
     }
+
+    setTimeout(() => {
+      setIsFormVisible(false);
+      setEditingStudent(null);
+    }, 1200);
   };
 
   const handleEditStudent = (student: Student) => {
@@ -536,6 +582,9 @@ const AdminDashboard: React.FC = () => {
   };
   
   const handleDeleteStudents = async (ids: string[]) => {
+    ids.forEach(id => deletedStudentIdsRef.current.add(id));
+    setStudents(students.filter(s => !ids.includes(s.id)));
+
     try {
       const batch = writeBatch(db);
       ids.forEach(id => {
@@ -544,12 +593,12 @@ const AdminDashboard: React.FC = () => {
       await batch.commit();
     } catch (err) {
       console.error("Error deleting student records from Firestore:", err);
-      setStudents(students.filter(s => !ids.includes(s.id)));
     }
     setSelectedStudentIds([]);
   };
 
   const handleImportStudents = async (newStudents: Student[]) => {
+    setStudents(prev => [...newStudents, ...prev]);
     try {
       const chunkSize = 500;
       for (let i = 0; i < newStudents.length; i += chunkSize) {
@@ -562,7 +611,6 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (err) {
       console.error("Error importing student records to Firestore:", err);
-      setStudents(prev => [...newStudents, ...prev]);
     }
     setIsStudentImportModalVisible(false);
   };
@@ -830,15 +878,36 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'staff' && (
               <>
                  <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <div className="relative flex-grow max-w-lg">
-                        <input 
-                            type="search"
-                            value={staffSearchQuery}
-                            onChange={(e) => setStaffSearchQuery(e.target.value)}
-                            placeholder="Search staff by name, surname, email, or SP no."
-                            className="w-full pl-10 pr-4 py-2.5 bg-brand-secondary/50 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none"
-                        />
-                        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-muted" />
+                    <div className="flex items-center gap-4 flex-grow max-w-xl flex-wrap">
+                      <div className="relative flex-grow min-w-[240px]">
+                          <input 
+                              type="search"
+                              value={staffSearchQuery}
+                              onChange={(e) => setStaffSearchQuery(e.target.value)}
+                              placeholder="Search staff by name, surname, email, or SP no."
+                              className="w-full pl-10 pr-4 py-2.5 bg-brand-secondary/50 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none"
+                          />
+                          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-muted" />
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-semibold text-brand-muted bg-brand-secondary/40 px-3 py-2 rounded-lg border border-brand-secondary">
+                        <span>Show:</span>
+                        <select
+                          value={recordsPerPage}
+                          onChange={(e) => {
+                            setRecordsPerPage(Number(e.target.value));
+                            setStaffCurrentPage(1);
+                          }}
+                          className="bg-brand-primary text-brand-light rounded px-2 py-1 border border-brand-secondary font-bold focus:outline-none focus:ring-1 focus:ring-brand-accent cursor-pointer"
+                        >
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                          <option value={500}>500</option>
+                          <option value={5000}>All</option>
+                        </select>
+                        <span>rows</span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <button onClick={() => setIsImportModalVisible(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-primary/80 hover:bg-brand-primary rounded-lg text-white font-semibold transition-colors">
@@ -891,15 +960,36 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'students' && (
                <>
                  <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                    <div className="relative flex-grow max-w-lg">
-                        <input 
-                            type="search"
-                            value={studentSearchQuery}
-                            onChange={(e) => setStudentSearchQuery(e.target.value)}
-                            placeholder="Search students by name, surname, email, or reg. no."
-                            className="w-full pl-10 pr-4 py-2.5 bg-brand-secondary/50 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none"
-                        />
-                        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-muted" />
+                    <div className="flex items-center gap-4 flex-grow max-w-xl flex-wrap">
+                      <div className="relative flex-grow min-w-[240px]">
+                          <input 
+                              type="search"
+                              value={studentSearchQuery}
+                              onChange={(e) => setStudentSearchQuery(e.target.value)}
+                              placeholder="Search students by name, surname, email, or reg. no."
+                              className="w-full pl-10 pr-4 py-2.5 bg-brand-secondary/50 rounded-lg focus:ring-2 focus:ring-brand-accent focus:outline-none"
+                          />
+                          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-muted" />
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-semibold text-brand-muted bg-brand-secondary/40 px-3 py-2 rounded-lg border border-brand-secondary">
+                        <span>Show:</span>
+                        <select
+                          value={recordsPerPage}
+                          onChange={(e) => {
+                            setRecordsPerPage(Number(e.target.value));
+                            setStudentCurrentPage(1);
+                          }}
+                          className="bg-brand-primary text-brand-light rounded px-2 py-1 border border-brand-secondary font-bold focus:outline-none focus:ring-1 focus:ring-brand-accent cursor-pointer"
+                        >
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                          <option value={500}>500</option>
+                          <option value={5000}>All</option>
+                        </select>
+                        <span>rows</span>
+                      </div>
                     </div>
                      <div className="flex items-center gap-2 flex-wrap">
                       <button onClick={() => setIsStudentImportModalVisible(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-primary/80 hover:bg-brand-primary rounded-lg text-white font-semibold transition-colors">
@@ -956,7 +1046,7 @@ const AdminDashboard: React.FC = () => {
                   <span className="text-xs font-bold text-brand-muted tracking-wide uppercase">Staff Storage Allocation</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl font-black text-white">{records.length.toLocaleString()}</span>
-                    <span className="text-xs text-brand-muted font-mono">/ 2,000 slots</span>
+                    <span className="text-xs text-brand-muted font-mono">/ 50,000 slots (Expanded)</span>
                   </div>
                 </div>
                 <div className="p-2 bg-brand-accent/15 text-brand-accent rounded-lg border border-brand-accent/20">
@@ -967,12 +1057,12 @@ const AdminDashboard: React.FC = () => {
                 <div className="w-full bg-brand-primary/60 rounded-full h-2 overflow-hidden border border-brand-secondary">
                   <div 
                     className="bg-brand-accent h-full rounded-full transition-all duration-500 ease-out" 
-                    style={{ width: `${Math.min(100, (records.length / 2000) * 100)}%` }}
+                    style={{ width: `${Math.max(1, Math.min(100, (records.length / 50000) * 100))}%` }}
                   />
                 </div>
                 <div className="flex justify-between text-[10px] font-mono font-bold text-brand-muted">
-                  <span>{((records.length / 2000) * 100).toFixed(1)}% Used</span>
-                  <span>{Math.max(0, 2000 - records.length).toLocaleString()} Free Slots</span>
+                  <span>{((records.length / 50000) * 100).toFixed(1)}% Used</span>
+                  <span className="text-emerald-400 font-bold">{Math.max(0, 50000 - records.length).toLocaleString()} Plenty Slots Available</span>
                 </div>
               </div>
             </div>
@@ -984,7 +1074,7 @@ const AdminDashboard: React.FC = () => {
                   <span className="text-xs font-bold text-brand-muted tracking-wide uppercase">Student Storage Allocation</span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl font-black text-white">{students.length.toLocaleString()}</span>
-                    <span className="text-xs text-brand-muted font-mono">/ 5,000 slots</span>
+                    <span className="text-xs text-brand-muted font-mono">/ 50,000 slots (Expanded)</span>
                   </div>
                 </div>
                 <div className="p-2 bg-emerald-500/15 text-emerald-400 rounded-lg border border-emerald-500/20">
@@ -995,12 +1085,12 @@ const AdminDashboard: React.FC = () => {
                 <div className="w-full bg-brand-primary/60 rounded-full h-2 overflow-hidden border border-brand-secondary">
                   <div 
                     className="bg-emerald-500 h-full rounded-full transition-all duration-500 ease-out" 
-                    style={{ width: `${Math.min(100, (students.length / 5000) * 100)}%` }}
+                    style={{ width: `${Math.max(1, Math.min(100, (students.length / 50000) * 100))}%` }}
                   />
                 </div>
                 <div className="flex justify-between text-[10px] font-mono font-bold text-brand-muted">
-                  <span>{((students.length / 5000) * 100).toFixed(1)}% Used</span>
-                  <span>{Math.max(0, 5000 - students.length).toLocaleString()} Free Slots</span>
+                  <span>{((students.length / 50000) * 100).toFixed(1)}% Used</span>
+                  <span className="text-emerald-400 font-bold">{Math.max(0, 50000 - students.length).toLocaleString()} Plenty Slots Available</span>
                 </div>
               </div>
             </div>
@@ -1008,18 +1098,18 @@ const AdminDashboard: React.FC = () => {
             {/* Offline Database Engine Status card */}
             <div className="p-5 rounded-2xl bg-brand-secondary/40 border border-brand-accent/20 backdrop-blur-xs flex flex-col justify-between shadow-lg">
               <div className="space-y-1 mb-2">
-                <span className="text-xs font-bold text-brand-muted tracking-wide uppercase">Local DB Engine Status</span>
+                <span className="text-xs font-bold text-brand-muted tracking-wide uppercase">High-Capacity DB Engine Status</span>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-sm font-black text-white uppercase tracking-tight">Active & Optimized</span>
+                  <span className="text-sm font-black text-white uppercase tracking-tight">Active • High Compression</span>
                 </div>
                 <p className="text-[11px] text-brand-muted leading-tight mt-1.5">
-                  Secure local client-side storage engine. Multi-index query capability enabled.
+                  High-capacity storage engine with automatic image optimization enabled.
                 </p>
               </div>
               <div className="flex justify-between text-[10px] font-mono font-bold text-brand-muted border-t border-brand-secondary/50 pt-2.5">
                 <span>Row Capacity Used</span>
-                <span className="text-brand-accent">{(records.length + students.length).toLocaleString()} / 7,000 total</span>
+                <span className="text-brand-accent font-bold">{(records.length + students.length).toLocaleString()} / 100,000 total</span>
               </div>
             </div>
           </div>

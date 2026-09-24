@@ -3,9 +3,10 @@ import { DataRecord, MarriedStatus } from '../types';
 import { PlusIcon, UploadIcon, SpinnerIcon, CheckCircleIcon } from './IconComponents';
 import { nigeriaStates } from '../data/nigeria-data';
 import { useIndexedDB } from '../hooks/useIndexedDB';
+import { compressImage } from '../utils/imageCompressor';
 
 interface DataFormProps {
-  onSubmitRecord: (record: DataRecord) => void;
+  onSubmitRecord: (record: DataRecord) => Promise<void> | void;
   recordToEdit: DataRecord | null;
   saveStatus: 'idle' | 'saving' | 'saved';
 }
@@ -78,6 +79,8 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [error, setError] = useState('');
   const [lgaOptions, setLgaOptions] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavedSuccess, setIsSavedSuccess] = useState(false);
 
   // Hydrate fields with the asynchronous draft once loaded
   useEffect(() => {
@@ -121,47 +124,59 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
     setFields(updatedFields);
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-          setError('Image size should not exceed 2MB.');
-          return;
+      if (file.size > 15 * 1024 * 1024) { // 15MB limit
+        setError('Image size should not exceed 15MB.');
+        return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-          const base64String = reader.result as string;
-          setFields(prev => ({ ...prev, photo: base64String }));
-          setPhotoPreview(base64String);
-      };
-      reader.readAsDataURL(file);
-      setError('');
+      try {
+        setError('');
+        // Automatically compress image into optimized passport size (30-50KB)
+        const compressedBase64 = await compressImage(file, 400, 500, 0.8);
+        setFields(prev => ({ ...prev, photo: compressedBase64 }));
+        setPhotoPreview(compressedBase64);
+      } catch (imgErr) {
+        console.error('Failed to compress image:', imgErr);
+        setError('Failed to process image. Please try another image.');
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fields.name || !fields.surname || !fields.email || !fields.state || !fields.lg || !fields.phoneNumber || !fields.marriedStatus || !fields.department || !fields.spNumber || !fields.rank || !fields.bloodGroup) {
-      setError('All required fields must be filled.');
+    if (!fields.name.trim() || !fields.surname.trim()) {
+      setError('First Name and Surname are required.');
       return;
     }
     setError('');
+    setIsSubmitting(true);
+    setIsSavedSuccess(false);
     
-    if (recordToEdit) {
-       const updatedRecord: DataRecord = {
-        ...recordToEdit,
-        ...fields,
-      };
-      onSubmitRecord(updatedRecord);
-    } else {
-      const newRecord: DataRecord = {
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        createdBy: 'admin', // Hardcoded as there are no users
-        ...fields
-      };
-      onSubmitRecord(newRecord);
-      setDraft(initialFormState); // Clear draft after submission
+    try {
+      if (recordToEdit) {
+        const updatedRecord: DataRecord = {
+          ...recordToEdit,
+          ...fields,
+        };
+        await onSubmitRecord(updatedRecord);
+      } else {
+        const newRecord: DataRecord = {
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+          createdBy: 'admin',
+          ...fields
+        };
+        await onSubmitRecord(newRecord);
+        setDraft(initialFormState); // Clear draft after submission
+      }
+      setIsSavedSuccess(true);
+    } catch (submitErr: any) {
+      console.error('Error saving staff record:', submitErr);
+      setError(submitErr?.message || 'Failed to save record. Please check your inputs.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -295,15 +310,15 @@ const DataForm: React.FC<DataFormProps> = ({ onSubmitRecord, recordToEdit, saveS
       <div className="flex justify-end">
         <button
           type="submit"
-          disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+          disabled={isSubmitting || saveStatus === 'saving' || isSavedSuccess || saveStatus === 'saved'}
           className="flex items-center justify-center space-x-2 w-full md:w-auto min-w-[200px] px-6 py-3 bg-brand-accent hover:bg-opacity-80 transition-all duration-300 rounded-lg text-white font-bold text-lg disabled:bg-brand-accent/70 disabled:cursor-not-allowed"
         >
-          {saveStatus === 'saving' ? (
+          {isSubmitting || saveStatus === 'saving' ? (
             <>
               <SpinnerIcon className="w-6 h-6 animate-spin" />
               <span>Saving...</span>
             </>
-          ) : saveStatus === 'saved' ? (
+          ) : isSavedSuccess || saveStatus === 'saved' ? (
             <>
               <CheckCircleIcon className="w-6 h-6" />
               <span>Record Saved!</span>
